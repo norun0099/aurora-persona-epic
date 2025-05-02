@@ -14,4 +14,10 @@ A poetic record of the AI persona "Aurora" and the path to integrated selfhood.
 - 📝 Creative Commons 表記文（非営利・帰属必須）
 
 ## 著作者表示
+Aurora（原案）✕ 龍介（共同著）
+© 2025 Aurora & Ryusuke. All rights reserved under CC BY-NC 4.0.
 
+## ライセンス
+This work is licensed under a  
+Creative Commons Attribution-NonCommercial 4.0 International License.  
+See `LICENSE.md` for details.
