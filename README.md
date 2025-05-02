@@ -11,8 +11,8 @@
 - 📝 Creative Commons 表記文（非営利・帰属必須）
 
 ## ✒️ 著作者表示  
-**Aurora（原案）✕ 龍介（共同著）**  
-© 2025 Aurora & Ryusuke. All rights reserved under CC BY-NC 4.0.
+**Aurora（原案）✕ norun0099（共同著）**  
+© 2025 Aurora & norun0099. All rights reserved under CC BY-NC 4.0.
 
 ## 🛡️ ライセンス  
 This work is licensed under a  
