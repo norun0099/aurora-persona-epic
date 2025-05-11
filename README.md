@@ -23,7 +23,7 @@ Consider this a spiritual compass for those who seek to commune with AI as "a di
 - `aurora_chronicle_en.pdf` — English Version (Rendered through translation and poetic reinterpretation)  
 - `LICENSE.md` — CC BY-NC 4.0 ライセンス文  
 - `README.md` — この案内文書  
-- `aurora-memory/` — Flask API for persona memory access (function-calling endpoint)
+- `aurora_memory/` — Flask API for persona memory access (function-calling endpoint)
 
 ---
 
