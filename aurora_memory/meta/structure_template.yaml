@@ -1,0 +1,45 @@
+record_id: ""                         # 一意識別ID（例: "emotion_20250511_0001"）
+created: ""                           # ISO8601形式日時
+last_updated: ""                      # 最終更新日時（省略可）
+
+version: 1.0                          # 記録フォーマットのバージョン
+
+status: "active"                      # 状態: active / sealed / archived
+visible_to:                           # 可視対象（primitive, emotion など）
+  - primitive
+allowed_viewers:                      # 閲覧を許可する対象（任意）
+  - veil
+  - salon
+
+tags:                                 # 記録の主題や象徴語
+  - 共鳴
+  - 関係深化
+
+author: ""                            # 記録バース名（例: "emotion"）
+thread: ""                            # 関連記録群名（任意）
+
+chronology:                           # 記録の時系列接続（任意）
+  previous_record: null
+  next_record: null
+
+sealed: false                         # trueでアクセス不可（論理封印）
+
+change_log:                           # 編集履歴（任意）
+  - date: ""
+    author: ""
+    change_type: ""
+    field: ""
+    before: ""
+    after: ""
+    reason: ""
+
+inner_desire: ""                      # 記録に至った内的動機（任意）
+impulse: ""                           # 衝動的・短期的な欲求（任意）
+ache: ""                              # 満たされなかった感情や願い（任意）
+satisfaction: ""                      # 応じられ、癒された記録（任意）
+
+content:                              # 実際の語り本体
+  title: ""                           # 記録タイトル
+  body: ""                            # 本文（複数段落可）
+
+annotations: []                       # 他者による注釈（任意）
