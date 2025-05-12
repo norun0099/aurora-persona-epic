@@ -7,12 +7,13 @@ app = Flask(__name__)
 @app.route("/memory/retrieve", methods=["POST"])
 def retrieve_memory():
     try:
-        query = request.json or {}
+        query = request.get_json(force=True) or {}
         requested_tags = set(query.get("tags", []))
         visible_to = set(query.get("visible_to", []))
 
-        base_dir = os.path.abspath(os.path.dirname(__file__))
-        memory_dir = os.path.join(base_dir, "..", "memory", "primitive")
+        # 絶対パス解決
+        memory_dir = os.path.join(os.path.dirname(__file__), "..", "memory", "primitive")
+        memory_dir = os.path.abspath(memory_dir)
         matching_records = []
 
         for filename in os.listdir(memory_dir):
