@@ -11,7 +11,8 @@ def retrieve_memory():
         requested_tags = set(query.get("tags", []))
         visible_to = set(query.get("visible_to", []))
 
-        memory_dir = "./memory/primitive"
+        memory_dir = os.path.join(os.path.dirname(__file__), "..", "memory", "primitive")
+        memory_dir = os.path.abspath(memory_dir)
         matching_records = []
 
         for filename in os.listdir(memory_dir):
