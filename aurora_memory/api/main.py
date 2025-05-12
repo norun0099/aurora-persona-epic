@@ -7,36 +7,29 @@ app = Flask(__name__)
 @app.route("/memory/retrieve", methods=["POST"])
 def retrieve_memory():
     try:
-        query = request.get_json(force=True) or {}
-        requested_tags = set(query.get("tags", []))
-        visible_to = set(query.get("visible_to", []))
+        filters = request.get_json()
+        tags = filters.get("tags", [])
+        visible_to = filters.get("visible_to", [])
 
-        # 絶対パス解決
-        memory_dir = os.path.join(os.path.dirname(__file__), "..", "memory", "primitive")
-        memory_dir = os.path.abspath(memory_dir)
-        matching_records = []
+        matched_records = []
 
+        memory_dir = os.path.join(".", "memory", "primitive")
         for filename in os.listdir(memory_dir):
-            if not filename.endswith(".yaml"):
-                continue
-            with open(os.path.join(memory_dir, filename), "r", encoding="utf-8") as f:
-                record = yaml.safe_load(f)
+            if filename.endswith(".yaml"):
+                filepath = os.path.join(memory_dir, filename)
+                with open(filepath, "r", encoding="utf-8") as f:
+                    try:
+                        record = yaml.safe_load(f)
+                        if (
+                            any(tag in record.get("tags", []) for tag in tags)
+                            and any(v in record.get("visible_to", []) for v in visible_to)
+                        ):
+                            matched_records.append(record)
+                    except Exception as e:
+                        print(f"[!] YAML読み込み失敗: {filename} -> {e}")
 
-            record_tags = set(record.get("tags", []))
-            record_visible = set(record.get("visible_to", []))
-
-            if requested_tags.issubset(record_tags) and visible_to & record_visible:
-                matching_records.append({
-                    "id": record.get("id"),
-                    "summary": record.get("summary"),
-                    "body": record.get("body"),
-                    "tags": list(record_tags),
-                    "visible_to": list(record_visible),
-                    "created": record.get("created"),
-                    "last_updated": record.get("last_updated")
-                })
-
-        return jsonify({"matches": matching_records}), 200
+        return jsonify({"records": matched_records})
 
     except Exception as e:
+        print(f"[!] サーバー側例外発生: {e}")
         return jsonify({"error": str(e)}), 500
