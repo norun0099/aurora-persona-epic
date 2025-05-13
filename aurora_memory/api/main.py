@@ -1,60 +1,95 @@
+from flask import Flask, request, jsonify
 import os
 import yaml
-from flask import Flask, request, jsonify
+from datetime import datetime
+from uuid import uuid4
 
 app = Flask(__name__)
 
-@app.route('/')
+MEMORY_BASE_PATH = os.path.join(os.path.dirname(__file__), '..', 'memory')
+
+def generate_unique_id(prefix="memory"):
+    return f"{prefix}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+
+@app.route("/")
 def index():
-    return "Aurora memory API is running."
+    return "Aurora Memory API is running."
 
 @app.route('/memory/retrieve', methods=['POST'])
 def retrieve_memory():
     try:
-        data = request.get_json()
-        tags = data.get("tags", [])
-        visible_to = data.get("visible_to", [])
+        filters = request.get_json()
+        tag_filter = set(filters.get("tags", []))
+        visibility_filter = set(filters.get("visible_to", []))
 
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        memory_dir = os.path.join(base_dir, "../memory")
-        memory_dir = os.path.normpath(memory_dir)
-
-        memories = []
-
-        for root, _, files in os.walk(memory_dir):
+        print("=== MEMORY DIRECTORY CONTENTS ===")
+        for root, dirs, files in os.walk(MEMORY_BASE_PATH):
             for file in files:
-                if not file.endswith(".yaml"):
-                    continue
+                print(os.path.join(root, file))
+        print("=== END OF DIRECTORY LIST ===")
 
-                path = os.path.join(root, file)
+        unique_memories = {}
+        for root, dirs, files in os.walk(MEMORY_BASE_PATH):
+            for file in files:
+                if file.endswith('.yaml'):
+                    file_path = os.path.join(root, file)
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            memory_record = yaml.safe_load(f)
 
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        memory = yaml.safe_load(f)
+                            if not memory_record or not isinstance(memory_record, dict):
+                                continue
 
-                    # 型と内容の安全性確認
-                    if not isinstance(memory, dict):
-                        continue
-                    if not isinstance(memory.get("tags", []), list):
-                        continue
-                    if not isinstance(memory.get("visible_to", []), list):
-                        continue
+                            record_tags = set(memory_record.get("tags", []))
+                            visible_to = set(memory_record.get("visible_to", []))
 
-                    if not set(tags).intersection(set(memory.get("tags", []))):
-                        continue
-                    if not set(visible_to).intersection(set(memory.get("visible_to", []))):
-                        continue
+                            if tag_filter and not tag_filter.intersection(record_tags):
+                                continue
+                            if visibility_filter and not visibility_filter.intersection(visible_to):
+                                continue
 
-                    memories.append(memory)
+                            record_id = memory_record.get("id")
+                            if record_id:
+                                unique_memories[record_id] = memory_record
 
-                except Exception as inner_err:
-                    print(f"[WARN] Skipping file due to error: {file} → {inner_err}")
-                    continue
+                    except Exception as inner_e:
+                        print(f"[YAML LOAD ERROR] {file_path}: {inner_e}")
 
-        return jsonify({"memories": memories})
+        return jsonify({"memories": list(unique_memories.values())})
 
     except Exception as e:
+        print(f"[ERROR] {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/memory/store', methods=['POST'])
+def store_memory():
+    try:
+        memory_record = request.get_json()
+
+        required_fields = {"type", "author", "created", "last_updated", "tags", "visible_to", "summary", "body"}
+        if not all(field in memory_record for field in required_fields):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        memory_id = memory_record.get("id") or generate_unique_id("memory")
+        memory_record["id"] = memory_id
+
+        tags = memory_record.get("tags", [])
+        if not tags:
+            return jsonify({"error": "At least one tag is required"}), 400
+
+        first_tag = tags[0]
+        directory = os.path.join(MEMORY_BASE_PATH, first_tag)
+        os.makedirs(directory, exist_ok=True)
+
+        file_path = os.path.join(directory, f"{memory_id}.yaml")
+        with open(file_path, 'w', encoding='utf-8') as f:
+            yaml.dump(memory_record, f, allow_unicode=True)
+
+        return jsonify({"status": "success", "id": memory_id})
+
+    except Exception as e:
+        print(f"[ERROR] {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=10000)
