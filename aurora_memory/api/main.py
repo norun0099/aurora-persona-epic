@@ -31,5 +31,7 @@ def retrieve_memory():
         return jsonify({"records": matched_records})
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"[!] サーバー側例外発生: {e}")
-        return jsonify({"error": str(e)}), 500
+    return jsonify({"error": str(e)}), 500
