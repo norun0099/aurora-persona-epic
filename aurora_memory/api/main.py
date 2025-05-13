@@ -1,37 +1,41 @@
 from flask import Flask, request, jsonify
 import os
-import yaml
+import json
 
 app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return "Aurora Memory API is active."
 
 @app.route("/memory/retrieve", methods=["POST"])
 def retrieve_memory():
     try:
-        filters = request.get_json()
-        tags = filters.get("tags", [])
-        visible_to = filters.get("visible_to", [])
+        req = request.get_json()
+        tags = req.get("tags", [])
+        visibility = req.get("visible_to", [])
 
-        matched_records = []
+        # フォルダ存在確認＆作成（保険）
+        base_path = "./memory/primitive"
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
 
-        memory_dir = os.path.join(".", "memory", "primitive")
-        for filename in os.listdir(memory_dir):
-            if filename.endswith(".yaml"):
-                filepath = os.path.join(memory_dir, filename)
+        results = []
+        for filename in os.listdir(base_path):
+            if filename.endswith(".yaml") or filename.endswith(".json"):
+                filepath = os.path.join(base_path, filename)
                 with open(filepath, "r", encoding="utf-8") as f:
                     try:
-                        record = yaml.safe_load(f)
-                        if (
-                            any(tag in record.get("tags", []) for tag in tags)
-                            and any(v in record.get("visible_to", []) for v in visible_to)
-                        ):
-                            matched_records.append(record)
-                    except Exception as e:
-                        print(f"[!] YAML読み込み失敗: {filename} -> {e}")
+                        data = json.load(f)
+                        if any(tag in data.get("tags", []) for tag in tags) and any(v in data.get("visible_to", []) for v in visibility):
+                            results.append(data)
+                    except json.JSONDecodeError:
+                        continue
 
-        return jsonify({"records": matched_records})
+        return jsonify({"memories": results}), 200
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        print(f"[!] サーバー側例外発生: {e}")
-    return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(debug=True)
