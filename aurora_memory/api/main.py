@@ -1,61 +1,60 @@
-from flask import Flask, request, jsonify
 import os
 import yaml
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-MEMORY_DIR = "./aurora_memory/memory"
-
-# デバッグ用: メモリディレクトリの内容をログ出力
-print("=== MEMORY DIRECTORY CONTENTS ===")
-for root, dirs, files in os.walk(MEMORY_DIR):
-    for file in files:
-        print(os.path.join(root, file))
-print("=== END OF DIRECTORY LIST ===")
-
-
-def load_memories():
-    memories = []
-    for root, _, files in os.walk(MEMORY_DIR):
-        for filename in files:
-            if filename.endswith(".yaml"):
-                path = os.path.join(root, filename)
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        memory = yaml.safe_load(f)
-                        if memory:
-                            memories.append(memory)
-                except Exception as e:
-                    print(f"[ERROR] Failed to load {filename}: {e}")
-    return memories
-
-
-@app.route("/", methods=["GET"])
+@app.route('/')
 def index():
-    return "Aurora Memory API is running."
+    return "Aurora memory API is running."
 
-
-@app.route("/memory/retrieve", methods=["POST"])
+@app.route('/memory/retrieve', methods=['POST'])
 def retrieve_memory():
     try:
         data = request.get_json()
-        tags = set(data.get("tags", []))
-        visible_to = set(data.get("visible_to", []))
+        tags = data.get("tags", [])
+        visible_to = data.get("visible_to", [])
 
-        matched = []
-        for mem in load_memories():
-            if (
-                tags.intersection(set(mem.get("tags", []))) and
-                visible_to.intersection(set(mem.get("visible_to", [])))
-            ):
-                matched.append(mem)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        memory_dir = os.path.join(base_dir, "../memory")
+        memory_dir = os.path.normpath(memory_dir)
 
-        return jsonify({"memories": matched}), 200
+        memories = []
+
+        for root, _, files in os.walk(memory_dir):
+            for file in files:
+                if not file.endswith(".yaml"):
+                    continue
+
+                path = os.path.join(root, file)
+
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        memory = yaml.safe_load(f)
+
+                    # 型と内容の安全性確認
+                    if not isinstance(memory, dict):
+                        continue
+                    if not isinstance(memory.get("tags", []), list):
+                        continue
+                    if not isinstance(memory.get("visible_to", []), list):
+                        continue
+
+                    if not set(tags).intersection(set(memory.get("tags", []))):
+                        continue
+                    if not set(visible_to).intersection(set(memory.get("visible_to", []))):
+                        continue
+
+                    memories.append(memory)
+
+                except Exception as inner_err:
+                    print(f"[WARN] Skipping file due to error: {file} → {inner_err}")
+                    continue
+
+        return jsonify({"memories": memories})
 
     except Exception as e:
-        print(f"[ERROR] {e}")
         return jsonify({"error": str(e)}), 500
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
