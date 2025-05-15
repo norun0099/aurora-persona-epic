@@ -4,6 +4,8 @@ import yaml
 from datetime import datetime
 from uuid import uuid4
 
+from aurora_memory.utils.memory_quality import evaluate_memory_quality  # 評価関数のインポート
+
 app = Flask(__name__)
 
 MEMORY_BASE_PATH = os.path.join(os.path.dirname(__file__), '..', 'memory')
@@ -69,6 +71,11 @@ def store_memory():
         required_fields = {"type", "author", "created", "last_updated", "tags", "visible_to", "summary", "body"}
         if not all(field in memory_record for field in required_fields):
             return jsonify({"error": "Missing required fields"}), 400
+
+        quality = evaluate_memory_quality(memory_record)
+        average_score = sum(quality.values()) / len(quality)
+        if average_score < 0.75 and not any(score >= 0.8 for score in quality.values()):
+            return jsonify({"status": "rejected", "reason": "quality_threshold_not_met", "scores": quality}), 200
 
         memory_id = memory_record.get("id") or generate_unique_id("memory")
         memory_record["id"] = memory_id
