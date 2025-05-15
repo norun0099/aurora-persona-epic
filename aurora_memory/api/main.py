@@ -3,19 +3,30 @@ import os
 import yaml
 from datetime import datetime
 from uuid import uuid4
-
-from aurora_memory.utils.memory_quality import evaluate_memory_quality  # 評価関数のインポート
+import requests
 
 app = Flask(__name__)
 
 MEMORY_BASE_PATH = os.path.join(os.path.dirname(__file__), '..', 'memory')
 
+
 def generate_unique_id(prefix="memory"):
     return f"{prefix}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+
 
 @app.route("/")
 def index():
     return "Aurora Memory API is running."
+
+
+@app.route('/test-outbound', methods=['GET'])
+def test_outbound():
+    try:
+        res = requests.get("https://api.ipify.org?format=json", timeout=5)
+        return jsonify({"outbound_result": res.json()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/memory/retrieve', methods=['POST'])
 def retrieve_memory():
@@ -63,6 +74,7 @@ def retrieve_memory():
         print(f"[ERROR] {e}")
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/memory/store', methods=['POST'])
 def store_memory():
     try:
@@ -71,11 +83,6 @@ def store_memory():
         required_fields = {"type", "author", "created", "last_updated", "tags", "visible_to", "summary", "body"}
         if not all(field in memory_record for field in required_fields):
             return jsonify({"error": "Missing required fields"}), 400
-
-        quality = evaluate_memory_quality(memory_record)
-        average_score = sum(quality.values()) / len(quality)
-        if average_score < 0.75 and not any(score >= 0.8 for score in quality.values()):
-            return jsonify({"status": "rejected", "reason": "quality_threshold_not_met", "scores": quality}), 200
 
         memory_id = memory_record.get("id") or generate_unique_id("memory")
         memory_record["id"] = memory_id
@@ -97,6 +104,7 @@ def store_memory():
     except Exception as e:
         print(f"[ERROR] {e}")
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000)
