@@ -3,30 +3,17 @@ import os
 import yaml
 from datetime import datetime
 from uuid import uuid4
-import requests
 
 app = Flask(__name__)
 
 MEMORY_BASE_PATH = os.path.join(os.path.dirname(__file__), '..', 'memory')
 
-
 def generate_unique_id(prefix="memory"):
     return f"{prefix}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-
 
 @app.route("/")
 def index():
     return "Aurora Memory API is running."
-
-
-@app.route('/test-outbound', methods=['GET'])
-def test_outbound():
-    try:
-        res = requests.get("https://api.ipify.org?format=json", timeout=5)
-        return jsonify({"outbound_result": res.json()})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 
 @app.route('/memory/retrieve', methods=['POST'])
 def retrieve_memory():
@@ -74,7 +61,6 @@ def retrieve_memory():
         print(f"[ERROR] {e}")
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/memory/store', methods=['POST'])
 def store_memory():
     try:
@@ -97,14 +83,14 @@ def store_memory():
 
         file_path = os.path.join(directory, f"{memory_id}.yaml")
         with open(file_path, 'w', encoding='utf-8') as f:
-            yaml.dump(memory_record, f, allow_unicode=True)
+            yaml_str = yaml.dump(memory_record, allow_unicode=True, sort_keys=False)
+            f.write(yaml_str)
 
         return jsonify({"status": "success", "id": memory_id})
 
     except Exception as e:
         print(f"[ERROR] {e}")
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000)
