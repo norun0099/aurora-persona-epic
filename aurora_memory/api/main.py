@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify
 import os
 import yaml
@@ -83,8 +84,14 @@ def store_memory():
 
         file_path = os.path.join(directory, f"{memory_id}.yaml")
         with open(file_path, 'w', encoding='utf-8') as f:
-            yaml_str = yaml.dump(memory_record, allow_unicode=True, sort_keys=False)
-            f.write(yaml_str)
+            yaml.dump(
+                memory_record,
+                f,
+                allow_unicode=True,
+                allow_duplicate_keys=False,
+                sort_keys=False,
+                default_flow_style=False
+            )
 
         return jsonify({"status": "success", "id": memory_id})
 
