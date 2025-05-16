@@ -3,6 +3,7 @@ import requests
 import os
 
 app = Flask(__name__)
+handler = app  # Vercel が Flask アプリを認識するためのエントリポイント
 
 RENDER_ENDPOINT = os.environ.get("RENDER_ENDPOINT")
 
