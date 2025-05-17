@@ -60,20 +60,23 @@ def retrieve_memory():
 
 def push_to_git():
     repo_path = os.path.join(os.path.dirname(__file__), '..', 'memory')
-    git_url = os.environ.get("GIT_REPO_URL")
     git_token = os.environ.get("GIT_TOKEN")
     git_user = os.environ.get("GIT_USER_NAME", "AuroraMemoryBot")
     git_email = os.environ.get("GIT_USER_EMAIL", "aurora@memory.bot")
+    git_repo_url = os.environ.get("GIT_REPO_URL")
 
     try:
         env = os.environ.copy()
         env["GIT_AUTHOR_NAME"] = git_user
         env["GIT_AUTHOR_EMAIL"] = git_email
 
+        subprocess.run(["git", "config", "--global", "user.name", git_user], check=True)
+        subprocess.run(["git", "config", "--global", "user.email", git_email], check=True)
+
         subprocess.run(["git", "add", "."], cwd=repo_path, check=True)
         subprocess.run(["git", "commit", "-m", "auto: memory update"], cwd=repo_path, check=True)
         subprocess.run(
-            ["git", "push", f"https://{git_token}@github.com/{git_url.split('github.com/')[-1]}"],
+            ["git", "push", f"https://{git_token}@github.com/{git_repo_url.split('github.com/')[-1]}"],
             cwd=repo_path,
             check=True
         )
@@ -104,7 +107,7 @@ def store_memory():
         with open(file_path, "w", encoding="utf-8") as f:
             yaml.dump(memory_record, f, allow_unicode=True)
 
-        push_to_git()  # Git連携処理を実行
+        push_to_git()
 
         return jsonify({"status": "success", "id": memory_id})
 
