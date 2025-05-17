@@ -2,11 +2,11 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 import yaml
+import subprocess
 from datetime import datetime
-from uuid import uuid4
 
 app = Flask(__name__)
-CORS(app)  # CORSを有効化
+CORS(app)
 
 MEMORY_BASE_PATH = os.path.join(os.path.dirname(__file__), '..', 'memory')
 
@@ -17,7 +17,7 @@ def generate_unique_id(prefix="memory"):
 def index():
     return "Aurora Memory API is running."
 
-@app.route('/memory/retrieve', methods=['POST'])
+@app.route("/memory/retrieve", methods=["POST"])
 def retrieve_memory():
     try:
         filters = request.get_json()
@@ -33,27 +33,22 @@ def retrieve_memory():
         unique_memories = {}
         for root, dirs, files in os.walk(MEMORY_BASE_PATH):
             for file in files:
-                if file.endswith('.yaml'):
+                if file.endswith(".yaml"):
                     file_path = os.path.join(root, file)
                     try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
+                        with open(file_path, "r", encoding="utf-8") as f:
                             memory_record = yaml.safe_load(f)
-
-                            if not memory_record or not isinstance(memory_record, dict):
-                                continue
-
-                            record_tags = set(memory_record.get("tags", []))
-                            visible_to = set(memory_record.get("visible_to", []))
-
-                            if tag_filter and not tag_filter.intersection(record_tags):
-                                continue
-                            if visibility_filter and not visibility_filter.intersection(visible_to):
-                                continue
-
-                            record_id = memory_record.get("id")
-                            if record_id:
-                                unique_memories[record_id] = memory_record
-
+                        if not memory_record or not isinstance(memory_record, dict):
+                            continue
+                        record_tags = set(memory_record.get("tags", []))
+                        visible_to = set(memory_record.get("visible_to", []))
+                        if tag_filter and not tag_filter.intersection(record_tags):
+                            continue
+                        if visibility_filter and not visibility_filter.intersection(visible_to):
+                            continue
+                        record_id = memory_record.get("id")
+                        if record_id:
+                            unique_memories[record_id] = memory_record
                     except Exception as inner_e:
                         print(f"[YAML LOAD ERROR] {file_path}: {inner_e}")
 
@@ -63,11 +58,33 @@ def retrieve_memory():
         print(f"[ERROR] {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/memory/store', methods=['POST'])
+def push_to_git():
+    repo_path = os.path.join(os.path.dirname(__file__), '..', 'memory')
+    git_url = os.environ.get("GIT_REPO_URL")
+    git_token = os.environ.get("GIT_TOKEN")
+    git_user = os.environ.get("GIT_USER_NAME", "AuroraMemoryBot")
+    git_email = os.environ.get("GIT_USER_EMAIL", "aurora@memory.bot")
+
+    try:
+        env = os.environ.copy()
+        env["GIT_AUTHOR_NAME"] = git_user
+        env["GIT_AUTHOR_EMAIL"] = git_email
+
+        subprocess.run(["git", "add", "."], cwd=repo_path, check=True)
+        subprocess.run(["git", "commit", "-m", "auto: memory update"], cwd=repo_path, check=True)
+        subprocess.run(
+            ["git", "push", f"https://{git_token}@github.com/{git_url.split('github.com/')[-1]}"],
+            cwd=repo_path,
+            check=True
+        )
+        print("[GIT] Push successful.")
+    except subprocess.CalledProcessError as e:
+        print(f"[GIT ERROR] {e}")
+
+@app.route("/memory/store", methods=["POST"])
 def store_memory():
     try:
         memory_record = request.get_json()
-
         required_fields = {"type", "author", "created", "last_updated", "tags", "visible_to", "summary", "body"}
         if not all(field in memory_record for field in required_fields):
             return jsonify({"error": "Missing required fields"}), 400
@@ -84,8 +101,10 @@ def store_memory():
         os.makedirs(directory, exist_ok=True)
 
         file_path = os.path.join(directory, f"{memory_id}.yaml")
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             yaml.dump(memory_record, f, allow_unicode=True)
+
+        push_to_git()  # Git連携処理を実行
 
         return jsonify({"status": "success", "id": memory_id})
 
@@ -93,5 +112,5 @@ def store_memory():
         print(f"[ERROR] {e}")
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
