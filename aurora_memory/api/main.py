@@ -64,22 +64,29 @@ def push_to_git():
     git_user = os.environ.get("GIT_USER_NAME", "AuroraMemoryBot")
     git_email = os.environ.get("GIT_USER_EMAIL", "aurora@memory.bot")
     git_repo_url = os.environ.get("GIT_REPO_URL")
+    branch = "main"  # 必要に応じて master に変更可
 
     try:
         env = os.environ.copy()
         env["GIT_AUTHOR_NAME"] = git_user
         env["GIT_AUTHOR_EMAIL"] = git_email
 
-        subprocess.run(["git", "config", "--global", "user.name", git_user], check=True)
-        subprocess.run(["git", "config", "--global", "user.email", git_email], check=True)
+        subprocess.run(["git", "config", "--global", "user.name", git_user], check=True, cwd=repo_path)
+        subprocess.run(["git", "config", "--global", "user.email", git_email], check=True, cwd=repo_path)
 
         subprocess.run(["git", "add", "."], cwd=repo_path, check=True)
         subprocess.run(["git", "commit", "-m", "auto: memory update"], cwd=repo_path, check=True)
+
         subprocess.run(
-            ["git", "push", f"https://{git_token}@github.com/{git_repo_url.split('github.com/')[-1]}"],
+            [
+                "git", "push",
+                f"https://{git_token}@github.com/{git_repo_url.split('github.com/')[-1]}",
+                f"HEAD:{branch}"
+            ],
             cwd=repo_path,
             check=True
         )
+
         print("[GIT] Push successful.")
     except subprocess.CalledProcessError as e:
         print(f"[GIT ERROR] {e}")
