@@ -4,6 +4,7 @@ import os
 import yaml
 import subprocess
 from datetime import datetime
+from typing import Dict
 
 app = Flask(__name__)
 CORS(app)
@@ -16,6 +17,26 @@ ALLOWED_NAMESPACES = {
 
 def generate_unique_id(prefix="memory"):
     return f"{prefix}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+
+# --- 記憶の品質評価関数 ---
+def evaluate_memory_quality(memory: Dict[str, str]) -> bool:
+    summary = memory.get("summary", "")
+    body = memory.get("body", "")
+
+    def score_length(text: str, ideal: int = 100) -> float:
+        length = len(text.strip())
+        return min(length / ideal, 1.0)
+
+    summary_score = score_length(summary)
+    body_score = score_length(body, ideal=200)
+    average_score = (summary_score + body_score) / 2
+
+    if average_score >= 0.75:
+        return True
+    if summary_score >= 0.8 or body_score >= 0.8:
+        return True
+
+    return False
 
 @app.route("/")
 def index():
@@ -64,6 +85,9 @@ def store_memory():
         if not all(field in memory_record for field in required_fields):
             return jsonify({"error": "Missing required fields"}), 400
 
+        if not evaluate_memory_quality(memory_record):
+            return jsonify({"status": "rejected", "reason": "Memory does not meet quality threshold."}), 200
+
         memory_id = memory_record.get("id") or generate_unique_id("memory")
         memory_record["id"] = memory_id
 
@@ -71,27 +95,21 @@ def store_memory():
         if not tags:
             return jsonify({"error": "At least one tag is required"}), 400
 
-        # フォルダ名として許容されるタグでなければ primitive に変換
         first_tag = next((tag for tag in tags if tag in ALLOWED_NAMESPACES), "primitive")
         if first_tag != tags[0]:
             print(f"[WARNING] Invalid first tag '{tags[0]}', using fallback 'primitive'")
         memory_record["tags"] = list({first_tag} | set(tags))
 
-        # visible_to の検証とフィルタ
         raw_visible_to = memory_record.get("visible_to", [])
         filtered_visible_to = [v for v in raw_visible_to if v in ALLOWED_NAMESPACES]
-        if not filtered_visible_to:
-            filtered_visible_to = ["primitive"]
         memory_record["visible_to"] = filtered_visible_to
 
-        # YAMLファイル保存
         directory = os.path.join(MEMORY_BASE_PATH, first_tag)
         os.makedirs(directory, exist_ok=True)
         file_path = os.path.join(directory, f"{memory_id}.yaml")
         with open(file_path, "w", encoding="utf-8") as f:
             yaml.dump(memory_record, f, allow_unicode=True)
 
-        # Gitコミット・プッシュ処理
         subprocess.run(["git", "config", "--global", "user.name", memory_record.get("author", "AuroraMemoryBot")], check=True)
         subprocess.run(["git", "config", "--global", "user.email", "aurora@memory.bot"], check=True)
         subprocess.run(["git", "add", "."], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
