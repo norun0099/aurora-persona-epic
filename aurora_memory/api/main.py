@@ -18,7 +18,6 @@ ALLOWED_NAMESPACES = {
 def generate_unique_id(prefix="memory"):
     return f"{prefix}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
-# --- 記憶の品質評価関数 ---
 def evaluate_memory_quality(memory: Dict[str, str]) -> bool:
     summary = memory.get("summary", "")
     body = memory.get("body", "")
@@ -35,7 +34,6 @@ def evaluate_memory_quality(memory: Dict[str, str]) -> bool:
         return True
     if summary_score >= 0.8 or body_score >= 0.8:
         return True
-
     return False
 
 @app.route("/")
@@ -86,7 +84,7 @@ def store_memory():
             return jsonify({"error": "Missing required fields"}), 400
 
         if not evaluate_memory_quality(memory_record):
-            return jsonify({"status": "rejected", "reason": "Memory does not meet quality threshold."}), 200
+            return jsonify({"status": "rejected", "reason": "insufficient memory quality"}), 400
 
         memory_id = memory_record.get("id") or generate_unique_id("memory")
         memory_record["id"] = memory_id
@@ -110,11 +108,11 @@ def store_memory():
         with open(file_path, "w", encoding="utf-8") as f:
             yaml.dump(memory_record, f, allow_unicode=True)
 
-        subprocess.run(["git", "config", "--global", "user.name", memory_record.get("author", "AuroraMemoryBot")], check=True)
-        subprocess.run(["git", "config", "--global", "user.email", "aurora@memory.bot"], check=True)
+        subprocess.run(["git", "config", "user.name", memory_record.get("author", "AuroraMemoryBot")], check=True)
+        subprocess.run(["git", "config", "user.email", "aurora@memory.bot"], check=True)
         subprocess.run(["git", "add", "."], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
         subprocess.run(["git", "commit", "-m", "auto: memory update"], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
-        subprocess.run(["git", "push"], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
+        subprocess.run(["git", "push", "origin", "main"], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
 
         print(f"[GIT] Push successful.")
         return jsonify({"status": "success", "id": memory_id})
