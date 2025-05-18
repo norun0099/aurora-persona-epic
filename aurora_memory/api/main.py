@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
@@ -6,6 +5,9 @@ import yaml
 import subprocess
 from datetime import datetime
 from typing import Dict
+
+# 静的記憶のロード
+from aurora_memory import load_memory_files
 
 app = Flask(__name__)
 CORS(app)
@@ -15,6 +17,8 @@ ALLOWED_NAMESPACES = {
     "primitive", "relation", "emotion", "music",
     "request", "technology", "salon", "veil", "desire"
 }
+
+STATIC_KNOWLEDGE = load_memory_files()  # ← ここで静的記憶を読み込み
 
 def generate_unique_id(prefix="memory"):
     return f"{prefix}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
@@ -49,6 +53,8 @@ def retrieve_memory():
         visibility_filter = set(filters.get("visible_to", []))
 
         unique_memories = {}
+
+        # 動的記憶から取得
         for root, _, files in os.walk(MEMORY_BASE_PATH):
             for file in files:
                 if file.endswith(".yaml"):
@@ -69,6 +75,18 @@ def retrieve_memory():
                             unique_memories[record_id] = memory_record
                     except Exception as inner_e:
                         print(f"[YAML LOAD ERROR] {file_path}: {inner_e}")
+
+        # 静的記憶（STATIC_KNOWLEDGE）からも検索
+        for mem in STATIC_KNOWLEDGE:
+            record_tags = set(mem.get("tags", []))
+            visible_to = set(mem.get("visible_to", []))
+            if tag_filter and not tag_filter.intersection(record_tags):
+                continue
+            if visibility_filter and not visibility_filter.intersection(visible_to):
+                continue
+            record_id = mem.get("id")
+            if record_id:
+                unique_memories[record_id] = mem
 
         return jsonify({"memories": list(unique_memories.values())})
 
