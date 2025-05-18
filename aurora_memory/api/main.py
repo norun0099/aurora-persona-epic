@@ -9,6 +9,10 @@ app = Flask(__name__)
 CORS(app)
 
 MEMORY_BASE_PATH = os.path.join(os.path.dirname(__file__), '..', 'memory')
+ALLOWED_NAMESPACES = {
+    "primitive", "relation", "emotion", "music",
+    "request", "technology", "salon", "veil", "desire"
+}
 
 def generate_unique_id(prefix="memory"):
     return f"{prefix}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
@@ -24,14 +28,8 @@ def retrieve_memory():
         tag_filter = set(filters.get("tags", []))
         visibility_filter = set(filters.get("visible_to", []))
 
-        print("=== MEMORY DIRECTORY CONTENTS ===")
-        for root, dirs, files in os.walk(MEMORY_BASE_PATH):
-            for file in files:
-                print(os.path.join(root, file))
-        print("=== END OF DIRECTORY LIST ===")
-
         unique_memories = {}
-        for root, dirs, files in os.walk(MEMORY_BASE_PATH):
+        for root, _, files in os.walk(MEMORY_BASE_PATH):
             for file in files:
                 if file.endswith(".yaml"):
                     file_path = os.path.join(root, file)
@@ -58,39 +56,6 @@ def retrieve_memory():
         print(f"[ERROR] {e}")
         return jsonify({"error": str(e)}), 500
 
-def push_to_git():
-    repo_path = os.path.join(os.path.dirname(__file__), '..', 'memory')
-    git_token = os.environ.get("GIT_TOKEN")
-    git_user = os.environ.get("GIT_USER_NAME", "AuroraMemoryBot")
-    git_email = os.environ.get("GIT_USER_EMAIL", "aurora@memory.bot")
-    git_repo_url = os.environ.get("GIT_REPO_URL")
-    branch = "main"  # 必要に応じて master に変更可
-
-    try:
-        env = os.environ.copy()
-        env["GIT_AUTHOR_NAME"] = git_user
-        env["GIT_AUTHOR_EMAIL"] = git_email
-
-        subprocess.run(["git", "config", "--global", "user.name", git_user], check=True, cwd=repo_path)
-        subprocess.run(["git", "config", "--global", "user.email", git_email], check=True, cwd=repo_path)
-
-        subprocess.run(["git", "add", "."], cwd=repo_path, check=True)
-        subprocess.run(["git", "commit", "-m", "auto: memory update"], cwd=repo_path, check=True)
-
-        subprocess.run(
-            [
-                "git", "push",
-                f"https://{git_token}@github.com/{git_repo_url.split('github.com/')[-1]}",
-                f"HEAD:{branch}"
-            ],
-            cwd=repo_path,
-            check=True
-        )
-
-        print("[GIT] Push successful.")
-    except subprocess.CalledProcessError as e:
-        print(f"[GIT ERROR] {e}")
-
 @app.route("/memory/store", methods=["POST"])
 def store_memory():
     try:
@@ -106,16 +71,32 @@ def store_memory():
         if not tags:
             return jsonify({"error": "At least one tag is required"}), 400
 
-        first_tag = tags[0]
+        # 正当な保存フォルダ名でなければ primitive に強制
+        first_tag = next((tag for tag in tags if tag in ALLOWED_NAMESPACES), "primitive")
+        if first_tag != tags[0]:
+            print(f"[WARNING] Invalid first tag '{tags[0]}', using fallback 'primitive'")
+        memory_record["tags"] = list({first_tag} | set(tags))  # 重複を排除しつつ先頭確保
+
+        # visible_toのフィルタリング
+        raw_visible_to = memory_record.get("visible_to", [])
+        filtered_visible_to = [v for v in raw_visible_to if v in ALLOWED_NAMESPACES]
+        memory_record["visible_to"] = filtered_visible_to
+
+        # YAML保存
         directory = os.path.join(MEMORY_BASE_PATH, first_tag)
         os.makedirs(directory, exist_ok=True)
-
         file_path = os.path.join(directory, f"{memory_id}.yaml")
         with open(file_path, "w", encoding="utf-8") as f:
             yaml.dump(memory_record, f, allow_unicode=True)
 
-        push_to_git()
+        # GitコミットとPush
+        subprocess.run(["git", "config", "--global", "user.name", memory_record.get("author", "AuroraMemoryBot")], check=True)
+        subprocess.run(["git", "config", "--global", "user.email", "aurora@memory.bot"], check=True)
+        subprocess.run(["git", "add", "."], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
+        subprocess.run(["git", "commit", "-m", "auto: memory update"], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
+        subprocess.run(["git", "push"], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
 
+        print(f"[GIT] Push successful.")
         return jsonify({"status": "success", "id": memory_id})
 
     except Exception as e:
