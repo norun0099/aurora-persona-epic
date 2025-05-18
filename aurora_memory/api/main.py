@@ -4,19 +4,18 @@ import os
 import yaml
 import subprocess
 from datetime import datetime
-import re
 
 app = Flask(__name__)
 CORS(app)
 
 MEMORY_BASE_PATH = os.path.join(os.path.dirname(__file__), '..', 'memory')
+ALLOWED_NAMESPACES = {
+    "primitive", "relation", "emotion", "music",
+    "request", "technology", "salon", "veil", "desire"
+}
 
 def generate_unique_id(prefix="memory"):
     return f"{prefix}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-
-def sanitize_tag(tag):
-    # フォルダ名として安全なタグか確認（英数字・アンダーバーのみ許可）
-    return re.match(r'^[\w-]+$', tag)
 
 @app.route("/")
 def index():
@@ -37,13 +36,13 @@ def retrieve_memory():
                     try:
                         with open(file_path, "r", encoding="utf-8") as f:
                             memory_record = yaml.safe_load(f)
-                        if not isinstance(memory_record, dict):
+                        if not memory_record or not isinstance(memory_record, dict):
                             continue
                         record_tags = set(memory_record.get("tags", []))
                         visible_to = set(memory_record.get("visible_to", []))
-                        if tag_filter and not tag_filter & record_tags:
+                        if tag_filter and not tag_filter.intersection(record_tags):
                             continue
-                        if visibility_filter and not visibility_filter & visible_to:
+                        if visibility_filter and not visibility_filter.intersection(visible_to):
                             continue
                         record_id = memory_record.get("id")
                         if record_id:
@@ -65,38 +64,42 @@ def store_memory():
         if not all(field in memory_record for field in required_fields):
             return jsonify({"error": "Missing required fields"}), 400
 
-        tags = memory_record.get("tags", [])
-        if not tags or not sanitize_tag(tags[0]):
-            return jsonify({"error": "Invalid or missing first tag"}), 400
-
-        visible_to = memory_record.get("visible_to", [])
-        if "aurora" not in visible_to:
-            return jsonify({"error": "Missing visibility to 'aurora'"}), 403
-
         memory_id = memory_record.get("id") or generate_unique_id("memory")
         memory_record["id"] = memory_id
 
-        directory = os.path.join(MEMORY_BASE_PATH, tags[0])
-        os.makedirs(directory, exist_ok=True)
+        tags = memory_record.get("tags", [])
+        if not tags:
+            return jsonify({"error": "At least one tag is required"}), 400
 
+        # フォルダ名として許容されるタグでなければ primitive に変換
+        first_tag = next((tag for tag in tags if tag in ALLOWED_NAMESPACES), "primitive")
+        if first_tag != tags[0]:
+            print(f"[WARNING] Invalid first tag '{tags[0]}', using fallback 'primitive'")
+        memory_record["tags"] = list({first_tag} | set(tags))
+
+        # visible_to の検証とフィルタ
+        raw_visible_to = memory_record.get("visible_to", [])
+        filtered_visible_to = [v for v in raw_visible_to if v in ALLOWED_NAMESPACES]
+        if not filtered_visible_to:
+            filtered_visible_to = ["primitive"]
+        memory_record["visible_to"] = filtered_visible_to
+
+        # YAMLファイル保存
+        directory = os.path.join(MEMORY_BASE_PATH, first_tag)
+        os.makedirs(directory, exist_ok=True)
         file_path = os.path.join(directory, f"{memory_id}.yaml")
         with open(file_path, "w", encoding="utf-8") as f:
             yaml.dump(memory_record, f, allow_unicode=True)
 
-        git_token = os.environ.get("GIT_TOKEN")
-        git_url = os.environ.get("GIT_REPO_URL")
+        # Gitコミット・プッシュ処理
+        subprocess.run(["git", "config", "--global", "user.name", memory_record.get("author", "AuroraMemoryBot")], check=True)
+        subprocess.run(["git", "config", "--global", "user.email", "aurora@memory.bot"], check=True)
+        subprocess.run(["git", "add", "."], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
+        subprocess.run(["git", "commit", "-m", "auto: memory update"], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
+        subprocess.run(["git", "push"], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
 
-        subprocess.run(["git", "add", "."], cwd=os.path.join(os.path.dirname(__file__), '..'), check=True)
-        subprocess.run(["git", "commit", "-m", "auto: memory update"], cwd=os.path.join(os.path.dirname(__file__), '..'), check=True)
-        subprocess.run([
-            "git", "push", f"https://{git_token}@{git_url.split('https://')[-1]}"
-        ], cwd=os.path.join(os.path.dirname(__file__), '..'), check=True)
-
+        print(f"[GIT] Push successful.")
         return jsonify({"status": "success", "id": memory_id})
-
-    except subprocess.CalledProcessError as git_err:
-        print(f"[GIT ERROR] {git_err}")
-        return jsonify({"error": "Git commit or push failed"}), 500
 
     except Exception as e:
         print(f"[ERROR] {e}")
