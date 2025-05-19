@@ -1,0 +1,9 @@
+type: system
+id: dummy_00000000
+author: aurora
+created: 2025-01-01T00:00:00Z
+last_updated: 2025-01-01T00:00:00Z
+tags: [primitive]
+visible_to: [primitive]
+summary: ダミーファイル
+body: Renderでprimitiveフォルダを有効化するためのダミーファイルです。
