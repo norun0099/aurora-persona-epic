@@ -12,7 +12,7 @@ from aurora_memory import load_memory_files
 app = Flask(__name__)
 CORS(app)
 
-MEMORY_BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'memory'))
+MEMORY_BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'memory'))
 ALLOWED_NAMESPACES = {
     "primitive", "relation", "emotion", "music",
     "request", "technology", "salon", "veil", "desire"
