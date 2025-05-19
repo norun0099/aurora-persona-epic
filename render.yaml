@@ -1,0 +1,15 @@
+# render.yaml
+services:
+  - type: web
+    name: aurora-memory
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn aurora_memory.api.main:app
+    buildFilter:
+      paths:
+        - memory/**
+        - aurora_memory/**
+        - requirements.txt
+        - render.yaml
+    autoDeploy: true
