@@ -18,6 +18,9 @@ ALLOWED_NAMESPACES = {
     "request", "technology", "salon", "veil", "desire"
 }
 
+print(f"[DEBUG] Looking for memory files in: {MEMORY_BASE_PATH}/primitive")
+print("Files present:", os.listdir(os.path.join(MEMORY_BASE_PATH, 'primitive')))
+
 STATIC_KNOWLEDGE = load_memory_files()  # ← ここで静的記憶を読み込み
 
 def generate_unique_id(prefix="memory"):
