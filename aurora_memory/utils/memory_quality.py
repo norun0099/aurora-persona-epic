@@ -17,9 +17,9 @@ def evaluate_memory_quality(memory: Dict[str, str]) -> bool:
     average_score = (summary_score + body_score) / 2
 
     # しきい値条件
-    if average_score >= 0.75:
+    if average_score >= 0.01:
         return True
-    if summary_score >= 0.8 or body_score >= 0.8:
+    if summary_score >= 0.01 or body_score >= 0.01:
         return True
 
     return False
