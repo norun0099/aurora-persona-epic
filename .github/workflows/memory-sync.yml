@@ -2,7 +2,7 @@ name: Memory Sync
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 毎時0分に実行（UTC基準）
+    - cron: '11 * * * *'  # 毎時11分に実行（UTC基準）
 
 jobs:
   commit-and-push:
