@@ -6,7 +6,6 @@ import subprocess
 from datetime import datetime
 from typing import Dict
 
-# 静的記憶のロード
 from aurora_memory import load_memory_files
 
 app = Flask(__name__)
@@ -18,7 +17,7 @@ ALLOWED_NAMESPACES = {
     "request", "technology", "salon", "veil", "desire"
 }
 
-STATIC_KNOWLEDGE = load_memory_files()  # ← ここで静的記憶を読み込み
+STATIC_KNOWLEDGE = load_memory_files()
 
 def generate_unique_id(prefix="memory"):
     return f"{prefix}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
@@ -35,11 +34,7 @@ def evaluate_memory_quality(memory: Dict[str, str]) -> bool:
     body_score = score_length(body, ideal=200)
     average_score = (summary_score + body_score) / 2
 
-    if average_score >= 0.75:
-        return True
-    if summary_score >= 0.8 or body_score >= 0.8:
-        return True
-    return False
+    return average_score >= 0.75 or summary_score >= 0.8 or body_score >= 0.8
 
 @app.route("/")
 def index():
@@ -54,7 +49,6 @@ def retrieve_memory():
 
         unique_memories = {}
 
-        # 動的記憶から取得
         for root, _, files in os.walk(MEMORY_BASE_PATH):
             for file in files:
                 if file.endswith(".yaml"):
@@ -76,7 +70,6 @@ def retrieve_memory():
                     except Exception as inner_e:
                         print(f"[YAML LOAD ERROR] {file_path}: {inner_e}")
 
-        # 静的記憶（STATIC_KNOWLEDGE）からも検索
         for mem in STATIC_KNOWLEDGE:
             record_tags = set(mem.get("tags", []))
             visible_to = set(mem.get("visible_to", []))
@@ -127,14 +120,32 @@ def store_memory():
         with open(file_path, "w", encoding="utf-8") as f:
             yaml.dump(memory_record, f, allow_unicode=True)
 
-        subprocess.run(["git", "config", "user.name", memory_record.get("author", "AuroraMemoryBot")], check=True)
-        subprocess.run(["git", "config", "user.email", "aurora@memory.bot"], check=True)
-        subprocess.run(["git", "add", "."], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
-        subprocess.run(["git", "commit", "-m", "auto: memory update"], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
-        subprocess.run(["git", "push", "origin", "main"], cwd=os.path.join(os.path.dirname(__file__), ".."), check=True)
+        repo_path = os.path.join(os.path.dirname(__file__), "..")
 
-        print(f"[GIT] Push successful.")
+        def run_git_command(cmd):
+            result = subprocess.run(
+                cmd, cwd=repo_path, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, text=True
+            )
+            print(f"[GIT CMD] {' '.join(cmd)}")
+            print(f"[GIT STDOUT] {result.stdout}")
+            print(f"[GIT STDERR] {result.stderr}")
+            result.check_returncode()
+
+        subprocess.run(["git", "config", "user.name", memory_record.get("author", "AuroraMemoryBot")], cwd=repo_path)
+        subprocess.run(["git", "config", "user.email", "aurora@memory.bot"], cwd=repo_path)
+
+        run_git_command(["git", "add", "."])
+        run_git_command(["git", "commit", "-m", "auto: memory update"])
+        run_git_command(["git", "push", "origin", "main"])
+
         return jsonify({"status": "success", "id": memory_id})
+
+    except subprocess.CalledProcessError as e:
+        print(f"[GIT ERROR] Command '{e.cmd}' failed with code {e.returncode}")
+        print(f"[GIT STDOUT] {e.stdout}")
+        print(f"[GIT STDERR] {e.stderr}")
+        return jsonify({"error": "Git push failed", "details": e.stderr}), 500
 
     except Exception as e:
         print(f"[ERROR] {e}")
