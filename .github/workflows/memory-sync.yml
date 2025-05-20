@@ -3,7 +3,7 @@ name: Memory Sync
 on:
   schedule:
     - cron: '11 * * * *'  # 毎時11分に実行（UTC基準）
-  workflow_dispatch: {}   # ✅ 正しく定義された手動トリガー
+  workflow_dispatch: {}
 
 jobs:
   commit-and-push:
@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          fetch-depth: 0
 
       - name: Set up Git
         run: |
