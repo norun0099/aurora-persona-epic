@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from aurora_memory import load_memory_files, save_memory_file
+from aurora_memory.core.memory_io import load_memory_files, save_memory_file
 
 app = FastAPI()
 
@@ -15,7 +15,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "message": "Aurora Memory is alive and well."}
+    return {"status": "ok", "message": "Aurora Memory API is running."}
 
 @app.post("/load")
 async def load_memory(request: Request):
