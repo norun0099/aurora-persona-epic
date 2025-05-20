@@ -1,15 +1,11 @@
-# render.yaml
 services:
   - type: web
-    name: aurora-memory
+    name: aurora-persona-epic
     env: python
-    plan: free
+    region: singapore
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn aurora_memory.api.main:app
-    buildFilter:
-      paths:
-        - memory/**
-        - aurora_memory/**
-        - requirements.txt
-        - render.yaml
-    autoDeploy: true
+    startCommand: uvicorn aurora_memory.api.main:app --host 0.0.0.0 --port 10000
+    plan: pro
+    envVars:
+      - key: RENDER_ENDPOINT
+        value: https://aurora-persona-epic.onrender.com/memory/store
