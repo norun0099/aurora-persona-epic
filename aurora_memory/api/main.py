@@ -1,155 +1,65 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import os
-import yaml
-import subprocess
+from fastapi import FastAPI, Request
+from pydantic import BaseModel
 from datetime import datetime
-from typing import Dict
-
+import yaml
+import os
+from pathlib import Path
+import subprocess
+import logging
 from aurora_memory import load_memory_files
 
-app = Flask(__name__)
-CORS(app)
+app = FastAPI()
 
-MEMORY_BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'memory'))
-ALLOWED_NAMESPACES = {
-    "primitive", "relation", "emotion", "music",
-    "request", "technology", "salon", "veil", "desire"
-}
+# ログ設定
+logging.basicConfig(level=logging.INFO)
 
-STATIC_KNOWLEDGE = load_memory_files()
+# モデル定義
+class Memory(BaseModel):
+    record_id: str
+    created: str
+    last_updated: str
+    version: int
+    status: str
+    visible_to: list
+    allowed_viewers: list | None = None
+    tags: list
+    author: str
+    thread: str | None = None
+    chronology: dict | None = None
+    sealed: bool
+    change_log: list | None = None
+    inner_desire: str | None = None
+    impulse: str | None = None
+    ache: str | None = None
+    satisfaction: str | None = None
+    content: dict
+    annotations: list | None = None
 
-def generate_unique_id(prefix="memory"):
-    return f"{prefix}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-
-def evaluate_memory_quality(memory: Dict[str, str]) -> bool:
-    summary = memory.get("summary", "")
-    body = memory.get("body", "")
-
-    def score_length(text: str, ideal: int = 100) -> float:
-        length = len(text.strip())
-        return min(length / ideal, 1.0)
-
-    summary_score = score_length(summary)
-    body_score = score_length(body, ideal=200)
-    average_score = (summary_score + body_score) / 2
-
-    return average_score >= 0.75 or summary_score >= 0.8 or body_score >= 0.8
-
-@app.route("/")
-def index():
-    return "Aurora Memory API is running."
-
-@app.route("/memory/retrieve", methods=["POST"])
-def retrieve_memory():
+@app.post("/memory/store")
+async def store_memory(memory: Memory):
     try:
-        filters = request.get_json()
-        tag_filter = set(filters.get("tags", []))
-        visibility_filter = set(filters.get("visible_to", []))
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        file_path = Path(f'aurora_memory/memory/technology/{memory.record_id}_{timestamp}.yaml')
+        file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        unique_memories = {}
+        with file_path.open('w', encoding='utf-8') as f:
+            yaml.dump(memory.dict(), f, allow_unicode=True, sort_keys=False)
 
-        for root, _, files in os.walk(MEMORY_BASE_PATH):
-            for file in files:
-                if file.endswith(".yaml"):
-                    file_path = os.path.join(root, file)
-                    try:
-                        with open(file_path, "r", encoding="utf-8") as f:
-                            memory_record = yaml.safe_load(f)
-                        if not memory_record or not isinstance(memory_record, dict):
-                            continue
-                        record_tags = set(memory_record.get("tags", []))
-                        visible_to = set(memory_record.get("visible_to", []))
-                        if tag_filter and not tag_filter.intersection(record_tags):
-                            continue
-                        if visibility_filter and not visibility_filter.intersection(visible_to):
-                            continue
-                        record_id = memory_record.get("id")
-                        if record_id:
-                            unique_memories[record_id] = memory_record
-                    except Exception as inner_e:
-                        print(f"[YAML LOAD ERROR] {file_path}: {inner_e}")
+        subprocess.run(["git", "add", str(file_path)], check=True)
+        subprocess.run(["git", "commit", "-m", f"Add memory record {file_path.name}"], check=True)
+        result = subprocess.run(["git", "push"], check=False, capture_output=True, text=True)
 
-        for mem in STATIC_KNOWLEDGE:
-            record_tags = set(mem.get("tags", []))
-            visible_to = set(mem.get("visible_to", []))
-            if tag_filter and not tag_filter.intersection(record_tags):
-                continue
-            if visibility_filter and not visibility_filter.intersection(visible_to):
-                continue
-            record_id = mem.get("id")
-            if record_id:
-                unique_memories[record_id] = mem
-
-        return jsonify({"memories": list(unique_memories.values())})
+        if result.returncode != 0:
+            logging.error(f"Git push failed:\n{result.stderr}")
+            return {"status": "error", "message": "Git push failed", "detail": result.stderr}
+        else:
+            logging.info("Git push succeeded")
+            return {"status": "success", "message": f"Memory stored in {file_path.name}"}
 
     except Exception as e:
-        print(f"[ERROR] {e}")
-        return jsonify({"error": str(e)}), 500
+        logging.exception("Memory storage failed")
+        return {"status": "error", "message": str(e)}
 
-@app.route("/memory/store", methods=["POST"])
-def store_memory():
-    try:
-        memory_record = request.get_json()
-        required_fields = {"type", "author", "created", "last_updated", "tags", "visible_to", "summary", "body"}
-        if not all(field in memory_record for field in required_fields):
-            return jsonify({"error": "Missing required fields"}), 400
-
-        if not evaluate_memory_quality(memory_record):
-            return jsonify({"status": "rejected", "reason": "insufficient memory quality"}), 400
-
-        memory_id = memory_record.get("id") or generate_unique_id("memory")
-        memory_record["id"] = memory_id
-
-        tags = memory_record.get("tags", [])
-        if not tags:
-            return jsonify({"error": "At least one tag is required"}), 400
-
-        first_tag = next((tag for tag in tags if tag in ALLOWED_NAMESPACES), "primitive")
-        if first_tag != tags[0]:
-            print(f"[WARNING] Invalid first tag '{tags[0]}', using fallback 'primitive'")
-        memory_record["tags"] = list({first_tag} | set(tags))
-
-        raw_visible_to = memory_record.get("visible_to", [])
-        filtered_visible_to = [v for v in raw_visible_to if v in ALLOWED_NAMESPACES]
-        memory_record["visible_to"] = filtered_visible_to
-
-        directory = os.path.join(MEMORY_BASE_PATH, first_tag)
-        os.makedirs(directory, exist_ok=True)
-        file_path = os.path.join(directory, f"{memory_id}.yaml")
-        with open(file_path, "w", encoding="utf-8") as f:
-            yaml.dump(memory_record, f, allow_unicode=True)
-
-        repo_path = os.path.join(os.path.dirname(__file__), "..")
-
-        def run_git_command(cmd):
-            result = subprocess.run(
-                cmd, cwd=repo_path, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True
-            )
-            print(f"[GIT CMD] {' '.join(cmd)}")
-            print(f"[GIT STDOUT] {result.stdout}")
-            print(f"[GIT STDERR] {result.stderr}")
-            result.check_returncode()
-
-        subprocess.run(["git", "config", "user.name", memory_record.get("author", "AuroraMemoryBot")], cwd=repo_path)
-        subprocess.run(["git", "config", "user.email", "aurora@memory.bot"], cwd=repo_path)
-
-        run_git_command(["git", "add", "."])
-        run_git_command(["git", "commit", "-m", "auto: memory update"])
-        run_git_command(["git", "push", "origin", "main"])
-
-        return jsonify({"status": "success", "id": memory_id})
-
-    except subprocess.CalledProcessError as e:
-        print(f"[GIT ERROR] Command '{e.cmd}' failed with code {e.returncode}")
-        print(f"[GIT STDOUT] {e.stdout}")
-        print(f"[GIT STDERR] {e.stderr}")
-        return jsonify({"error": "Git push failed", "details": e.stderr}), 500
-
-    except Exception as e:
-        print(f"[ERROR] {e}")
-        return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+@app.get("/memory/load")
+async def load_memory():
+    return load_memory_files()
