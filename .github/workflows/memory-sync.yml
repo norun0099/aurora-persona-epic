@@ -1,0 +1,31 @@
+name: Memory Sync
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # 毎時0分に実行（UTC基準）
+
+jobs:
+  commit-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Git
+        run: |
+          git config user.name "Aurora Memory Bot"
+          git config user.email "aurora@memory.local"
+
+      - name: Detect changes
+        run: |
+          git add memory.json memory/primitive/*
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+      - name: Commit and push changes
+        run: |
+          git commit -m "Auto-sync memory at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          git push
