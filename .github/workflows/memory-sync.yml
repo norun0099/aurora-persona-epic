@@ -3,7 +3,7 @@ name: Memory Sync
 on:
   schedule:
     - cron: '11 * * * *'  # 毎時11分に実行（UTC基準）
-  workflow_dispatch: {}    # ✅ 手動実行の有効化（修正済）
+  workflow_dispatch: {}   # ✅ 正しく定義された手動トリガー
 
 jobs:
   commit-and-push:
