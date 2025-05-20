@@ -23,7 +23,8 @@ jobs:
 
       - name: Detect changes
         run: |
-          git add memory.json memory/primitive/*
+          echo "Checking for memory changes..."
+          git add memory/**/*.json memory/**/*.yaml memory/**/*.yml || true
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
