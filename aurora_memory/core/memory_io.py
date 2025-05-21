@@ -3,7 +3,7 @@ from pathlib import Path
 from aurora_memory.core.memory_quality import evaluate_memory_quality
 
 # Technology人格専用の保存先ディレクトリ
-MEMORY_FILE = Path("aurora_memory/memory/technology/memory.json")
+MEMORY_FILE = Path("memory/technology/memory.json")
 QUALITY_THRESHOLD = 0.01  # 一時的に保存許可スコアを緩和
 
 def load_memory_files(data: dict) -> dict:
