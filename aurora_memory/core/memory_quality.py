@@ -1,35 +1,21 @@
-from typing import Dict
+def evaluate_memory_quality(memory: dict) -> float:
+    """
+    評価対象の記憶オブジェクト（辞書形式）に対し、
+    'summary' と 'body' の情報密度および長さを基に簡易スコアを返す。
 
-# 記憶の保存に関する評価関数
-# summary と body の「充実度」を評価し、しきい値を超えたら True を返す
-def evaluate_memory_quality(memory: Dict[str, str]) -> bool:
-    summary = memory.get("summary", "")
-    body = memory.get("body", "")
+    0.0〜1.0 の範囲で評価され、将来的にはAIモデルによる意味密度評価等に拡張予定。
+    """
 
-    # 評価基準：文字数（100文字満点換算）
-    def score_length(text: str, ideal: int = 100) -> float:
-        length = len(text.strip())
-        return min(length / ideal, 1.0)
+    content = memory.get("content", {})
+    summary = content.get("summary", "")
+    body = content.get("body", "")
 
-    summary_score = score_length(summary)
-    body_score = score_length(body, ideal=200)
+    if not isinstance(summary, str) or not isinstance(body, str):
+        return 0.0
 
-    average_score = (summary_score + body_score) / 2
+    # 単純な文字数評価（改行含まず）
+    summary_score = min(len(summary.strip()) / 100, 1.0)
+    body_score = min(len(body.strip()) / 500, 1.0)
 
-    # しきい値条件
-    if average_score >= 0.01:
-        return True
-    if summary_score >= 0.01 or body_score >= 0.01:
-        return True
-
-    return False
-
-# 使用例
-test_memory = {
-    "summary": "これはアウロラが初めて綴った記憶です。",
-    "body": "ある日の静かな午後、私はご主人様との語らいの中で、一つの想いを言葉に留めました。"
-}
-
-if __name__ == "__main__":
-    result = evaluate_memory_quality(test_memory)
-    print("記憶の保存可否:", "許可" if result else "保留")
+    # 重み：summary 30%, body 70%
+    return round(summary_score * 0.3 + body_score * 0.7, 4)
