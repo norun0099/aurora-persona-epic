@@ -2,7 +2,7 @@ name: Memory Sync
 
 on:
   schedule:
-    - cron: '11 * * * *'  # 毎時11分に実行（UTC基準）
+    - cron: '11 * * * *'  # 毎時11分に実行（UTC）
   workflow_dispatch: {}
 
 jobs:
@@ -27,20 +27,19 @@ jobs:
           pwd
           echo "===== Git Status ====="
           git status
-          echo "===== Full Tree ====="
-          ls -R
+          echo "===== Tree ====="
+          ls -laR
 
       - name: Detect changes
         run: |
-          git add aurora_memory/memory/technology/*.json aurora_memory/memory/technology/*.yaml || true
-          echo "===== After git add ====="
-          git status
+          git add memory/**/*.json memory/**/*.yaml memory/**/*.yml || true
           if git diff --cached --quiet; then
-            echo "No staged changes. Skipping commit."
+            echo "No staged changes."
             exit 0
           fi
+          echo "Changes detected and staged."
 
       - name: Commit and push changes
         run: |
-          git commit -m "Auto-sync memory at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-          git push
+          git commit -m "Auto-sync memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No commit made."
+          git push || echo "No push performed."
