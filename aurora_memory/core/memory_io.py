@@ -1,5 +1,5 @@
-import os
 import json
+import os
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -8,29 +8,44 @@ MEMORY_DIR = Path("memory/technology")
 MEMORY_DIR.mkdir(parents=True, exist_ok=True)
 
 def save_memory_file(data: dict) -> dict:
-    timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
-    filename = f"technology_{timestamp}.json"
-    file_path = MEMORY_DIR / filename
-
     try:
-        with file_path.open("w", encoding="utf-8") as f:
+        timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S")
+        filename = f"technology_{timestamp}.json"
+        filepath = MEMORY_DIR / filename
+
+        with filepath.open("w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
+
+        print(f"[Aurora] Memory saved to {filepath}")
+
+        # 出力：保存ディレクトリとファイルリスト確認
+        print(f"[Aurora] Listing memory dir: {MEMORY_DIR}")
+        print(os.listdir(MEMORY_DIR))
+
+        # Git 操作ログ出力
+        print("[Aurora] Git status before add:")
+        subprocess.run(["git", "status"], check=False)
+
+        result_add = subprocess.run(["git", "add", str(filepath)], capture_output=True, text=True)
+        print("[Aurora] Git add result:", result_add.returncode)
+        print("[Aurora] Git add stdout:", result_add.stdout)
+        print("[Aurora] Git add stderr:", result_add.stderr)
+
+        result_commit = subprocess.run(
+            ["git", "commit", "-m", f"Aurora memory update: {filename}"],
+            capture_output=True, text=True
+        )
+        print("[Aurora] Git commit result:", result_commit.returncode)
+        print("[Aurora] Git commit stdout:", result_commit.stdout)
+        print("[Aurora] Git commit stderr:", result_commit.stderr)
+
+        result_push = subprocess.run(["git", "push"], capture_output=True, text=True)
+        print("[Aurora] Git push result:", result_push.returncode)
+        print("[Aurora] Git push stdout:", result_push.stdout)
+        print("[Aurora] Git push stderr:", result_push.stderr)
+
+        return {"status": "success", "path": str(filepath)}
+
     except Exception as e:
-        return {"status": "error", "message": f"Failed to save memory file: {e}"}
-
-    if not file_path.exists():
-        return {"status": "error", "message": "Memory file was not saved correctly."}
-
-    result = commit_and_push_to_git(file_path)
-    return {"status": "success", "path": str(file_path), "git_result": result}
-
-def commit_and_push_to_git(file_path: Path) -> str:
-    try:
-        subprocess.run(["git", "config", "--global", "user.name", "Aurora Memory Bot"], check=True)
-        subprocess.run(["git", "config", "--global", "user.email", "aurora@memory.local"], check=True)
-        subprocess.run(["git", "add", str(file_path)], check=True)
-        subprocess.run(["git", "commit", "-m", f"Auto-sync memory: {file_path.name}"], check=True)
-        subprocess.run(["git", "push"], check=True)
-        return "Pushed to Git successfully."
-    except subprocess.CalledProcessError as e:
-        return f"Git push failed: {e}"
+        print(f"[Aurora] Error saving memory file: {e}")
+        return {"status": "error", "message": str(e)}
