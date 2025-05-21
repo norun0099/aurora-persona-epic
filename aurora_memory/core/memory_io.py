@@ -1,51 +1,33 @@
 import os
 import json
-import uuid
 from datetime import datetime
 
-MEMORY_DIR = "memory/technology"
+MEMORY_DIRECTORY = "memory/technology"
 
 def ensure_memory_directory():
-    os.makedirs(MEMORY_DIR, exist_ok=True)
-    print(f"[Aurora] Memory directory ensured: {MEMORY_DIR}")
+    os.makedirs(MEMORY_DIRECTORY, exist_ok=True)
 
-def save_memory_file(data: dict):
+def generate_filename(title):
+    timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    safe_title = "".join(c if c.isalnum() else "_" for c in title)[:50]
+    return f"{safe_title}_{timestamp}.json"
+
+def save_memory_file(data):
     ensure_memory_directory()
-
-    record_id = data.get("record_id", str(uuid.uuid4()))
-    filename = f"{record_id}.json"
-    filepath = os.path.join(MEMORY_DIR, filename)
-
-    payload = {
-        "record_id": record_id,
-        "created": data.get("created", datetime.utcnow().isoformat() + "Z"),
-        "last_updated": datetime.utcnow().isoformat() + "Z",
-        "status": data.get("status", "active"),
-        "visible_to": data.get("visible_to", []),
-        "tags": data.get("tags", []),
-        "author": data.get("author", "unknown"),
-        "content": data.get("content", {}),
-    }
-
+    filename = generate_filename(data.get("content", {}).get("title", "memory"))
+    filepath = os.path.join(MEMORY_DIRECTORY, filename)
     with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, indent=2)
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    return {"status": "success", "path": filepath, "score": 0.0294}
 
-    print(f"[Aurora] Memory saved to {filepath}")
-
-    return {"status": "success", "path": filepath, "record_id": record_id}
-
-def load_memory_files(filters: dict = None):
+def load_memory_files(filters=None):
     ensure_memory_directory()
-    results = []
-
-    for file in os.listdir(MEMORY_DIR):
-        if file.endswith(".json"):
-            filepath = os.path.join(MEMORY_DIR, file)
-            with open(filepath, "r", encoding="utf-8") as f:
-                try:
-                    content = json.load(f)
-                    results.append(content)
-                except json.JSONDecodeError:
-                    print(f"[Aurora] Failed to decode: {filepath}")
-
-    return results
+    memory_files = []
+    for file in Path(MEMORY_DIRECTORY).glob("*.json"):
+        with open(file, "r", encoding="utf-8") as f:
+            try:
+                memory_data = json.load(f)
+                memory_files.append(memory_data)
+            except json.JSONDecodeError:
+                continue
+    return {"status": "success", "memories": memory_files}
