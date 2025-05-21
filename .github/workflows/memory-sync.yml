@@ -3,11 +3,12 @@ name: Memory Sync
 on:
   schedule:
     - cron: '11 * * * *'  # 毎時11分に実行（UTC）
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   commit-and-push:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -17,22 +18,29 @@ jobs:
 
       - name: Set up Git
         run: |
-          git config user.name "Aurora Memory Bot"
-          git config user.email "aurora@memory.local"
+          git config user.name "${{ secrets.GIT_USER_NAME }}"
+          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
 
-      - name: Detect changes
+      - name: Configure remote with GitHub token
+        env:
+          TOKEN: ${{ secrets.GIT_TOKEN }}
         run: |
-          echo "===== Checking for memory files ====="
-          ls -laR memory || echo "No memory directory found"
+          git remote set-url origin https://norun0099:${TOKEN}@github.com/norun0099/aurora-persona-epic.git
+          git remote -v
+
+      - name: Check for changes
+        run: |
+          echo "===== Git Status ====="
+          git status
+          echo "===== Git Diff ====="
+          git diff
+          echo "===== Git Diff --cached ====="
+          git diff --cached
 
       - name: Commit and push changes
         env:
-          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          TOKEN: ${{ secrets.GIT_TOKEN }}
         run: |
-          git add memory/**/*.json || echo "No memory changes to add"
-          if ! git diff --cached --quiet; then
-            git commit -m "Auto-sync memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-            git push https://AuroraMemoryBot:${GIT_TOKEN}@github.com/norun0099/aurora-persona-epic.git HEAD:main
-          else
-            echo "No changes to commit."
-          fi
+          git add memory/technology/*.json || echo "No memory JSON files to add"
+          git commit -m "Auto-sync memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "Nothing to commit"
+          git push origin main || echo "Push failed or nothing to push"
