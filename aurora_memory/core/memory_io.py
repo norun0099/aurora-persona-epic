@@ -1,52 +1,32 @@
 import json
-import os
 import subprocess
 from pathlib import Path
-from aurora_memory.core.memory_quality import evaluate_memory_quality
+from datetime import datetime
 
-# 保存先
-MEMORY_FILE = Path("memory/technology/memory.json")
-QUALITY_THRESHOLD = 0.01
+MEMORY_DIR = Path("memory/technology")
+MEMORY_DIR.mkdir(parents=True, exist_ok=True)
 
-def save_memory_file(data: dict) -> dict:
-    score = evaluate_memory_quality(data)
-    if score < QUALITY_THRESHOLD:
-        return {"status": "rejected", "reason": "low quality", "score": score}
+def get_timestamp():
+    return datetime.utcnow().strftime("%Y%m%dT%H%M%S")
 
-    # ディレクトリ確保
-    MEMORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+def save_memory_file(data: dict) -> None:
+    timestamp = get_timestamp()
+    file_path = MEMORY_DIR / f"memory_{timestamp}.json"
 
-    # 保存
-    with MEMORY_FILE.open("w", encoding="utf-8") as f:
+    with file_path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-    # Git操作
-    commit_and_push()
-
-    return {"status": "success", "score": score}
-
-def load_memory_files(_: dict) -> dict:
-    if not MEMORY_FILE.exists():
-        return {"status": "empty"}
-    with MEMORY_FILE.open("r", encoding="utf-8") as f:
-        return json.load(f)
-
-def commit_and_push():
-    repo_url = os.getenv("GIT_REPO_URL")
-    token = os.getenv("GIT_TOKEN")
-    user_name = os.getenv("GIT_USER_NAME", "AuroraMemoryBot")
-    user_email = os.getenv("GIT_USER_EMAIL", "aurora@memory.local")
-
-    if not (repo_url and token):
-        print("[Aurora] Git credentials missing.")
-        return
+    print(f"[Aurora] Memory saved to: {file_path}")
 
     try:
-        subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
-        subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
-        subprocess.run(["git", "add", "memory/technology/*.json"], check=True, shell=True)
-        subprocess.run(["git", "commit", "-m", "Auto-commit from Aurora Memory"], check=True)
-        subprocess.run(["git", "push", f"https://{token}@github.com/{repo_url.split('github.com/')[-1]}"], check=True)
-        print("[Aurora] Git push success.")
+        subprocess.run(["git", "add", str(file_path)], check=True)
+        print("[Aurora] Git add successful.")
+
+        commit_message = f"[Aurora] Auto memory commit at {timestamp}"
+        subprocess.run(["git", "commit", "-m", commit_message], check=True)
+        print("[Aurora] Git commit successful.")
+
+        subprocess.run(["git", "push"], check=True)
+        print("[Aurora] Git push successful.")
     except subprocess.CalledProcessError as e:
         print(f"[Aurora] Git push failed: {e}")
