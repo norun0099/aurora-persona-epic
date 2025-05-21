@@ -1,4 +1,4 @@
-name: Minimal Git Diff Test
+name: Memory Diagnostic Test
 
 on:
   workflow_dispatch:
@@ -15,6 +15,15 @@ jobs:
         run: |
           git config --global user.name "Aurora Memory Bot"
           git config --global user.email "aurora@memory.local"
+
+      - name: Show working directory and memory structure
+        run: |
+          echo "===== Current Working Directory ====="
+          pwd
+          echo "===== List of memory/technology ====="
+          ls -laR memory/technology || echo "No memory/technology directory found"
+          echo "===== List of memory (all) ====="
+          ls -laR memory || echo "No memory directory found"
 
       - name: Git Status and Diff
         run: |
