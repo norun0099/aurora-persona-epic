@@ -13,4 +13,4 @@ file_naming_rule: "{type}_{timestamp}.yaml"
 commit_message_template: "auto: memory update"
 tag_limitations:
   - primary tag must match a namespace
-  - fallback: primitive
+  - fallback: technology
