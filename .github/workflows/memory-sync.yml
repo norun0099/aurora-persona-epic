@@ -3,12 +3,11 @@ name: Memory Sync
 on:
   schedule:
     - cron: '11 * * * *'  # 毎時11分に実行（UTC）
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 jobs:
   commit-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -23,24 +22,17 @@ jobs:
 
       - name: Detect changes
         run: |
-          echo "===== Git Status Before Add ====="
-          git status
-          git diff
-          git diff --cached
-
-          echo "===== Staging Memory Files ====="
-          git add memory/technology/*.json || true
-
-          echo "===== Git Status After Add ====="
-          git status
-          git diff --cached
-
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-            exit 0
-          fi
+          echo "===== Checking for memory files ====="
+          ls -laR memory || echo "No memory directory found"
 
       - name: Commit and push changes
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
         run: |
-          git commit -m "Auto-sync memory at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-          git push
+          git add memory/**/*.json || echo "No memory changes to add"
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto-sync memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git push https://AuroraMemoryBot:${GIT_TOKEN}@github.com/norun0099/aurora-persona-epic.git HEAD:main
+          else
+            echo "No changes to commit."
+          fi
