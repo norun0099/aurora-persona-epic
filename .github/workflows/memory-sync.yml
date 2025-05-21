@@ -2,7 +2,7 @@ name: Memory Sync
 
 on:
   schedule:
-    - cron: '11 * * * *'  # 毎時11分に実行（UTC基準）
+    - cron: '11 * * * *'  # 毎時11分に実行（UTC）
   workflow_dispatch: {}
 
 jobs:
@@ -21,18 +21,20 @@ jobs:
           git config user.name "Aurora Memory Bot"
           git config user.email "aurora@memory.local"
 
-      - name: Debug Show Memory Directory
-        run: |
-          echo "===== memory/technology/ ====="
-          if [ -d "memory/technology" ]; then
-            ls -laR memory/technology
-          else
-            echo "No memory/technology directory found"
-          fi
-
       - name: Detect changes
         run: |
-          git add memory/**/*.json memory/**/*.yaml memory/**/*.yml || true
+          echo "===== Git Status Before Add ====="
+          git status
+          git diff
+          git diff --cached
+
+          echo "===== Staging Memory Files ====="
+          git add memory/technology/*.json || true
+
+          echo "===== Git Status After Add ====="
+          git status
+          git diff --cached
+
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
@@ -40,9 +42,5 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          if git diff --cached --quiet; then
-            echo "No staged changes. Skipping commit."
-            exit 0
-          fi
-          git commit -m "Auto-sync memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          git commit -m "Auto-sync memory at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           git push
