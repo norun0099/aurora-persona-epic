@@ -31,5 +31,9 @@ jobs:
 
       - name: Commit and push changes
         run: |
+          if git diff --cached --quiet; then
+            echo "No staged changes. Skipping commit."
+            exit 0
+          fi
           git commit -m "Auto-sync memory at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           git push
