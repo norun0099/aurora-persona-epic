@@ -18,4 +18,21 @@ jobs:
 
       - name: Set up Git
         run: |
-          git co
+          git config user.name "Aurora Memory Bot"
+          git config user.email "aurora@memory.local"
+
+      - name: Detect changes
+        run: |
+          git add aurora_memory/memory/technology/**/*.yaml || true
+          git add aurora_memory/memory/technology/**/*.yml || true
+          git add aurora_memory/memory/technology/**/*.json || true
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+      - name: Commit and push changes
+        run: |
+          git commit -m "Auto-sync memory at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          git push
