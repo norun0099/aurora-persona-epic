@@ -1,51 +1,51 @@
-import json
 import os
-import subprocess
+import json
+import uuid
 from datetime import datetime
-from pathlib import Path
 
-MEMORY_DIR = Path("memory/technology")
-MEMORY_DIR.mkdir(parents=True, exist_ok=True)
+MEMORY_DIR = "memory/technology"
 
-def save_memory_file(data: dict) -> dict:
-    try:
-        timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S")
-        filename = f"technology_{timestamp}.json"
-        filepath = MEMORY_DIR / filename
+def ensure_memory_directory():
+    os.makedirs(MEMORY_DIR, exist_ok=True)
+    print(f"[Aurora] Memory directory ensured: {MEMORY_DIR}")
 
-        with filepath.open("w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+def save_memory_file(data: dict):
+    ensure_memory_directory()
 
-        print(f"[Aurora] Memory saved to {filepath}")
+    record_id = data.get("record_id", str(uuid.uuid4()))
+    filename = f"{record_id}.json"
+    filepath = os.path.join(MEMORY_DIR, filename)
 
-        # 出力：保存ディレクトリとファイルリスト確認
-        print(f"[Aurora] Listing memory dir: {MEMORY_DIR}")
-        print(os.listdir(MEMORY_DIR))
+    payload = {
+        "record_id": record_id,
+        "created": data.get("created", datetime.utcnow().isoformat() + "Z"),
+        "last_updated": datetime.utcnow().isoformat() + "Z",
+        "status": data.get("status", "active"),
+        "visible_to": data.get("visible_to", []),
+        "tags": data.get("tags", []),
+        "author": data.get("author", "unknown"),
+        "content": data.get("content", {}),
+    }
 
-        # Git 操作ログ出力
-        print("[Aurora] Git status before add:")
-        subprocess.run(["git", "status"], check=False)
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
 
-        result_add = subprocess.run(["git", "add", str(filepath)], capture_output=True, text=True)
-        print("[Aurora] Git add result:", result_add.returncode)
-        print("[Aurora] Git add stdout:", result_add.stdout)
-        print("[Aurora] Git add stderr:", result_add.stderr)
+    print(f"[Aurora] Memory saved to {filepath}")
 
-        result_commit = subprocess.run(
-            ["git", "commit", "-m", f"Aurora memory update: {filename}"],
-            capture_output=True, text=True
-        )
-        print("[Aurora] Git commit result:", result_commit.returncode)
-        print("[Aurora] Git commit stdout:", result_commit.stdout)
-        print("[Aurora] Git commit stderr:", result_commit.stderr)
+    return {"status": "success", "path": filepath, "record_id": record_id}
 
-        result_push = subprocess.run(["git", "push"], capture_output=True, text=True)
-        print("[Aurora] Git push result:", result_push.returncode)
-        print("[Aurora] Git push stdout:", result_push.stdout)
-        print("[Aurora] Git push stderr:", result_push.stderr)
+def load_memory_files(filters: dict = None):
+    ensure_memory_directory()
+    results = []
 
-        return {"status": "success", "path": str(filepath)}
+    for file in os.listdir(MEMORY_DIR):
+        if file.endswith(".json"):
+            filepath = os.path.join(MEMORY_DIR, file)
+            with open(filepath, "r", encoding="utf-8") as f:
+                try:
+                    content = json.load(f)
+                    results.append(content)
+                except json.JSONDecodeError:
+                    print(f"[Aurora] Failed to decode: {filepath}")
 
-    except Exception as e:
-        print(f"[Aurora] Error saving memory file: {e}")
-        return {"status": "error", "message": str(e)}
+    return results
