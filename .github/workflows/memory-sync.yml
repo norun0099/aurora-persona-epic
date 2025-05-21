@@ -21,15 +21,6 @@ jobs:
           git config user.name "Aurora Memory Bot"
           git config user.email "aurora@memory.local"
 
-      - name: Debug: Show directory structure
-        run: |
-          echo "===== Current Directory ====="
-          pwd
-          echo "===== Git Status ====="
-          git status
-          echo "===== Tree ====="
-          ls -laR
-
       - name: Detect changes
         run: |
           git add memory/**/*.json memory/**/*.yaml memory/**/*.yml || true
