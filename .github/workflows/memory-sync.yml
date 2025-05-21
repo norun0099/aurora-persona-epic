@@ -21,16 +21,24 @@ jobs:
           git config user.name "Aurora Memory Bot"
           git config user.email "aurora@memory.local"
 
+      - name: Debug: Show directory structure
+        run: |
+          echo "===== Current Directory ====="
+          pwd
+          echo "===== Git Status ====="
+          git status
+          echo "===== Tree ====="
+          ls -laR
+
       - name: Detect changes
         run: |
           git add memory/**/*.json memory/**/*.yaml memory/**/*.yml || true
           if git diff --cached --quiet; then
-            echo "No staged changes."
+            echo "No changes to commit."
             exit 0
           fi
-          echo "Changes detected and staged."
 
       - name: Commit and push changes
         run: |
-          git commit -m "Auto-sync memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No commit made."
-          git push || echo "No push performed."
+          git commit -m "Auto-sync memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "Nothing to commit"
+          git push || echo "Nothing to push"
