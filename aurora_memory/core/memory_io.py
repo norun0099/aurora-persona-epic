@@ -3,7 +3,7 @@ from pathlib import Path
 from aurora_memory.core.memory_quality import evaluate_memory_quality
 
 MEMORY_FILE = Path("memory.json")
-QUALITY_THRESHOLD = 0.75  # 保存に必要なしきい値
+QUALITY_THRESHOLD = 0.01  # 保存に必要なしきい値
 
 def load_memory_files(data: dict) -> dict:
     if not MEMORY_FILE.exists():
