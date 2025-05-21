@@ -1,12 +1,12 @@
-name: Memory Sync
+name: commit-and-push
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '11 * * * *'  # 毎時11分に実行（UTC）
-  workflow_dispatch: {}
+    - cron: '0 * * * *' # 毎時実行（後で削除可能）
 
 jobs:
-  commit-and-push:
+  sync-memory:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,29 +18,16 @@ jobs:
 
       - name: Set up Git
         run: |
-          git config user.name "${{ secrets.GIT_USER_NAME }}"
-          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
+          git config user.name "Aurora Memory Bot"
+          git config user.email "aurora@memory.local"
 
-      - name: Configure remote with GitHub token
-        env:
-          TOKEN: ${{ secrets.GIT_TOKEN }}
+      - name: Detect changes
         run: |
-          git remote set-url origin https://norun0099:${TOKEN}@github.com/norun0099/aurora-persona-epic.git
-          git remote -v
-
-      - name: Check for changes
-        run: |
-          echo "===== Git Status ====="
-          git status
-          echo "===== Git Diff ====="
-          git diff
-          echo "===== Git Diff --cached ====="
-          git diff --cached
+          echo "Checking memory/technology for changes..."
 
       - name: Commit and push changes
-        env:
-          TOKEN: ${{ secrets.GIT_TOKEN }}
         run: |
-          git add memory/technology/*.json || echo "No memory JSON files to add"
-          git commit -m "Auto-sync memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "Nothing to commit"
-          git push origin main || echo "Push failed or nothing to push"
+          git add memory/technology/
+          git commit -m "Auto-sync memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes to commit"
+          git push
+        shell: bash
