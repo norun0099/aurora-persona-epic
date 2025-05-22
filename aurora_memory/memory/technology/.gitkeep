@@ -1,4 +1,2 @@
-touch memory/technology/.gitkeep
-git add memory/technology/.gitkeep
-git commit -m "Add placeholder to track memory/technology directory"
-git push
+# 現在このディレクトリには追跡するファイルがありません
+# .gitkeepは空ディレクトリをGitで保持するためのプレースホルダです
