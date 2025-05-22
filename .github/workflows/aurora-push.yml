@@ -19,13 +19,13 @@ jobs:
           git config user.name "Aurora Memory Bot"
           git config user.email "aurora@openai.com"
 
-      - name: Debug: Show file status
+      - name: Show Git file status
         run: |
-          echo "Current git status:"
+          echo "==== Current git status ===="
           git status
-          echo "Tracked files:"
+          echo "==== Tracked files ===="
           git ls-files
-          echo "Untracked files:"
+          echo "==== Untracked files ===="
           git ls-files --others --exclude-standard
 
       - name: Add and commit memory updates
