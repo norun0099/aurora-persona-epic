@@ -1,13 +1,12 @@
 name: sync-memory
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 * * * *'  # 毎時実行
+  workflow_dispatch:  # 手動実行のみ
 
 jobs:
   commit-and-push:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -21,10 +20,8 @@ jobs:
           git config user.email "aurora@memory.local"
 
       - name: Commit and push changes
-        working-directory: aurora_memory/memory
         run: |
+          cd aurora_memory/memory
           git add technology/
           git commit -m "Auto-sync memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes to commit"
           git push
-        env:
-          GIT_AUTH_TOKEN: ${{ secrets.GIT_TOKEN }}
