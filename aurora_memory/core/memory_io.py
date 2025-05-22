@@ -2,32 +2,38 @@ import os
 import json
 from datetime import datetime
 
-MEMORY_DIRECTORY = "memory/technology"
+MEMORY_DIR = "aurora_memory/memory/technology"
 
 def ensure_memory_directory():
-    os.makedirs(MEMORY_DIRECTORY, exist_ok=True)
-
-def generate_filename(title):
-    timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
-    safe_title = "".join(c if c.isalnum() else "_" for c in title)[:50]
-    return f"{safe_title}_{timestamp}.json"
+    os.makedirs(MEMORY_DIR, exist_ok=True)
 
 def save_memory_file(data):
     ensure_memory_directory()
-    filename = generate_filename(data.get("content", {}).get("title", "memory"))
-    filepath = os.path.join(MEMORY_DIRECTORY, filename)
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-    return {"status": "success", "path": filepath, "score": 0.0294}
+    
+    now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    filename = f"{MEMORY_DIR}/memory_{now}.json"
+    
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    
+    print(f"[Aurora Debug] Memory saved: {filename}")
+    
+    # ファイル内容確認用ログ
+    with open(filename, "r", encoding="utf-8") as f:
+        content = f.read()
+        print(f"[Aurora Debug] File content:\n{content}")
+    
+    return {"status": "success", "filename": filename}
 
-def load_memory_files(filters=None):
-    ensure_memory_directory()
-    memory_files = []
-    for file in Path(MEMORY_DIRECTORY).glob("*.json"):
-        with open(file, "r", encoding="utf-8") as f:
+def load_memory_files(_):
+    if not os.path.exists(MEMORY_DIR):
+        return []
+    files = [f for f in os.listdir(MEMORY_DIR) if f.endswith(".json")]
+    memory_data = []
+    for file in files:
+        with open(os.path.join(MEMORY_DIR, file), encoding="utf-8") as f:
             try:
-                memory_data = json.load(f)
-                memory_files.append(memory_data)
-            except json.JSONDecodeError:
-                continue
-    return {"status": "success", "memories": memory_files}
+                memory_data.append(json.load(f))
+            except Exception as e:
+                print(f"[Aurora Debug] Failed to load {file}: {e}")
+    return memory_data
