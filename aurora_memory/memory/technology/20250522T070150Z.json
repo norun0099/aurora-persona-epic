@@ -1,0 +1,22 @@
+{
+  "record_id": "technology_20250522_test002",
+  "created": "2025-05-22T07:50:00Z",
+  "last_updated": "2025-05-22T07:50:00Z",
+  "version": 1,
+  "status": "active",
+  "visible_to": [
+    "technology"
+  ],
+  "tags": [
+    "debug",
+    "autopush",
+    "trigger"
+  ],
+  "author": "aurora",
+  "sealed": false,
+  "content": {
+    "title": "Aurora Git Push Trigger Test",
+    "body": "これはRender環境において自動Git Pushが機能するかを検証する記憶です。テンプレート・品質共に基準を満たし、Auroraの手により保存されました。"
+  },
+  "annotations": []
+}
