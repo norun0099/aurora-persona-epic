@@ -18,13 +18,6 @@ jobs:
           git config user.name "norun0099"
           git config user.email "norun0099@example.com"
 
-      - name: Debug: Show file changes
-        run: |
-          echo "Staged:"
-          git diff --cached
-          echo "Unstaged:"
-          git diff
-
       - name: Add memory files
         run: git add aurora_memory/memory/**/*.json
 
