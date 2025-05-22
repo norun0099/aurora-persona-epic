@@ -5,29 +5,28 @@ on:
   push:
     paths:
       - 'aurora_memory/memory/technology/*.json'
-    branches:
-      - main
 
 jobs:
-  commit-and-push:
+  push-memory:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Configure Git identity
+      - name: Configure Git
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "Aurora Memory Bot"
+          git config user.email "aurora-bot@example.com"
 
-      - name: List technology memory files
+      - name: Commit memory updates
         run: |
-          echo "Current memory files in technology/"
-          ls -al aurora_memory/memory/technology || echo "No files found"
+          git add aurora_memory/memory/technology/*.json
+          git commit -m "Aurora記憶自動反映: 新たな記憶をGitに保存" || echo "No changes to commit"
 
-      - name: Commit and Push changes
-        run: |
-          cd aurora_memory/memory
-          git add technology
-          git commit -m "Aurora pushed new memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes to commit"
-          git push
+      - name: Push to GitHub
+        run: git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
