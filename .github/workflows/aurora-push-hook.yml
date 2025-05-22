@@ -1,29 +1,33 @@
-name: aurora-push-hook
+name: Aurora Push Hook
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'aurora_memory/memory/technology/*.json'
+    branches:
+      - main
 
 jobs:
-  sync-memory:
+  commit-and-push:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Git
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Configure Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: List new memory files (debug)
-      run: |
-        echo "Listing files under aurora_memory/memory/technology/"
-        ls -al aurora_memory/memory/technology || echo "No files found"
+      - name: List technology memory files
+        run: |
+          echo "Current memory files in technology/"
+          ls -al aurora_memory/memory/technology || echo "No files found"
 
-    - name: Commit and push memory files
-      run: |
-        cd aurora_memory/memory
-        git add technology
-        git commit -m "Aurora pushed new memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes to commit"
-        git push
+      - name: Commit and Push changes
+        run: |
+          cd aurora_memory/memory
+          git add technology
+          git commit -m "Aurora pushed new memory at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes to commit"
+          git push
