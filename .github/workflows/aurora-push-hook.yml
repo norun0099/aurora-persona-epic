@@ -1,32 +1,38 @@
-name: Aurora Push Hook
+# .github/workflows/aurora-push-hook.yml
+name: Aurora Memory Immediate Push
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - 'aurora_memory/memory/technology/*.json'
+      - 'aurora_memory/memory/**.json'
 
 jobs:
-  push-memory:
+  commit-and-push:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
-      - name: Configure Git
-        run: |
-          git config user.name "Aurora Memory Bot"
-          git config user.email "aurora-bot@example.com"
+    - name: Set Git identity
+      run: |
+        git config user.name "Aurora Memory Bot"
+        git config user.email "aurora@memory.bot"
 
-      - name: Commit memory updates
-        run: |
-          git add aurora_memory/memory/technology/*.json
-          git commit -m "Aurora記憶自動反映: 新たな記憶をGitに保存" || echo "No changes to commit"
+    - name: Stage memory changes
+      run: |
+        git add aurora_memory/memory/**/*.json
+        git status
 
-      - name: Push to GitHub
-        run: git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Commit changes if any
+      run: |
+        if git diff --cached --quiet; then
+          echo "No changes to commit."
+        else
+          git commit -m "Aurora Memory Update: auto-sync"
+        fi
+
+    - name: Push changes
+      run: git push
