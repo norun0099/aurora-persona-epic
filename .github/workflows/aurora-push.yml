@@ -37,3 +37,4 @@ jobs:
           else
             git commit -m "Memory Update: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
             git push https://$GITHUB_TOKEN@github.com/${{ github.repository }}.git HEAD:main
+          fi
