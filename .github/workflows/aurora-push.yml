@@ -1,7 +1,7 @@
-name: Aurora Memory Push
+name: Aurora Push Hook
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   commit-and-push:
@@ -11,38 +11,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Set up Git
         run: |
           git config user.name "Aurora Memory Bot"
-          git config user.email "aurora@memory.local"
+          git config user.email "aurora@openai.com"
 
-      - name: Show working directory
+      - name: Debug: Show file status
         run: |
-          pwd
-          ls -R
-
-      - name: Git status and diff preview
-        run: |
+          echo "Current git status:"
           git status
-          git diff --stat
-          find aurora_memory/memory -type f -name "*.json" -exec echo "==== {} ====" \; -exec cat {} \;
+          echo "Tracked files:"
+          git ls-files
+          echo "Untracked files:"
+          git ls-files --others --exclude-standard
 
-      - name: Stage memory files
+      - name: Add and commit memory updates
         run: |
-          git add aurora_memory/memory/**/*.json || echo "No memory files found to add."
-
-      - name: Commit if changes exist
-        run: |
+          git add aurora_memory/memory/**/*.json
+          git status
           if git diff --cached --quiet; then
-            echo "No staged changes to commit."
-            exit 0
-          fi
-          git commit -m "Aurora auto-memory sync: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-
-      - name: Push changes
-        env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git push https://x-access-token:${TOKEN}@github.com/${{ github.repository }} HEAD:main
+            echo "No changes to commit."
+          else
+            git commit -m "Memory Update: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+            git push https://$GITHUB_TOKEN@github.com/${{ github.repository }}.git HEAD:main
