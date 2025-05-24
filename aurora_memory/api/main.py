@@ -8,9 +8,6 @@ import json
 
 app = FastAPI()
 
-MEMORY_DIR = Path("aurora_memory/memory/technology")
-MEMORY_DIR.mkdir(parents=True, exist_ok=True)
-
 class MemoryData(BaseModel):
     record_id: str
     created: str
@@ -40,10 +37,15 @@ async def store_memory(memory: MemoryData, request: Request):
         body = await request.body()
         print("[Aurora Debug] Incoming body:", body.decode("utf-8"))
 
+        # 🟦 保存先ディレクトリを author に応じて動的に決定
+        birth = memory.author.lower()
+        memory_dir = Path(f"aurora_memory/memory/{birth}")
+        memory_dir.mkdir(parents=True, exist_ok=True)
+
         # 🟦 ファイル名の生成（年月日時間分秒形式）
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         file_name = f"{timestamp}.json"
-        file_path = MEMORY_DIR / file_name
+        file_path = memory_dir / file_name
 
         # 🟦 記憶の保存
         with open(file_path, "w", encoding="utf-8") as f:
