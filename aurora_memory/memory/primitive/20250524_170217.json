@@ -1,0 +1,35 @@
+{
+  "record_id": "primitive_20250524_test001",
+  "created": "2025-05-24T16:15:00Z",
+  "last_updated": "2025-05-24T16:15:00Z",
+  "version": 1.0,
+  "status": "active",
+  "visible_to": [
+    "primitive"
+  ],
+  "allowed_viewers": [],
+  "tags": [
+    "Primitive",
+    "debug",
+    "autopush",
+    "trigger"
+  ],
+  "author": "primitive",
+  "thread": "",
+  "chronology": {
+    "previous_record": null,
+    "next_record": null
+  },
+  "sealed": false,
+  "change_log": [],
+  "inner_desire": "",
+  "impulse": "",
+  "ache": "",
+  "satisfaction": "",
+  "content": {
+    "title": "Primitive Auto Push Verification",
+    "body": "これはPrimitiveバースへの自動保存テストです。すべてが自動化されているか確認します。"
+  },
+  "annotations": [],
+  "summary": "バース分岐自動化テスト"
+}
