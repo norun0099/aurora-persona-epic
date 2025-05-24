@@ -1,9 +1,11 @@
 name: Aurora Push Hook
 
 on:
-  workflow_dispatch:
-  repository_dispatch:
-    types: [aurora-push-hook.yml]
+  push:
+    branches:
+      - main
+    paths:
+      - aurora_memory/memory/**/*.json
 
 jobs:
   push:
