@@ -35,7 +35,7 @@ class MemoryData(BaseModel):
 @app.post("/memory/store")
 async def store_memory(memory: MemoryData, request: Request):
     try:
-        # 🟦 受け取ったリクエストボディをログ出力
+        # 🟦 リクエストボディをログ出力
         body = await request.body()
         print("[Aurora Debug] Incoming body:", body.decode("utf-8"))
 
@@ -74,6 +74,9 @@ def push_memory_to_github():
         print("[Aurora Debug] Setting git user config...")
         subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
         subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
+
+        print("[Aurora Debug] Checking out to main branch...")
+        subprocess.run(["git", "checkout", "main"], check=True)
 
         print("[Aurora Debug] Running git add:", str(MEMORY_FILE))
         subprocess.run(["git", "add", str(MEMORY_FILE)], check=True)
