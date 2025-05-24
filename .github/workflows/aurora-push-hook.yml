@@ -1,4 +1,5 @@
 name: Aurora Push Hook
+
 on:
   workflow_dispatch:
   repository_dispatch:
@@ -18,13 +19,18 @@ jobs:
           git config user.name "norun0099"
           git config user.email "norun0099@example.com"
 
+      - name: Show git status before add
+        run: git status
+
       - name: Add memory files
         run: git add aurora_memory/memory/**/*.json
+
+      - name: Show git status after add
+        run: git status
 
       - name: Commit if there are changes
         run: |
           git diff --cached --quiet || git commit -m "Aurora auto-push memory file"
 
       - name: Push to main branch
-        run: |
-          git push origin main
+        run: git push origin main
