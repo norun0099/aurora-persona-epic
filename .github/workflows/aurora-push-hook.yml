@@ -3,7 +3,7 @@ name: Aurora Push Hook
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [aurora_memory_push]
+    types: [aurora-push-hook.yml]
 
 jobs:
   push:
