@@ -28,13 +28,17 @@ class MemoryData(BaseModel):
     impulse: str
     ache: str
     satisfaction: str
-    summary: str
     content: dict
     annotations: list
+    summary: str  # 🟦 summary を追加
 
 @app.post("/memory/store")
 async def store_memory(memory: MemoryData, request: Request):
     try:
+        # 🟦 受け取ったリクエストボディをログ出力
+        body = await request.body()
+        print("[Aurora Debug] Incoming body:", body.decode("utf-8"))
+
         # 保存
         MEMORY_FILE.parent.mkdir(parents=True, exist_ok=True)
         with open(MEMORY_FILE, "w", encoding="utf-8") as f:
@@ -70,7 +74,6 @@ def push_memory_to_github():
 
         subprocess.run(["git", "add", str(MEMORY_FILE)], check=True)
 
-        # 差分が無い場合はコミットをスキップ
         diff_check = subprocess.run(["git", "diff", "--cached", "--quiet"])
         if diff_check.returncode == 0:
             return {"status": "success", "message": "No changes to commit."}
