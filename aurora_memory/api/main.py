@@ -38,6 +38,7 @@ class MemoryData(BaseModel):
     impulse: str | None = ""
     ache: str | None = ""
     satisfaction: str | None = ""
+    summary: str | None = ""          # summary フィールドを追加
     content: dict
     annotations: list[str] | None = []
 
