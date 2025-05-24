@@ -73,6 +73,10 @@ def push_memory_to_github(file_path):
     user_name = os.environ.get("GIT_USER_NAME")
     token = os.environ.get("GITHUB_TOKEN")
 
+    if not user_email or not user_name:
+        print("[Aurora Debug] WARNING: GIT_USER_EMAIL or GIT_USER_NAME is missing!")
+        return {"status": "error", "message": "Git user identity is missing in environment variables."}
+
     try:
         print("[Aurora Debug] Setting git user config...")
         subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
