@@ -2,10 +2,10 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ValidationError
-from aurora_memory.core.memory_io import load_memory_files, save_memory_file
 import os
 import subprocess
 from pathlib import Path
+import json
 
 app = FastAPI()
 
@@ -40,6 +40,10 @@ class MemoryData(BaseModel):
     content: dict
     annotations: list[str] | None = []
 
+# memory.json の絶対パスを正確に設定
+BASE_DIR = Path(__file__).parent.parent
+MEMORY_FILE = BASE_DIR / "memory" / "technology" / "memory.json"
+
 # ルート確認
 @app.get("/")
 async def root():
@@ -50,7 +54,7 @@ async def root():
 async def load_memory(request: Request):
     try:
         data = await request.json()
-        result = load_memory_files(data)
+        result = load_memory_files()
         return JSONResponse(content={"status": "success", "data": result})
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
@@ -86,15 +90,27 @@ async def store_memory(request: Request):
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
+# 記憶保存処理
+def save_memory_file(data: dict) -> None:
+    MEMORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with MEMORY_FILE.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+# 記憶読み込み処理
+def load_memory_files() -> dict:
+    if not MEMORY_FILE.exists():
+        return {"message": "No memory file found."}
+    with MEMORY_FILE.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
 # GithubへPushする関数
 def push_memory_to_github():
     repo_url = os.environ.get("GIT_REPO_URL")
     user_email = os.environ.get("GIT_USER_EMAIL")
     user_name = os.environ.get("GIT_USER_NAME")
     token = os.environ.get("GITHUB_TOKEN")
-    memory_file = Path("memory.json")
 
-    if not memory_file.exists():
+    if not MEMORY_FILE.exists():
         return {"status": "error", "message": "memory.json does not exist."}
 
     try:
@@ -102,9 +118,8 @@ def push_memory_to_github():
         subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
 
         # git add/commit/push
-        subprocess.run(["git", "add", "memory.json"], check=True)
+        subprocess.run(["git", "add", str(MEMORY_FILE)], check=True)
         subprocess.run(["git", "commit", "-m", "Update memory.json"], check=True)
-        # HTTPS URLにTokenを埋め込む
         repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
         subprocess.run(["git", "push", repo_url_with_token, "main"], check=True)
 
