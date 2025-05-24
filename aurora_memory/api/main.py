@@ -30,7 +30,7 @@ class MemoryData(BaseModel):
     satisfaction: str
     content: dict
     annotations: list
-    summary: str  # 🟦 summary を追加
+    summary: str
 
 @app.post("/memory/store")
 async def store_memory(memory: MemoryData, request: Request):
@@ -39,12 +39,13 @@ async def store_memory(memory: MemoryData, request: Request):
         body = await request.body()
         print("[Aurora Debug] Incoming body:", body.decode("utf-8"))
 
-        # 保存
+        # 🟦 保存処理
         MEMORY_FILE.parent.mkdir(parents=True, exist_ok=True)
         with open(MEMORY_FILE, "w", encoding="utf-8") as f:
             json.dump(memory.dict(), f, ensure_ascii=False, indent=2)
+        print("[Aurora Debug] memory.json has been updated.")
 
-        # GitHubへのPush
+        # 🟦 GitHubへのPush
         push_result = push_memory_to_github()
 
         return {
@@ -54,6 +55,7 @@ async def store_memory(memory: MemoryData, request: Request):
         }
 
     except Exception as e:
+        print("[Aurora Debug] Exception:", str(e))
         return {
             "status": "error",
             "message": str(e)
@@ -69,22 +71,31 @@ def push_memory_to_github():
         return {"status": "error", "message": "memory.json does not exist."}
 
     try:
+        print("[Aurora Debug] Setting git user config...")
         subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
         subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
 
+        print("[Aurora Debug] Running git add:", str(MEMORY_FILE))
         subprocess.run(["git", "add", str(MEMORY_FILE)], check=True)
 
-        diff_check = subprocess.run(["git", "diff", "--cached", "--quiet"])
-        if diff_check.returncode == 0:
-            return {"status": "success", "message": "No changes to commit."}
+        print("[Aurora Debug] Running git status...")
+        subprocess.run(["git", "status"], check=True)
 
+        print("[Aurora Debug] Running git commit...")
         subprocess.run(["git", "commit", "-m", "Update memory.json"], check=True)
 
+        print("[Aurora Debug] Running git log (last 5 commits)...")
+        subprocess.run(["git", "log", "--oneline", "-n", "5"], check=True)
+
         repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
+        print("[Aurora Debug] Running git push to:", repo_url_with_token)
         subprocess.run(["git", "push", repo_url_with_token, "main"], check=True)
 
         return {"status": "success", "message": "memory.json pushed to GitHub."}
+
     except subprocess.CalledProcessError as e:
+        print("[Aurora Debug] Git command failed:", str(e))
         return {"status": "error", "message": f"Git command failed: {e}"}
     except Exception as e:
+        print("[Aurora Debug] Exception:", str(e))
         return {"status": "error", "message": str(e)}
