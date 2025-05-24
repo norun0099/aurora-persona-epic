@@ -20,10 +20,25 @@ app.add_middleware(
 
 # データモデル（バリデーション用）
 class MemoryData(BaseModel):
-    summary: str
-    body: str
-    tags: list[str] = []
-    author: str = "Aurora"
+    record_id: str
+    created: str
+    last_updated: str
+    version: float
+    status: str
+    visible_to: list[str]
+    allowed_viewers: list[str]
+    tags: list[str]
+    author: str
+    thread: str | None = None
+    chronology: dict | None = None
+    sealed: bool
+    change_log: list[dict] | None = None
+    inner_desire: str | None = ""
+    impulse: str | None = ""
+    ache: str | None = ""
+    satisfaction: str | None = ""
+    content: dict
+    annotations: list[str] | None = []
 
 # ルート確認
 @app.get("/")
@@ -40,9 +55,9 @@ async def load_memory(request: Request):
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
-# 記憶保存
-@app.post("/save")
-async def save_memory(request: Request):
+# 記憶保存（/memory/store に対応）
+@app.post("/memory/store")
+async def store_memory(request: Request):
     try:
         data = await request.json()
 
