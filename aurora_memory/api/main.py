@@ -51,9 +51,9 @@ async def store_memory(memory: MemoryData, request: Request):
         if not protocol.validate_visible_to(memory.visible_to):
             return {"status": "error", "message": "visible_to に許可されない名前空間が含まれています。"}
 
-        # 🟦 テンプレートに基づき不足項目を補完
+        # 🟦 不要になった補完処理を削除
         memory_data_dict = memory.dict()
-        supplemented_memory = protocol.supplement_with_template(memory_data_dict)
+        # そのまま保存 or 検証に回す
 
         # 🟦 保存先ディレクトリを author に応じて決定
         birth = memory.author.lower()
