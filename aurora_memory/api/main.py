@@ -6,12 +6,12 @@ from pydantic import BaseModel
 from datetime import datetime
 import json
 
-# 🟦 追加: memory_protocol を導入
+# 🟦 memory_protocol を導入
 from config.memory_protocol import MemoryProtocol
 
 app = FastAPI()
 
-# 🟦 プロトコルの初期化（必ず最初に思い出す）
+# 🟦 プロトコルの初期化
 protocol = MemoryProtocol("aurora_memory/config/git_memory_protocol.yaml")
 
 class MemoryData(BaseModel):
@@ -51,6 +51,10 @@ async def store_memory(memory: MemoryData, request: Request):
         if not protocol.validate_visible_to(memory.visible_to):
             return {"status": "error", "message": "visible_to に許可されない名前空間が含まれています。"}
 
+        # 🟦 テンプレートに基づき不足項目を補完
+        memory_data_dict = memory.dict()
+        supplemented_memory = protocol.supplement_with_template(memory_data_dict)
+
         # 🟦 保存先ディレクトリを author に応じて決定
         birth = memory.author.lower()
         memory_dir = Path(f"aurora_memory/memory/{birth}")
@@ -61,9 +65,9 @@ async def store_memory(memory: MemoryData, request: Request):
         file_name = f"{timestamp}.json"
         file_path = memory_dir / file_name
 
-        # 🟦 記憶の保存
+        # 🟦 記憶の保存（補完後のデータを保存）
         with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(memory.dict(), f, ensure_ascii=False, indent=2)
+            json.dump(supplemented_memory, f, ensure_ascii=False, indent=2)
         print(f"[Aurora Debug] Memory saved to: {file_path}")
 
         # 🟦 GitHubへのPush
