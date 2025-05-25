@@ -7,8 +7,12 @@ from datetime import datetime
 import json
 
 from aurora_memory.config.memory_protocol import MemoryProtocol
+from aurora_memory.api import memo  # 🟦 メモ管理機能のインポートを追加
 
 app = FastAPI()
+
+# 🟦 メモAPIのルーティングを追加
+app.include_router(memo.router)
 
 MEMORY_DIR = Path("aurora_memory/memory/technology")
 MEMORY_DIR.mkdir(parents=True, exist_ok=True)
