@@ -1,6 +1,5 @@
 import yaml
 from pathlib import Path
-import copy
 
 class MemoryProtocol:
     def __init__(self, protocol_path, template_path="aurora_memory/config/structure_template.yaml"):
@@ -44,24 +43,14 @@ class MemoryProtocol:
 
     def validate_against_template(self, memory_data: dict):
         """
-        記録がテンプレートに準拠しているか検証。
-        すべての必須項目が存在するかどうかを確認。
+        記録がテンプレートに完全準拠しているかを厳格に検証。
+        すべての必須項目が存在するかどうかを確認する。
         """
         for key in self.template.keys():
             if key not in memory_data:
                 print(f"[Aurora Debug] Missing field in memory_data: {key}")
                 return False, f"{key} が不足しています"
         return True, "準拠確認OK"
-
-    def supplement_with_template(self, memory_data: dict):
-        """
-        テンプレートに基づき、不足項目を補完する。
-        既に存在する項目は上書きしない。
-        """
-        supplemented = copy.deepcopy(self.template)
-        for key, value in memory_data.items():
-            supplemented[key] = value
-        return supplemented
 
     def _allowed_persona_namespaces(self):
         validation = self.protocol["rules"]["visible_to"]["validation"]
