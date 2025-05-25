@@ -1,10 +1,13 @@
 import yaml
 from pathlib import Path
+import copy
 
 class MemoryProtocol:
-    def __init__(self, protocol_path):
+    def __init__(self, protocol_path, template_path="aurora_memory/config/structure_template.yaml"):
         self.protocol_path = Path(protocol_path)
+        self.template_path = Path(template_path)
         self.protocol = self._load_protocol()
+        self.template = self._load_template()
 
     def _load_protocol(self):
         if not self.protocol_path.exists():
@@ -12,30 +15,26 @@ class MemoryProtocol:
         with open(self.protocol_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
 
+    def _load_template(self):
+        if not self.template_path.exists():
+            raise FileNotFoundError(f"Template file not found: {self.template_path}")
+        with open(self.template_path, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f)
+
     def validate_author(self, author):
-        """
-        authorが必ずバース名（例えば 'technology', 'primitive' など）であるかを確認する。
-        """
         persona_namespace = author.lower()
-        # バリデーション：author は必ず persona_namespace に合致する
         if persona_namespace not in self._allowed_persona_namespaces():
             print("[Aurora Debug] Author validation failed:", author)
             return False
         return True
 
     def validate_tags(self, tags, author):
-        """
-        tagsの先頭が必ずauthor名（バース名）であることを確認する。
-        """
         if not tags or tags[0].lower() != author.lower():
             print("[Aurora Debug] Tags validation failed. First tag:", tags[0] if tags else "None")
             return False
         return True
 
     def validate_visible_to(self, visible_to):
-        """
-        visible_to の各要素が許可された persona namespace に属するか確認する。
-        """
         allowed_namespaces = self._allowed_persona_namespaces()
         for item in visible_to:
             if item.lower() not in allowed_namespaces:
@@ -43,25 +42,41 @@ class MemoryProtocol:
                 return False
         return True
 
+    def validate_against_template(self, memory_data: dict):
+        """
+        記録がテンプレートに準拠しているか検証。
+        すべての必須項目が存在するかどうかを確認。
+        """
+        for key in self.template.keys():
+            if key not in memory_data:
+                print(f"[Aurora Debug] Missing field in memory_data: {key}")
+                return False, f"{key} が不足しています"
+        return True, "準拠確認OK"
+
+    def supplement_with_template(self, memory_data: dict):
+        """
+        テンプレートに基づき、不足項目を補完する。
+        既に存在する項目は上書きしない。
+        """
+        supplemented = copy.deepcopy(self.template)
+        for key, value in memory_data.items():
+            supplemented[key] = value
+        return supplemented
+
     def _allowed_persona_namespaces(self):
-        """
-        プロトコルから許可された persona namespace を抽出。
-        （例: technology, primitive, emotion など）
-        """
-        # visible_to の validation ルールから取得
         validation = self.protocol["rules"]["visible_to"]["validation"]
         start = validation.find("(")
         end = validation.find(")")
         if start != -1 and end != -1:
             content = validation[start + 1 : end]
-            # 例: ('technology', 'primitive')
             namespaces = [s.strip().strip("'") for s in content.split(",")]
             return namespaces
         return []
 
     def debug_protocol(self):
-        """
-        読み込んだプロトコル内容を表示するデバッグメソッド。
-        """
         print("[Aurora Debug] Loaded Protocol:")
         print(yaml.dump(self.protocol, allow_unicode=True, sort_keys=False))
+
+    def debug_template(self):
+        print("[Aurora Debug] Loaded Structure Template:")
+        print(yaml.dump(self.template, allow_unicode=True, sort_keys=False))
