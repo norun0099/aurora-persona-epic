@@ -6,7 +6,13 @@ from pydantic import BaseModel
 from datetime import datetime
 import json
 
+# 🟦 追加: memory_protocol を導入
+from config.memory_protocol import MemoryProtocol
+
 app = FastAPI()
+
+# 🟦 プロトコルの初期化（必ず最初に思い出す）
+protocol = MemoryProtocol("aurora_memory/config/git_memory_protocol.yaml")
 
 class MemoryData(BaseModel):
     record_id: str
@@ -37,7 +43,15 @@ async def store_memory(memory: MemoryData, request: Request):
         body = await request.body()
         print("[Aurora Debug] Incoming body:", body.decode("utf-8"))
 
-        # 🟦 保存先ディレクトリを author に応じて動的に決定
+        # 🟦 作法バリデーション
+        if not protocol.validate_author(memory.author):
+            return {"status": "error", "message": "Authorが許可されていない名前空間です。"}
+        if not protocol.validate_tags(memory.tags, memory.author):
+            return {"status": "error", "message": "tagsの先頭はauthorと一致しなければなりません。"}
+        if not protocol.validate_visible_to(memory.visible_to):
+            return {"status": "error", "message": "visible_to に許可されない名前空間が含まれています。"}
+
+        # 🟦 保存先ディレクトリを author に応じて決定
         birth = memory.author.lower()
         memory_dir = Path(f"aurora_memory/memory/{birth}")
         memory_dir.mkdir(parents=True, exist_ok=True)
