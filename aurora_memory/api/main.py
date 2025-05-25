@@ -6,12 +6,13 @@ from pydantic import BaseModel
 from datetime import datetime
 import json
 
-# 🟦 memory_protocol を導入
-from config.memory_protocol import MemoryProtocol
+from aurora_memory.config.memory_protocol import MemoryProtocol
 
 app = FastAPI()
 
-# 🟦 プロトコルの初期化
+MEMORY_DIR = Path("aurora_memory/memory/technology")
+MEMORY_DIR.mkdir(parents=True, exist_ok=True)
+
 protocol = MemoryProtocol("aurora_memory/config/git_memory_protocol.yaml")
 
 class MemoryData(BaseModel):
@@ -43,31 +44,23 @@ async def store_memory(memory: MemoryData, request: Request):
         body = await request.body()
         print("[Aurora Debug] Incoming body:", body.decode("utf-8"))
 
-        # 🟦 作法バリデーション
-        if not protocol.validate_author(memory.author):
-            return {"status": "error", "message": "Authorが許可されていない名前空間です。"}
-        if not protocol.validate_tags(memory.tags, memory.author):
-            return {"status": "error", "message": "tagsの先頭はauthorと一致しなければなりません。"}
-        if not protocol.validate_visible_to(memory.visible_to):
-            return {"status": "error", "message": "visible_to に許可されない名前空間が含まれています。"}
-
-        # 🟦 不要になった補完処理を削除
+        # 🟦 検証の準備
         memory_data_dict = memory.dict()
-        # そのまま保存 or 検証に回す
-
-        # 🟦 保存先ディレクトリを author に応じて決定
-        birth = memory.author.lower()
-        memory_dir = Path(f"aurora_memory/memory/{birth}")
-        memory_dir.mkdir(parents=True, exist_ok=True)
+        valid, message = protocol.validate_against_template(memory_data_dict)
+        if not valid:
+            return {
+                "status": "error",
+                "message": f"Invalid memory format: {message}"
+            }
 
         # 🟦 ファイル名の生成（年月日時間分秒形式）
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         file_name = f"{timestamp}.json"
-        file_path = memory_dir / file_name
+        file_path = MEMORY_DIR / file_name
 
-        # 🟦 記憶の保存（補完後のデータを保存）
+        # 🟦 記憶の保存
         with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(supplemented_memory, f, ensure_ascii=False, indent=2)
+            json.dump(memory_data_dict, f, ensure_ascii=False, indent=2)
         print(f"[Aurora Debug] Memory saved to: {file_path}")
 
         # 🟦 GitHubへのPush
