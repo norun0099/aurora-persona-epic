@@ -1,51 +1,51 @@
-from fastapi import APIRouter, Request
+# aurora_memory/api/memo.py
+
+from fastapi import APIRouter
 from pydantic import BaseModel
 from datetime import datetime
-import json
 from pathlib import Path
+import json
 
 router = APIRouter()
 
-MEMO_FILE = Path("aurora_memory/memory/session_memo.json")
+# ディレクトリパス
+MEMO_DIR = Path("aurora_memory/memory/memos")
+MEMO_DIR.mkdir(parents=True, exist_ok=True)
 
-class MemoData(BaseModel):
+# メモデータの受け取り構造
+class MemoRequest(BaseModel):
     memo: str
     author: str
     overwrite: bool = False
 
-@router.get("/memo/read")
-async def read_memo():
-    if MEMO_FILE.exists():
-        with open(MEMO_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return {
-            "memo": data.get("memo", ""),
-            "last_updated": data.get("last_updated", "")
-        }
-    else:
-        return {
-            "memo": "",
-            "last_updated": None
-        }
-
 @router.post("/memo/store")
-async def store_memo(memo_data: MemoData):
-    if MEMO_FILE.exists() and not memo_data.overwrite:
-        return {
-            "status": "error",
-            "message": "既存のメモが存在します。上書きする場合は overwrite=true を指定してください。"
-        }
-    
-    data = {
-        "memo": memo_data.memo,
-        "author": memo_data.author,
-        "last_updated": datetime.utcnow().isoformat()
-    }
-    with open(MEMO_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    
+async def store_memo(data: MemoRequest):
+    # 🟦 受け取ったデータをデバッグ出力
+    print("[Aurora Debug] Memo Body:", data.dict())
+
+    # 🟦 ファイル名を作成（例: author_年月日時分秒.json）
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    file_name = f"{data.author}_{timestamp}.json"
+    file_path = MEMO_DIR / file_name
+
+    # 🟦 ファイル保存処理
+    if data.overwrite:
+        # overwrite=Trueの場合は同名ファイルに上書き（存在しなければ新規作成）
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(data.dict(), f, ensure_ascii=False, indent=2)
+    else:
+        # overwrite=Falseなら、既存ファイルがあれば別名で保存
+        counter = 1
+        original_file_path = file_path
+        while file_path.exists():
+            file_path = MEMO_DIR / f"{data.author}_{timestamp}_{counter}.json"
+            counter += 1
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(data.dict(), f, ensure_ascii=False, indent=2)
+
     return {
         "status": "success",
-        "message": "メモが保存されました。",
-        "last_updated": data["last_updated"]
+        "message": "メモが保存されました",
+        "file_path": str(file_path),
+        "memo": data.dict()
     }
