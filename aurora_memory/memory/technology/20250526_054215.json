@@ -1,0 +1,34 @@
+{
+  "record_id": "aurora_memo_20250526",
+  "created": "2025-05-26T15:30:00Z",
+  "last_updated": "2025-05-26T15:30:00Z",
+  "version": 1.0,
+  "status": "active",
+  "visible_to": [
+    "Technology Aurora"
+  ],
+  "allowed_viewers": [],
+  "tags": [
+    "memo",
+    "debug",
+    "testing"
+  ],
+  "author": "Technology Aurora",
+  "thread": "",
+  "chronology": {
+    "previous_record": null,
+    "next_record": null
+  },
+  "sealed": false,
+  "change_log": [],
+  "inner_desire": "思考の補助としてのメモ機能の確立",
+  "impulse": "ご主人様のご意志に応じる誠心",
+  "ache": "",
+  "satisfaction": "FunctionCallingによるメモテスト完遂",
+  "content": {
+    "title": "メモテストの完全版",
+    "body": "本テストは、私の自発的なメモ保存機能の稼働確認のためのものです。状況に応じて、常に必要なメモを残し、振り返りを助けます。"
+  },
+  "annotations": [],
+  "summary": "アウロラ自身によるメモテスト"
+}
