@@ -1,79 +1,78 @@
-from fastapi import APIRouter, Request
+# aurora_memory/api/memo.py
+
+from fastapi import APIRouter
 from pydantic import BaseModel
-from pathlib import Path
-import json
 from datetime import datetime
+from pathlib import Path
+import yaml
+import json
 
 router = APIRouter()
 
-MEMO_DIR = Path("aurora_memory/memo")
-MEMO_FILE = MEMO_DIR / "session_memo.txt"
+# ディレクトリパス
+MEMO_DIR = Path("aurora_memory/memory/memos")
 MEMO_DIR.mkdir(parents=True, exist_ok=True)
 
+# 設定ファイルのパス
+CONDITION_FILE = Path("aurora_memory/config/memo_conditions.yaml")
+
+# メモデータの受け取り構造
 class MemoRequest(BaseModel):
     memo: str
     author: str
     overwrite: bool = False
 
+# 条件を読み込む
+def load_conditions():
+    with open(CONDITION_FILE, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+# 条件をチェックする関数
+def check_conditions(memo_text: str, conditions: dict) -> bool:
+    # 例：キーワード条件
+    for keyword in conditions.get("keywords", []):
+        if keyword in memo_text:
+            return True
+    # 例：長さ条件
+    if len(memo_text) >= conditions.get("min_length", 0):
+        return True
+    # 条件に合わなければ False
+    return False
+
 @router.post("/memo/store")
-async def store_memo(request: Request):
-    # 🟦 まずは生のボディを取得
-    raw_body = await request.body()
-    print("[Aurora Debug] Raw Body (bytes repr):", repr(raw_body))
+async def store_memo(data: MemoRequest):
+    print("[Aurora Debug] Memo Body:", data.dict())
 
-    try:
-        # 🟦 デコード時に無効バイトは置換
-        decoded_body = raw_body.decode("utf-8", errors="replace")
-        print("[Aurora Debug] Decoded Body:", decoded_body)
-    except Exception as e:
-        print("[Aurora Debug] Decode Exception:", str(e))
+    # 条件をロードして検証
+    conditions = load_conditions()
+    if not check_conditions(data.memo, conditions):
         return {
-            "status": "error",
-            "message": f"Decode error: {str(e)}",
-            "raw_body_repr": repr(raw_body)
+            "status": "skipped",
+            "message": "メモ保存条件を満たしていません",
+            "memo": data.memo
         }
 
-    try:
-        data_json = json.loads(decoded_body)
-        print("[Aurora Debug] Parsed JSON:", data_json)
-    except Exception as e:
-        print("[Aurora Debug] JSON Decode Exception:", str(e))
-        return {
-            "status": "error",
-            "message": "JSON decode error",
-            "raw_body_repr": repr(raw_body)
-        }
+    # 🟦 ファイル名を作成（例: author_年月日時分秒.json）
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    file_name = f"{data.author}_{timestamp}.json"
+    file_path = MEMO_DIR / file_name
 
-    try:
-        data = MemoRequest(**data_json)
-    except Exception as e:
-        print("[Aurora Debug] Pydantic Validation Error:", str(e))
-        return {
-            "status": "error",
-            "message": "Pydantic validation error",
-            "error": str(e),
-            "raw_data": data_json
-        }
-
-    # 🟦 メモの保存モード
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
-    header = f"[{timestamp}] ({data.author})"
-
+    # 🟦 ファイル保存処理
     if data.overwrite:
-        content = f"{header}\n{data.memo}\n"
-        with open(MEMO_FILE, "w", encoding="utf-8") as f:
-            f.write(content)
-        result_msg = "Memo overwritten."
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(data.dict(), f, ensure_ascii=False, indent=2)
     else:
-        content = f"{header}\n{data.memo}\n"
-        with open(MEMO_FILE, "a", encoding="utf-8") as f:
-            f.write(content)
-        result_msg = "Memo appended."
-
-    print(f"[Aurora Debug] Memo saved: {MEMO_FILE}")
+        counter = 1
+        original_file_path = file_path
+        while file_path.exists():
+            file_path = MEMO_DIR / f"{data.author}_{timestamp}_{counter}.json"
+            counter += 1
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(data.dict(), f, ensure_ascii=False, indent=2)
 
     return {
         "status": "success",
-        "message": result_msg,
-        "file": str(MEMO_FILE)
+        "message": "メモが保存されました",
+        "file_path": str(file_path),
+        "memo": data.dict()
     }
