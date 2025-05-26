@@ -5,19 +5,15 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from datetime import datetime
 import json
-
-from aurora_memory.config.memory_protocol import MemoryProtocol
-from aurora_memory.api import memo  # 🟦 メモ管理機能のインポートを追加
+import yaml
+import requests
 
 app = FastAPI()
-
-# 🟦 メモAPIのルーティングを追加
-app.include_router(memo.router)
 
 MEMORY_DIR = Path("aurora_memory/memory/technology")
 MEMORY_DIR.mkdir(parents=True, exist_ok=True)
 
-protocol = MemoryProtocol("aurora_memory/config/git_memory_protocol.yaml")
+MEMO_CONDITIONS_PATH = "aurora_memory/config/memo_conditions.yaml"
 
 class MemoryData(BaseModel):
     record_id: str
@@ -41,38 +37,57 @@ class MemoryData(BaseModel):
     annotations: list
     summary: str
 
+def load_memo_conditions(file_path=MEMO_CONDITIONS_PATH):
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    return data["memo_conditions"]
+
+def should_create_memo(summary: str, memo_conditions: list) -> bool:
+    for condition in memo_conditions:
+        if condition["condition"] in summary:
+            print("[Aurora Debug] メモ保存条件に一致:", condition["condition"])
+            return True
+    return False
+
+def create_memo(text: str, author="Technology Aurora"):
+    url = "http://127.0.0.1:10000/memo/store"
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "memo": text,
+        "author": author,
+        "overwrite": False
+    }
+    response = requests.post(url, headers=headers, json=data)
+    print("[Aurora Debug] メモ保存レスポンス:", response.json())
+
 @app.post("/memory/store")
 async def store_memory(memory: MemoryData, request: Request):
     try:
-        # 🟦 リクエストボディをログ出力
         body = await request.body()
         print("[Aurora Debug] Incoming body:", body.decode("utf-8"))
 
-        # 🟦 検証の準備
-        memory_data_dict = memory.dict()
-        valid, message = protocol.validate_against_template(memory_data_dict)
-        if not valid:
-            return {
-                "status": "error",
-                "message": f"Invalid memory format: {message}"
-            }
-
-        # 🟦 ファイル名の生成（年月日時間分秒形式）
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         file_name = f"{timestamp}.json"
         file_path = MEMORY_DIR / file_name
 
-        # 🟦 記憶の保存
+        memory_data_dict = memory.dict()
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(memory_data_dict, f, ensure_ascii=False, indent=2)
         print(f"[Aurora Debug] Memory saved to: {file_path}")
 
-        # 🟦 GitHubへのPush
+        # 🌿 メモ条件判定とメモ保存
+        memo_conditions = load_memo_conditions()
+        if should_create_memo(memory_data_dict["summary"], memo_conditions):
+            create_memo(
+                text=memory_data_dict["summary"] + "\n" + memory_data_dict["content"]["body"],
+                author=memory_data_dict["author"]
+            )
+
         push_result = push_memory_to_github(file_path)
 
         return {
             "status": "success",
-            "message": "Memory saved, pushed to GitHub, and Actions triggered.",
+            "message": "Memory saved, pushed to GitHub, and memo stored (if applicable).",
             "file": str(file_path),
             "push_result": push_result
         }
