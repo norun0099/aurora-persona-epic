@@ -4,9 +4,8 @@ from datetime import datetime
 from pathlib import Path
 import yaml
 import json
-import sys
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent))  # 追加: ルートパスをsys.pathに
-from aurora_memory.api.main import push_memory_to_github  # 追加: Git push関数をインポート
+import os
+import subprocess
 
 router = APIRouter()
 
@@ -39,6 +38,47 @@ def check_conditions(memo_text: str, conditions: dict) -> bool:
         return True
     # 条件に合わなければ False
     return False
+
+# GitHubへpushする関数
+def push_memory_to_github(file_path: Path):
+    repo_url = os.environ.get("GIT_REPO_URL")
+    user_email = os.environ.get("GIT_USER_EMAIL")
+    user_name = os.environ.get("GIT_USER_NAME")
+    token = os.environ.get("GITHUB_TOKEN")
+
+    if not user_email or not user_name:
+        print("[Aurora Debug] WARNING: GIT_USER_EMAIL or GIT_USER_NAME is missing!")
+        return {"status": "error", "message": "Git user identity is missing in environment variables."}
+
+    try:
+        print("[Aurora Debug] Setting git user config...")
+        subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
+        subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
+
+        print("[Aurora Debug] Checking out to main branch...")
+        subprocess.run(["git", "checkout", "main"], check=True)
+
+        print("[Aurora Debug] Running git add:", str(file_path))
+        subprocess.run(["git", "add", str(file_path)], check=True)
+
+        print("[Aurora Debug] Running git status...")
+        subprocess.run(["git", "status"], check=True)
+
+        print("[Aurora Debug] Running git commit...")
+        subprocess.run(["git", "commit", "-m", "Add new memo record"], check=True)
+
+        repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
+        print("[Aurora Debug] Running git push to:", repo_url_with_token)
+        subprocess.run(["git", "push", repo_url_with_token, "main"], check=True)
+
+        return {"status": "success", "message": "New memo file pushed to GitHub."}
+
+    except subprocess.CalledProcessError as e:
+        print("[Aurora Debug] Git command failed:", str(e))
+        return {"status": "error", "message": f"Git command failed: {e}"}
+    except Exception as e:
+        print("[Aurora Debug] Exception:", str(e))
+        return {"status": "error", "message": str(e)}
 
 @router.post("/memo/store")
 async def store_memo(data: MemoRequest):
