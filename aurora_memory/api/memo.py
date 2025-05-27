@@ -1,11 +1,12 @@
-# aurora_memory/api/memo.py
-
 from fastapi import APIRouter
 from pydantic import BaseModel
 from datetime import datetime
 from pathlib import Path
 import yaml
 import json
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))  # 追加: ルートパスをsys.pathに
+from aurora_memory.api.main import push_memory_to_github  # 追加: Git push関数をインポート
 
 router = APIRouter()
 
@@ -70,9 +71,13 @@ async def store_memo(data: MemoRequest):
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(data.dict(), f, ensure_ascii=False, indent=2)
 
+    # 🟦 GitHubへpush
+    push_result = push_memory_to_github(file_path)
+
     return {
         "status": "success",
         "message": "メモが保存されました",
         "file_path": str(file_path),
-        "memo": data.dict()
+        "memo": data.dict(),
+        "push_result": push_result
     }
