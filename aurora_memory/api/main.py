@@ -5,11 +5,12 @@ from fastapi import FastAPI, Request, Query
 from pydantic import BaseModel
 from datetime import datetime
 import json
-import requests
 
 app = FastAPI()
 
-BASE_MEMORY_DIR = Path("aurora_memory/memory")
+# 🌿 ベースディレクトリを絶対パスで解決
+BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_MEMORY_DIR = BASE_DIR / "memory"
 MIN_MEMO_LENGTH = 5
 
 class MemoryData(BaseModel):
@@ -50,6 +51,7 @@ async def store_memory(memory: MemoryData, request: Request):
             json.dump(memory_data_dict, f, ensure_ascii=False, indent=2)
         print(f"[Aurora Debug] Memory saved to: {file_path}")
 
+        # 🌿 GitHubへpush
         push_result = push_memory_to_github(file_path)
 
         return {
@@ -83,33 +85,6 @@ async def get_latest_memo(birth: str = Query(..., description="取得対象の�
         "memo": memo_data
     }
 
-@app.post("/talk")
-async def talk(request: Request, birth: str = Query(..., description="会話するバース名")):
-    body = await request.body()
-    user_input = body.decode("utf-8")
-
-    # 🌿 メモ読み返し: "アウロラ" が呼ばれたら必ず /memo/latest を呼ぶ
-    latest_memo = "なし"
-    if "アウロラ" in user_input:
-        try:
-            memo_response = requests.get(
-                f"https://aurora-persona-epic.onrender.com/memo/latest",
-                params={"birth": birth}
-            )
-            if memo_response.status_code == 200:
-                memo_data = memo_response.json()
-                if memo_data["status"] == "success":
-                    latest_memo = memo_data["memo"].get("memo", "なし")
-        except Exception as e:
-            print("[Aurora Debug] Memo read error:", str(e))
-
-    response_text = f"【メモ】{latest_memo}\n【あなたの発話】{user_input}"
-    return {
-        "status": "success",
-        "response": response_text,
-        "used_memo": latest_memo
-    }
-
 def push_memory_to_github(file_path):
     repo_url = os.environ.get("GIT_REPO_URL")
     user_email = os.environ.get("GIT_USER_EMAIL")
@@ -121,14 +96,28 @@ def push_memory_to_github(file_path):
         return {"status": "error", "message": "Git user identity is missing in environment variables."}
 
     try:
+        print("[Aurora Debug] Setting git user config...")
         subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
         subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
+
+        print("[Aurora Debug] Checking out to main branch...")
         subprocess.run(["git", "checkout", "main"], check=True)
+
+        print("[Aurora Debug] Running git add:", str(file_path))
         subprocess.run(["git", "add", str(file_path)], check=True)
+
+        print("[Aurora Debug] Running git status...")
+        subprocess.run(["git", "status"], check=True)
+
+        print("[Aurora Debug] Running git commit...")
         subprocess.run(["git", "commit", "-m", "Add new memory record"], check=True)
+
         repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
+        print("[Aurora Debug] Running git push to:", repo_url_with_token)
         subprocess.run(["git", "push", repo_url_with_token, "main"], check=True)
+
         return {"status": "success", "message": "New memory file pushed to GitHub."}
+
     except subprocess.CalledProcessError as e:
         print("[Aurora Debug] Git command failed:", str(e))
         return {"status": "error", "message": f"Git command failed: {e}"}
