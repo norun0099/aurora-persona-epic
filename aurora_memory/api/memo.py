@@ -9,15 +9,12 @@ import subprocess
 
 router = APIRouter()
 
-# ディレクトリパス
-MEMO_DIR = Path("aurora_memory/memory/memos")
-MEMO_DIR.mkdir(parents=True, exist_ok=True)
-
 # 設定ファイルのパス
 CONDITION_FILE = Path("aurora_memory/config/memo_conditions.yaml")
 
 # メモデータの受け取り構造
 class MemoRequest(BaseModel):
+    birth: str
     memo: str
     author: str
     overwrite: bool = False
@@ -84,6 +81,10 @@ def push_memory_to_github(file_path: Path):
 async def store_memo(data: MemoRequest):
     print("[Aurora Debug] Memo Body:", data.dict())
 
+    # 保存先ディレクトリを birth に基づいて決定
+    memo_dir = Path("aurora_memory/memory") / data.birth / "memo"
+    memo_dir.mkdir(parents=True, exist_ok=True)
+
     # 条件をロードして検証
     conditions = load_conditions()
     if not check_conditions(data.memo, conditions):
@@ -96,7 +97,7 @@ async def store_memo(data: MemoRequest):
     # 🟦 ファイル名を作成（例: author_年月日時分秒.json）
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     file_name = f"{data.author}_{timestamp}.json"
-    file_path = MEMO_DIR / file_name
+    file_path = memo_dir / file_name
 
     # 🟦 ファイル保存処理
     if data.overwrite:
@@ -104,9 +105,8 @@ async def store_memo(data: MemoRequest):
             json.dump(data.dict(), f, ensure_ascii=False, indent=2)
     else:
         counter = 1
-        original_file_path = file_path
         while file_path.exists():
-            file_path = MEMO_DIR / f"{data.author}_{timestamp}_{counter}.json"
+            file_path = memo_dir / f"{data.author}_{timestamp}_{counter}.json"
             counter += 1
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(data.dict(), f, ensure_ascii=False, indent=2)
