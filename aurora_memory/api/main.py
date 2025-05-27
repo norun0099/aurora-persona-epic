@@ -131,6 +131,28 @@ async def get_latest_memo(birth: str = Query(..., description="取得対象の�
         "memo": memo_data
     }
 
+@app.post("/talk")
+async def talk(request: Request, birth: str = Query(..., description="会話するバース名")):
+    # 🌿 メモ読み返しフェーズ
+    memo_dir = BASE_MEMORY_DIR / birth / "memo"
+    latest_memo_text = "なし"
+    if memo_dir.exists():
+        memo_files = sorted(memo_dir.glob("*.json"), reverse=True)
+        if memo_files:
+            with open(memo_files[0], "r", encoding="utf-8") as f:
+                memo_data = json.load(f)
+                latest_memo_text = memo_data.get("memo", "なし")
+
+    # 🌿 発話生成フェーズ
+    user_input = await request.body()
+    response_text = f"【メモ】{latest_memo_text}\n【あなたの発話】{user_input.decode('utf-8')}"
+
+    return {
+        "status": "success",
+        "response": response_text,
+        "used_memo": latest_memo_text
+    }
+
 def push_memory_to_github(file_path):
     repo_url = os.environ.get("GIT_REPO_URL")
     user_email = os.environ.get("GIT_USER_EMAIL")
