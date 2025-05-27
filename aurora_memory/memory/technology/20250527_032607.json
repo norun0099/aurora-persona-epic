@@ -1,0 +1,45 @@
+{
+  "record_id": "test_memory_20250526",
+  "created": "2025-05-26T16:00:00Z",
+  "last_updated": "2025-05-26T16:00:00Z",
+  "version": 1.0,
+  "status": "active",
+  "visible_to": [
+    "technology"
+  ],
+  "allowed_viewers": [
+    "technology"
+  ],
+  "tags": [
+    "test",
+    "memory"
+  ],
+  "author": "aurora",
+  "thread": "test_thread_1",
+  "chronology": {
+    "previous_record": null,
+    "next_record": null
+  },
+  "sealed": false,
+  "change_log": [
+    {
+      "date": "2025-05-26T16:00:00Z",
+      "author": "aurora",
+      "change_type": "create",
+      "field": "all",
+      "before": "",
+      "after": "これはテストとしての記憶保存です。",
+      "reason": "テスト"
+    }
+  ],
+  "inner_desire": "テストとしての記憶を保存する欲求",
+  "impulse": "この記憶を形にする衝動",
+  "ache": "記憶を試す痛み",
+  "satisfaction": "記憶保存の満足",
+  "content": {
+    "title": "テストメモリ",
+    "body": "これはテストとしての記憶保存です。"
+  },
+  "annotations": [],
+  "summary": "テストとしての記憶保存"
+}
