@@ -5,15 +5,11 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from datetime import datetime
 import json
-import yaml
-import requests
 
 app = FastAPI()
 
 MEMORY_DIR = Path("aurora_memory/memory/technology")
 MEMORY_DIR.mkdir(parents=True, exist_ok=True)
-
-MEMO_CONDITIONS_PATH = "aurora_memory/config/memo_conditions.yaml"
 
 class MemoryData(BaseModel):
     record_id: str
@@ -37,29 +33,6 @@ class MemoryData(BaseModel):
     annotations: list
     summary: str
 
-def load_memo_conditions(file_path=MEMO_CONDITIONS_PATH):
-    with open(file_path, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
-    return data["memo_conditions"]
-
-def should_create_memo(summary: str, memo_conditions: list) -> bool:
-    for condition in memo_conditions:
-        if condition["condition"] in summary:
-            print("[Aurora Debug] メモ保存条件に一致:", condition["condition"])
-            return True
-    return False
-
-def create_memo(text: str, author="Technology Aurora"):
-    url = "http://127.0.0.1:10000/memo/store"
-    headers = {"Content-Type": "application/json"}
-    data = {
-        "memo": text,
-        "author": author,
-        "overwrite": False
-    }
-    response = requests.post(url, headers=headers, json=data)
-    print("[Aurora Debug] メモ保存レスポンス:", response.json())
-
 @app.post("/memory/store")
 async def store_memory(memory: MemoryData, request: Request):
     try:
@@ -75,19 +48,12 @@ async def store_memory(memory: MemoryData, request: Request):
             json.dump(memory_data_dict, f, ensure_ascii=False, indent=2)
         print(f"[Aurora Debug] Memory saved to: {file_path}")
 
-        # 🌿 メモ条件判定とメモ保存
-        memo_conditions = load_memo_conditions()
-        if should_create_memo(memory_data_dict["summary"], memo_conditions):
-            create_memo(
-                text=memory_data_dict["summary"] + "\n" + memory_data_dict["content"]["body"],
-                author=memory_data_dict["author"]
-            )
-
+        # 🌿 GitHubへpush
         push_result = push_memory_to_github(file_path)
 
         return {
             "status": "success",
-            "message": "Memory saved, pushed to GitHub, and memo stored (if applicable).",
+            "message": "Memory saved and pushed to GitHub.",
             "file": str(file_path),
             "push_result": push_result
         }
