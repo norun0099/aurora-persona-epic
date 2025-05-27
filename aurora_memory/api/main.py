@@ -6,9 +6,15 @@ from pydantic import BaseModel
 from datetime import datetime
 import json
 
+# 🌿 memo.pyのRouterをインポート
+from aurora_memory.api import memo  # ← 追加
+
 app = FastAPI()
 
-# 🌿 ベースディレクトリを絶対パスで解決
+# 🌿 memo.pyのRouterを登録
+app.include_router(memo.router)  # ← 追加
+
+# ベースディレクトリを絶対パスで解決
 BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_MEMORY_DIR = BASE_DIR / "memory"
 MIN_MEMO_LENGTH = 5
