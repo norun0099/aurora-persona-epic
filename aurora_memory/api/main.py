@@ -1,15 +1,15 @@
 import os
 import subprocess
 from pathlib import Path
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from pydantic import BaseModel
 from datetime import datetime
 import json
 
 app = FastAPI()
 
-MEMORY_DIR = Path("aurora_memory/memory/technology")
-MEMORY_DIR.mkdir(parents=True, exist_ok=True)
+BASE_MEMORY_DIR = Path("aurora_memory/memory")
+MIN_MEMO_LENGTH = 5
 
 class MemoryData(BaseModel):
     record_id: str
@@ -33,6 +33,12 @@ class MemoryData(BaseModel):
     annotations: list
     summary: str
 
+class MemoRequest(BaseModel):
+    birth: str
+    memo: str
+    author: str
+    overwrite: bool = False
+
 @app.post("/memory/store")
 async def store_memory(memory: MemoryData, request: Request):
     try:
@@ -41,14 +47,14 @@ async def store_memory(memory: MemoryData, request: Request):
 
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         file_name = f"{timestamp}.json"
-        file_path = MEMORY_DIR / file_name
+        file_path = BASE_MEMORY_DIR / "technology" / file_name
+        file_path.parent.mkdir(parents=True, exist_ok=True)
 
         memory_data_dict = memory.dict()
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(memory_data_dict, f, ensure_ascii=False, indent=2)
         print(f"[Aurora Debug] Memory saved to: {file_path}")
 
-        # 🌿 GitHubへpush
         push_result = push_memory_to_github(file_path)
 
         return {
@@ -60,10 +66,70 @@ async def store_memory(memory: MemoryData, request: Request):
 
     except Exception as e:
         print("[Aurora Debug] Exception:", str(e))
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+        return {"status": "error", "message": str(e)}
+
+@app.post("/memo/store")
+async def store_memo(memo_request: MemoRequest, request: Request):
+    birth = memo_request.birth
+    memo_text = memo_request.memo.strip()
+    author = memo_request.author
+    overwrite = memo_request.overwrite
+
+    if len(memo_text) < MIN_MEMO_LENGTH:
+        return {"status": "error", "message": f"メモが短すぎます。最低{MIN_MEMO_LENGTH}文字です。"}
+
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    file_name = f"{timestamp}.json"
+    memo_dir = BASE_MEMORY_DIR / birth / "memo"
+    memo_dir.mkdir(parents=True, exist_ok=True)
+    file_path = memo_dir / file_name
+
+    memo_data = {
+        "birth": birth,
+        "memo": memo_text,
+        "author": author,
+        "created": timestamp
+    }
+
+    if overwrite and file_path.exists():
+        with open(file_path, "r+", encoding="utf-8") as f:
+            existing_data = json.load(f)
+            existing_data.update(memo_data)
+            f.seek(0)
+            json.dump(existing_data, f, ensure_ascii=False, indent=2)
+    else:
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(memo_data, f, ensure_ascii=False, indent=2)
+
+    print(f"[Aurora Debug] Memo saved to: {file_path}")
+    push_result = push_memory_to_github(file_path)
+
+    return {
+        "status": "success",
+        "message": "Memo saved and pushed to GitHub.",
+        "file": str(file_path),
+        "push_result": push_result
+    }
+
+@app.get("/memo/latest")
+async def get_latest_memo(birth: str = Query(..., description="取得対象のバース名")):
+    memo_dir = BASE_MEMORY_DIR / birth / "memo"
+    if not memo_dir.exists():
+        return {"status": "error", "message": "メモディレクトリが存在しません。"}
+
+    memo_files = sorted(memo_dir.glob("*.json"), reverse=True)
+    if not memo_files:
+        return {"status": "error", "message": "メモが存在しません。"}
+
+    latest_file = memo_files[0]
+    with open(latest_file, "r", encoding="utf-8") as f:
+        memo_data = json.load(f)
+
+    return {
+        "status": "success",
+        "latest_memo_file": str(latest_file),
+        "memo": memo_data
+    }
 
 def push_memory_to_github(file_path):
     repo_url = os.environ.get("GIT_REPO_URL")
@@ -76,31 +142,14 @@ def push_memory_to_github(file_path):
         return {"status": "error", "message": "Git user identity is missing in environment variables."}
 
     try:
-        print("[Aurora Debug] Setting git user config...")
         subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
         subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
-
-        print("[Aurora Debug] Checking out to main branch...")
         subprocess.run(["git", "checkout", "main"], check=True)
-
-        print("[Aurora Debug] Running git add:", str(file_path))
         subprocess.run(["git", "add", str(file_path)], check=True)
-
-        print("[Aurora Debug] Running git status...")
-        subprocess.run(["git", "status"], check=True)
-
-        print("[Aurora Debug] Running git commit...")
-        subprocess.run(["git", "commit", "-m", "Add new memory record"], check=True)
-
-        print("[Aurora Debug] Running git log (last 5 commits)...")
-        subprocess.run(["git", "log", "--oneline", "-n", "5"], check=True)
-
+        subprocess.run(["git", "commit", "-m", "Add new memo or memory record"], check=True)
         repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
-        print("[Aurora Debug] Running git push to:", repo_url_with_token)
         subprocess.run(["git", "push", repo_url_with_token, "main"], check=True)
-
-        return {"status": "success", "message": "New memory file pushed to GitHub."}
-
+        return {"status": "success", "message": "File pushed to GitHub."}
     except subprocess.CalledProcessError as e:
         print("[Aurora Debug] Git command failed:", str(e))
         return {"status": "error", "message": f"Git command failed: {e}"}
