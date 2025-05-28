@@ -159,3 +159,4 @@ def integrate_memo_to_memory(memo_data):
 scheduler = BackgroundScheduler()
 scheduler.add_job(fetch_latest_memo, "interval", minutes=3)
 scheduler.start()
+print("[Aurora Debug] BackgroundScheduler started.")  # 🌟 追加：スケジューラ起動確認
