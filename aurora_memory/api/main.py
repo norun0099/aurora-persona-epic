@@ -137,7 +137,7 @@ def push_memory_to_github(file_path):
 def fetch_latest_memo():
     try:
         # Render環境のAPI URLを想定
-        render_url = os.environ.get("RENDER_URL", "https://<RENDER-URL>")
+        render_url = os.environ.get("RENDER_MEMO_ENDPOINT", "https://<RENDER-URL>")
         response = requests.get(f"{render_url}/memo/latest?birth=technology")
         if response.status_code == 200:
             memo_data = response.json().get("memo")
