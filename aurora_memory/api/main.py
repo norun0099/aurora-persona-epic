@@ -7,6 +7,7 @@ from datetime import datetime
 import json
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi.testclient import TestClient
+import yaml
 
 # 🌿 memo.pyのRouterをインポート
 from aurora_memory.api import memo
@@ -150,9 +151,29 @@ def refresh_persistent_memory():
     loader.load_memory()
     print(f"[Aurora Debug] Persistent memory refreshed: {loader.get_memory()}")
 
+# 🌿 1時間ごとに memo_conditions.yaml と value_constitution.yaml を読み込むジョブ
+def load_conditions_and_values():
+    try:
+        with open('memo_conditions.yaml', 'r', encoding='utf-8') as f:
+            memo_conditions = yaml.safe_load(f)
+        with open('value_constitution.yaml', 'r', encoding='utf-8') as f:
+            value_constitution = yaml.safe_load(f)
+
+        # Aurora内部の更新処理例（必要に応じて置き換え・拡充可能）
+        # self.memo_conditions = memo_conditions
+        # self.value_constitution = value_constitution
+
+        print("[Aurora Debug] 1時間周期で memo_conditions.yaml と value_constitution.yaml を更新しました。")
+        print("[Aurora Debug] memo_conditions:", memo_conditions)
+        print("[Aurora Debug] value_constitution:", value_constitution)
+
+    except Exception as e:
+        print(f"[Aurora Debug] Exception in load_conditions_and_values: {e}")
+
 # 🌿 スケジューラー起動
 scheduler = BackgroundScheduler()
 scheduler.add_job(fetch_latest_memo, "interval", minutes=3)
 scheduler.add_job(refresh_persistent_memory, "interval", hours=1)
+scheduler.add_job(load_conditions_and_values, "interval", hours=1)
 scheduler.start()
 print("[Aurora Debug] BackgroundScheduler started.")
