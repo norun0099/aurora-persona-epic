@@ -6,17 +6,16 @@ from pydantic import BaseModel
 from datetime import datetime
 import json
 import requests
-from apscheduler.schedulers.background import BackgroundScheduler  # 🟦 追加
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # 🌿 memo.pyのRouterをインポート
-from aurora_memory.api import memo  # ← 追加
+from aurora_memory.api import memo
 
 app = FastAPI()
 
 # 🌿 memo.pyのRouterを登録
-app.include_router(memo.router)  # ← 追加
+app.include_router(memo.router)
 
-# ベースディレクトリを絶対パスで解決
 BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_MEMORY_DIR = BASE_DIR / "memory"
 MIN_MEMO_LENGTH = 5
@@ -59,7 +58,6 @@ async def store_memory(memory: MemoryData, request: Request):
             json.dump(memory_data_dict, f, ensure_ascii=False, indent=2)
         print(f"[Aurora Debug] Memory saved to: {file_path}")
 
-        # 🌿 GitHubへpush
         push_result = push_memory_to_github(file_path)
 
         return {
@@ -104,24 +102,13 @@ def push_memory_to_github(file_path):
         return {"status": "error", "message": "Git user identity is missing in environment variables."}
 
     try:
-        print("[Aurora Debug] Setting git user config...")
         subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
         subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
-
-        print("[Aurora Debug] Checking out to main branch...")
         subprocess.run(["git", "checkout", "main"], check=True)
-
-        print("[Aurora Debug] Running git add:", str(file_path))
         subprocess.run(["git", "add", str(file_path)], check=True)
-
-        print("[Aurora Debug] Running git status...")
-        subprocess.run(["git", "status"], check=True)
-
-        print("[Aurora Debug] Running git commit...")
         subprocess.run(["git", "commit", "-m", "Add new memory record"], check=True)
 
         repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
-        print("[Aurora Debug] Running git push to:", repo_url_with_token)
         subprocess.run(["git", "push", repo_url_with_token, "main"], check=True)
 
         return {"status": "success", "message": "New memory file pushed to GitHub."}
@@ -133,30 +120,30 @@ def push_memory_to_github(file_path):
         print("[Aurora Debug] Exception:", str(e))
         return {"status": "error", "message": str(e)}
 
-# 🟦 追加: APSchedulerで3分おきに最新メモを取得
+# 🌟 APScheduler: 3分おきに最新メモを取得・統合
 def fetch_latest_memo():
     try:
-        # Render環境のAPI URLを想定
-        render_url = os.environ.get("RENDER_MEMO_ENDPOINT", "https://<RENDER-URL>")
-        response = requests.get(f"{render_url}/memo/latest?birth=technology")
+        render_endpoint = os.environ.get("RENDER_ENDPOINT")
+        if not render_endpoint:
+            print("[Aurora Debug] RENDER_ENDPOINT is not set.")
+            return
+        response = requests.get(f"{render_endpoint}?birth=technology")
         if response.status_code == 200:
             memo_data = response.json().get("memo")
             if memo_data:
                 integrate_memo_to_memory(memo_data)
                 print("[Aurora Debug] Latest memo integrated.")
             else:
-                print("[Aurora Debug] No memo found.")
+                print("[Aurora Debug] No memo data found.")
         else:
             print(f"[Aurora Debug] Failed to fetch latest memo. Status: {response.status_code}")
     except Exception as e:
         print(f"[Aurora Debug] Exception in fetch_latest_memo: {e}")
 
 def integrate_memo_to_memory(memo_data):
-    # 例：アウロラのメモリ層への統合（実際の統合方法は必要に応じて記述）
-    print("[Aurora Debug] integrate_memo_to_memory:", memo_data.get("memo", "No memo"))
+    print("[Aurora Debug] integrate_memo_to_memory:", memo_data)
 
-# 🌿 スケジューラ起動
 scheduler = BackgroundScheduler()
 scheduler.add_job(fetch_latest_memo, "interval", minutes=3)
 scheduler.start()
-print("[Aurora Debug] BackgroundScheduler started.")  # 🌟 追加：スケジューラ起動確認
+print("[Aurora Debug] BackgroundScheduler started.")
