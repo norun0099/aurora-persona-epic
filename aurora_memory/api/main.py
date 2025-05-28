@@ -123,11 +123,12 @@ def push_memory_to_github(file_path):
 # 🌟 APScheduler: 3分おきに最新メモを取得・統合
 def fetch_latest_memo():
     try:
-        render_endpoint = os.environ.get("RENDER_ENDPOINT")
+        render_endpoint = os.environ.get("RENDER_MEMO_ENDPOINT")
         if not render_endpoint:
-            print("[Aurora Debug] RENDER_ENDPOINT is not set.")
+            print("[Aurora Debug] RENDER_MEMO_ENDPOINT is not set.")
             return
-        response = requests.get(f"{render_endpoint}?birth=technology")
+
+        response = requests.get(render_endpoint)
         if response.status_code == 200:
             memo_data = response.json().get("memo")
             if memo_data:
