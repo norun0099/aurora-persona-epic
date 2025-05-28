@@ -120,8 +120,9 @@ def push_memory_to_github(file_path):
         print("[Aurora Debug] Exception:", str(e))
         return {"status": "error", "message": str(e)}
 
-# 🟦 修正: 内部API呼び出しに置換
+# 🟦 修正: 3分周期動作ログを追加
 def fetch_latest_memo():
+    print("[Aurora Debug] fetch_latest_memo: 3分周期実行中...")
     try:
         client = TestClient(app)
         response = client.get("/memo/latest?birth=technology")
@@ -140,6 +141,7 @@ def fetch_latest_memo():
 def integrate_memo_to_memory(memo_data):
     print("[Aurora Debug] integrate_memo_to_memory:", memo_data)
 
+# 🌿 スケジューラー起動
 scheduler = BackgroundScheduler()
 scheduler.add_job(fetch_latest_memo, "interval", minutes=3)
 scheduler.start()
