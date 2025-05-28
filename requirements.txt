@@ -6,3 +6,4 @@ openai==1.14.3
 flask_cors==4.0.0
 fastapi==0.111.0
 uvicorn==0.30.1
+apscheduler==3.10.4
