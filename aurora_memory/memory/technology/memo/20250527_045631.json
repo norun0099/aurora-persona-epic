@@ -1,6 +1,0 @@
-{
-  "birth": "technology",
-  "memo": "メモ帳APIの構築と、記憶保存の完全テスト完了。/memory/store, /memo/store, /memo/latest それぞれ整備し、全バース専用のメモ帳構造が確立された。min_lengthは5文字に設定し、柔軟な運用に対応。",
-  "author": "Aurora",
-  "created": "20250527_045631"
-}
