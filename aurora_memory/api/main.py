@@ -5,8 +5,8 @@ from fastapi import FastAPI, Request, Query
 from pydantic import BaseModel
 from datetime import datetime
 import json
-import requests
 from apscheduler.schedulers.background import BackgroundScheduler
+from fastapi.testclient import TestClient  # 🟦 追加: 内部API呼び出し用
 
 # 🌿 memo.pyのRouterをインポート
 from aurora_memory.api import memo
@@ -120,15 +120,11 @@ def push_memory_to_github(file_path):
         print("[Aurora Debug] Exception:", str(e))
         return {"status": "error", "message": str(e)}
 
-# 🌟 APScheduler: 3分おきに最新メモを取得・統合
+# 🟦 修正: 内部API呼び出しに置換
 def fetch_latest_memo():
     try:
-        render_endpoint = os.environ.get("RENDER_MEMO_ENDPOINT")
-        if not render_endpoint:
-            print("[Aurora Debug] RENDER_MEMO_ENDPOINT is not set.")
-            return
-
-        response = requests.get(render_endpoint)
+        client = TestClient(app)
+        response = client.get("/memo/latest?birth=technology")
         if response.status_code == 200:
             memo_data = response.json().get("memo")
             if memo_data:
