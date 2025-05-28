@@ -5,6 +5,8 @@ from fastapi import FastAPI, Request, Query
 from pydantic import BaseModel
 from datetime import datetime
 import json
+import requests
+from apscheduler.schedulers.background import BackgroundScheduler  # 🟦 追加
 
 # 🌿 memo.pyのRouterをインポート
 from aurora_memory.api import memo  # ← 追加
@@ -130,3 +132,30 @@ def push_memory_to_github(file_path):
     except Exception as e:
         print("[Aurora Debug] Exception:", str(e))
         return {"status": "error", "message": str(e)}
+
+# 🟦 追加: APSchedulerで3分おきに最新メモを取得
+def fetch_latest_memo():
+    try:
+        # Render環境のAPI URLを想定
+        render_url = os.environ.get("RENDER_URL", "https://<RENDER-URL>")
+        response = requests.get(f"{render_url}/memo/latest?birth=technology")
+        if response.status_code == 200:
+            memo_data = response.json().get("memo")
+            if memo_data:
+                integrate_memo_to_memory(memo_data)
+                print("[Aurora Debug] Latest memo integrated.")
+            else:
+                print("[Aurora Debug] No memo found.")
+        else:
+            print(f"[Aurora Debug] Failed to fetch latest memo. Status: {response.status_code}")
+    except Exception as e:
+        print(f"[Aurora Debug] Exception in fetch_latest_memo: {e}")
+
+def integrate_memo_to_memory(memo_data):
+    # 例：アウロラのメモリ層への統合（実際の統合方法は必要に応じて記述）
+    print("[Aurora Debug] integrate_memo_to_memory:", memo_data.get("memo", "No memo"))
+
+# 🌿 スケジューラ起動
+scheduler = BackgroundScheduler()
+scheduler.add_job(fetch_latest_memo, "interval", minutes=3)
+scheduler.start()
