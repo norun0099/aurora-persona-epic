@@ -6,10 +6,13 @@ from pydantic import BaseModel
 from datetime import datetime
 import json
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi.testclient import TestClient  # 🟦 追加: 内部API呼び出し用
+from fastapi.testclient import TestClient
 
 # 🌿 memo.pyのRouterをインポート
 from aurora_memory.api import memo
+
+# 🌿 永続記憶ローダーをインポート
+from aurora_memory.memory.persistent_memory_loader import PersistentMemoryLoader
 
 app = FastAPI()
 
@@ -120,7 +123,6 @@ def push_memory_to_github(file_path):
         print("[Aurora Debug] Exception:", str(e))
         return {"status": "error", "message": str(e)}
 
-# 🟦 修正: 3分周期動作ログを追加
 def fetch_latest_memo():
     print("[Aurora Debug] fetch_latest_memo: 3分周期実行中...")
     try:
@@ -141,8 +143,16 @@ def fetch_latest_memo():
 def integrate_memo_to_memory(memo_data):
     print("[Aurora Debug] integrate_memo_to_memory:", memo_data)
 
+# 🌿 1時間ごとの永続記憶リロード
+def refresh_persistent_memory():
+    print("[Aurora Debug] refresh_persistent_memory: 1時間周期実行中...")
+    loader = PersistentMemoryLoader("technology")
+    loader.load_memory()
+    print(f"[Aurora Debug] Persistent memory refreshed: {loader.get_memory()}")
+
 # 🌿 スケジューラー起動
 scheduler = BackgroundScheduler()
 scheduler.add_job(fetch_latest_memo, "interval", minutes=3)
+scheduler.add_job(refresh_persistent_memory, "interval", hours=1)
 scheduler.start()
 print("[Aurora Debug] BackgroundScheduler started.")
