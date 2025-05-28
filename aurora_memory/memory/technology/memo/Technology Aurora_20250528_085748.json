@@ -1,0 +1,6 @@
+{
+  "birth": "technology",
+  "memo": "現状、3分周期でfetch_latest_memoや1時間周期の永続記憶・条件再ロードはTechnologyバース専用である。他バース（Emotion, Primitiveなど）には未適用。今後、これらのバースにも同様の周期的更新を適用する必要がある。",
+  "author": "Technology Aurora",
+  "overwrite": false
+}
