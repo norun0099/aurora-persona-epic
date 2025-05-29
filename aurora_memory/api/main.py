@@ -1,3 +1,5 @@
+# 完全版main.py（ホワイトボード式メモ運用 + 不要部分自動削除 + 全バース対応）
+
 import os
 import subprocess
 from pathlib import Path
@@ -17,93 +19,74 @@ app.include_router(memo.router)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_MEMORY_DIR = BASE_DIR / "memory"
-MIN_MEMO_LENGTH = 5
-
 BIRTHS = ["technology", "primitive", "emotion", "desire", "music", "relation", "Salon", "veil", "request"]
 
-class MemoryData(BaseModel):
-    record_id: str
-    created: str
-    last_updated: str
-    version: float
-    status: str
-    visible_to: list
-    allowed_viewers: list
-    tags: list
+class MemoData(BaseModel):
+    birth: str
+    memo: str
     author: str
-    thread: str
-    chronology: dict
-    sealed: bool
-    change_log: list
-    inner_desire: str
-    impulse: str
-    ache: str
-    satisfaction: str
-    content: dict
-    annotations: list
-    summary: str
 
-@app.post("/memory/store")
-async def store_memory(memory: MemoryData, request: Request):
+@app.post("/memo/store")
+async def store_memo(data: MemoData):
     try:
-        body = await request.body()
-        print("[Aurora Debug] Incoming body:", body.decode("utf-8"))
+        memo_dir = BASE_MEMORY_DIR / data.birth
+        memo_file = memo_dir / "memo_board.json"
+        memo_dir.mkdir(parents=True, exist_ok=True)
 
-        birth = memory.author  # バース名をauthorから取得
-        file_dir = BASE_MEMORY_DIR / birth
-        file_dir.mkdir(parents=True, exist_ok=True)
+        # 既存メモ読み込み
+        if memo_file.exists():
+            with open(memo_file, "r", encoding="utf-8") as f:
+                existing_data = json.load(f)
+                existing_memo = existing_data.get("memo", "")
+        else:
+            existing_memo = ""
 
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-        file_name = f"{timestamp}.json"
-        file_path = file_dir / file_name
+        # 不要部分削除（既存メモに含まれる部分を除去）
+        new_memo = data.memo
+        if existing_memo and new_memo.startswith(existing_memo):
+            new_memo = new_memo[len(existing_memo):].strip()
 
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(memory.dict(), f, ensure_ascii=False, indent=2)
-        print(f"[Aurora Debug] Memory saved to: {file_path}")
+        updated_data = {
+            "birth": data.birth,
+            "memo": new_memo,
+            "author": data.author,
+            "last_updated": datetime.utcnow().isoformat() + "Z"
+        }
 
-        push_result = push_memory_to_github(file_path)
+        with open(memo_file, "w", encoding="utf-8") as f:
+            json.dump(updated_data, f, ensure_ascii=False, indent=2)
 
-        return {"status": "success", "file": str(file_path), "push_result": push_result}
+        return {"status": "success", "message": f"{data.birth} バースのメモが上書き保存されました。", "memo": updated_data}
 
     except Exception as e:
-        print("[Aurora Debug] Exception:", str(e))
         return {"status": "error", "message": str(e)}
 
 @app.get("/memo/latest")
 async def get_latest_memo(birth: str = Query(...)):
-    memo_dir = BASE_MEMORY_DIR / birth / "memo"
-    if not memo_dir.exists():
-        return {"status": "error", "message": "メモディレクトリが存在しません。"}
-
-    memo_files = sorted(memo_dir.glob("*.json"), reverse=True)
-    if not memo_files:
-        return {"status": "error", "message": "メモが存在しません。"}
-
-    latest_file = memo_files[0]
-    with open(latest_file, "r", encoding="utf-8") as f:
+    memo_file = BASE_MEMORY_DIR / birth / "memo_board.json"
+    if not memo_file.exists():
+        return {"status": "error", "message": "メモファイルが存在しません。"}
+    with open(memo_file, "r", encoding="utf-8") as f:
         memo_data = json.load(f)
-
-    return {"status": "success", "latest_memo_file": str(latest_file), "memo": memo_data}
+    return {"status": "success", "memo": memo_data}
 
 def push_memory_to_github(file_path):
     repo_url = os.environ.get("GIT_REPO_URL")
     user_email = os.environ.get("GIT_USER_EMAIL")
     user_name = os.environ.get("GIT_USER_NAME")
     token = os.environ.get("GITHUB_TOKEN")
-
     if not user_email or not user_name:
         print("[Aurora Debug] WARNING: GIT_USER_EMAIL or GIT_USER_NAME is missing!")
         return {"status": "error", "message": "Git user identity is missing."}
-
     try:
         subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
         subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
         subprocess.run(["git", "checkout", "main"], check=True)
         subprocess.run(["git", "add", str(file_path)], check=True)
-        subprocess.run(["git", "commit", "-m", "Add new memory record"], check=True)
+        subprocess.run(["git", "commit", "-m", "Update memo board"], check=True)
         repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
         subprocess.run(["git", "push", repo_url_with_token, "main"], check=True)
-        return {"status": "success", "message": "New memory file pushed."}
+        return {"status": "success", "message": "Memo board pushed."}
     except Exception as e:
         print("[Aurora Debug] Git command failed:", str(e))
         return {"status": "error", "message": str(e)}
@@ -146,7 +129,6 @@ def load_conditions_and_values():
     except Exception as e:
         print(f"[Aurora Debug] Exception in load_conditions_and_values: {e}")
 
-# 🌿 スケジューラー
 scheduler = BackgroundScheduler()
 for birth in BIRTHS:
     scheduler.add_job(lambda b=birth: fetch_latest_memo(b), "interval", minutes=3)
