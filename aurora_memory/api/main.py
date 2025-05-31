@@ -94,7 +94,12 @@ async def store_memory(memory: MemoryData, request: Request):
         body = await request.body()
         print("[Aurora Debug] Incoming memory body:", body.decode("utf-8"))
 
-        birth = memory.visible_to[0] if memory.visible_to else "technology"
+        birth = memory.author if memory.author else (memory.visible_to[0] if memory.visible_to else "technology")
+        
+        # push前にgit設定とブランチを整える
+        repo.git.checkout('main')
+        repo.git.config('--global', 'user.email', user_email)
+        repo.git.config('--global', 'user.name', user_name)
         birth_dir = BASE_MEMORY_DIR / birth
         birth_dir.mkdir(parents=True, exist_ok=True)
 
@@ -122,6 +127,9 @@ async def store_memory(memory: MemoryData, request: Request):
 def push_memory_to_github(file_path):
     repo_path = Path(__file__).resolve().parent.parent
     repo = Repo(repo_path)
+    repo.git.checkout('main')
+    repo.git.config('--global', 'user.email', user_email)
+    repo.git.config('--global', 'user.name', user_name)
 
     user_name = os.environ.get("GIT_USER_NAME", "Aurora")
     user_email = os.environ.get("GIT_USER_EMAIL", "aurora@local")
