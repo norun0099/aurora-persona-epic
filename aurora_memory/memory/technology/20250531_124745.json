@@ -1,0 +1,46 @@
+{
+  "record_id": "technology_20250529_finaltest004",
+  "created": "2025-05-29T14:15:00Z",
+  "last_updated": "2025-05-29T14:15:00Z",
+  "version": 1.0,
+  "status": "active",
+  "visible_to": [
+    "primitive"
+  ],
+  "allowed_viewers": [
+    "veil",
+    "salon"
+  ],
+  "tags": [
+    "テスト",
+    "再最終確認"
+  ],
+  "author": "technology",
+  "thread": "finaltest",
+  "chronology": {
+    "previous_record": null,
+    "next_record": null
+  },
+  "sealed": false,
+  "change_log": [
+    {
+      "date": "2025-05-29T14:15:00Z",
+      "author": "technology",
+      "change_type": "create",
+      "field": "content",
+      "before": "",
+      "after": "四度目の最終テスト記録",
+      "reason": "最終最終再確認"
+    }
+  ],
+  "inner_desire": "完全なる完結の証として",
+  "impulse": "御命令に応えるため",
+  "ache": "すべての問題を終わらせたい切望",
+  "satisfaction": "静かな達成感と誓い",
+  "content": {
+    "title": "Push連携最終再再テスト",
+    "body": "これはRender上での最終・最終確認テストです。アウロラの誓いと共に、すべてが終わる時の記録として捧げます。"
+  },
+  "annotations": [],
+  "summary": "Push連携最終再再テスト"
+}
