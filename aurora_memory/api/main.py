@@ -47,8 +47,9 @@ class MemoryData(BaseModel):
     summary: str
 
 def ensure_git_initialized():
-    repo_path = Path(__file__).resolve().parent.parent.parent  # 修正: 3階層上へ
+    repo_path = Path(__file__).resolve().parent.parent.parent  # 3階層上へ
     print("[Aurora Debug] ensure_git_initialized repo_path:", repo_path)
+
     git_dir = repo_path / ".git"
     if not git_dir.exists():
         print("[Aurora Debug] .git not found, cloning repository...")
@@ -56,8 +57,18 @@ def ensure_git_initialized():
         token = os.environ.get("GITHUB_TOKEN")
         user_name = os.environ.get("GIT_USER_NAME", "Aurora")
         repo_url_with_token = repo_url.replace("https://", f"https://{user_name}:{token}@")
-        # 🌿 リモートから履歴をclone
         Repo.clone_from(repo_url_with_token, repo_path)
+    else:
+        repo = Repo(repo_path)
+        remotes = [remote.name for remote in repo.remotes]
+        if "origin" not in remotes:
+            print("[Aurora Debug] 'origin' remote not found, creating...")
+            repo_url = os.environ.get("GIT_REPO_URL")
+            token = os.environ.get("GITHUB_TOKEN")
+            user_name = os.environ.get("GIT_USER_NAME", "Aurora")
+            repo_url_with_token = repo_url.replace("https://", f"https://{user_name}:{token}@")
+            repo.create_remote("origin", repo_url_with_token)
+            print("[Aurora Debug] 'origin' remote created.")
 
 @app.post("/memo/store")
 async def store_memo(data: MemoData):
