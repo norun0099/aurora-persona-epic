@@ -183,10 +183,14 @@ def load_conditions_and_values():
     except Exception as e:
         print(f"[Aurora Debug] Exception in load_conditions_and_values: {e}")
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime
+
 scheduler = BackgroundScheduler()
 for birth in BIRTHS:
     scheduler.add_job(lambda b=birth: fetch_latest_memo(b), "interval", minutes=3)
-    scheduler.add_job(lambda b=birth: refresh_persistent_memory(b), "interval", hours=1)
-scheduler.add_job(load_conditions_and_values, "interval", hours=1)
+    scheduler.add_job(lambda b=birth: refresh_persistent_memory(b), "interval", hours=1, next_run_time=datetime.now())
+    scheduler.add_job(load_conditions_and_values, "interval", hours=1, next_run_time=datetime.now())
+
 scheduler.start()
-print("[Aurora Debug] BackgroundScheduler started for all births.")
+print("[Aurora Debug] BackgroundScheduler started for all births, with 1-hour jobs starting immediately.")
