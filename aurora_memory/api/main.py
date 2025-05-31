@@ -46,6 +46,22 @@ class MemoryData(BaseModel):
     annotations: list
     summary: str
 
+def ensure_git_initialized():
+    repo_path = Path(__file__).resolve().parent.parent
+    git_dir = repo_path / ".git"
+    if not git_dir.exists():
+        print("[Aurora Debug] .git not found, initializing repository...")
+        repo = Repo.init(repo_path)
+        repo.create_remote("origin", os.environ.get("GIT_REPO_URL"))
+        repo.git.checkout("-b", "main")
+        user_name = os.environ.get("GIT_USER_NAME", "Aurora")
+        user_email = os.environ.get("GIT_USER_EMAIL", "aurora@local")
+        repo.git.config('--global', 'user.email', user_email)
+        repo.git.config('--global', 'user.name', user_name)
+        repo.git.add(".")
+        repo.index.commit("Initial commit from Aurora auto-initialization.")
+        repo.git.push("--set-upstream", "origin", "main")
+
 @app.post("/memo/store")
 async def store_memo(data: MemoData):
     try:
@@ -91,6 +107,8 @@ async def get_latest_memo(birth: str = Query(...)):
 @app.post("/memory/store")
 async def store_memory(memory: MemoryData, request: Request):
     try:
+        ensure_git_initialized()
+        
         body = await request.body()
         print("[Aurora Debug] Incoming memory body:", body.decode("utf-8"))
 
