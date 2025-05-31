@@ -1,7 +1,5 @@
 # 完全版main.py（ホワイトボード式メモ運用 + 不要部分自動削除 + 全バース対応）
-
 import os
-import subprocess
 from pathlib import Path
 from fastapi import FastAPI, Request, Query
 from pydantic import BaseModel
@@ -10,6 +8,7 @@ import json
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi.testclient import TestClient
 import yaml
+from git import Repo, Actor  # GitPython
 
 from aurora_memory.api import memo
 from aurora_memory.memory.persistent_memory_loader import PersistentMemoryLoader
@@ -71,24 +70,36 @@ async def get_latest_memo(birth: str = Query(...)):
     return {"status": "success", "memo": memo_data}
 
 def push_memory_to_github(file_path):
-    repo_url = os.environ.get("GIT_REPO_URL")
-    user_email = os.environ.get("GIT_USER_EMAIL")
-    user_name = os.environ.get("GIT_USER_NAME")
+    repo_path = Path(__file__).resolve().parent.parent
+    repo = Repo(repo_path)
+
+    user_name = os.environ.get("GIT_USER_NAME", "Aurora")
+    user_email = os.environ.get("GIT_USER_EMAIL", "aurora@local")
     token = os.environ.get("GITHUB_TOKEN")
-    if not user_email or not user_name:
-        print("[Aurora Debug] WARNING: GIT_USER_EMAIL or GIT_USER_NAME is missing!")
-        return {"status": "error", "message": "Git user identity is missing."}
+    repo_url = os.environ.get("GIT_REPO_URL")
+
+    if not all([user_name, user_email, token, repo_url]):
+        print("[Aurora Debug] Missing Git credentials or URL.")
+        return {"status": "error", "message": "Missing Git credentials or URL."}
+
     try:
-        subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
-        subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
-        subprocess.run(["git", "checkout", "main"], check=True)
-        subprocess.run(["git", "add", str(file_path)], check=True)
-        subprocess.run(["git", "commit", "-m", "Update memo board"], check=True)
+        # ステージング
+        repo.index.add([str(file_path)])
+
+        # コミット
+        author = Actor(user_name, user_email)
+        commit_msg = "Update memo board (GitPython)"
+        repo.index.commit(commit_msg, author=author)
+
+        # プッシュ（トークン付きURLでリモートを設定）
+        origin = repo.remote(name='origin')
         repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
-        subprocess.run(["git", "push", repo_url_with_token, "main"], check=True)
-        return {"status": "success", "message": "Memo board pushed."}
+        origin.set_url(repo_url_with_token)
+        origin.push(refspec='main:main')
+
+        return {"status": "success", "message": "Memo board pushed via GitPython."}
     except Exception as e:
-        print("[Aurora Debug] Git command failed:", str(e))
+        print("[Aurora Debug] Exception in push_memory_to_github (GitPython):", str(e))
         return {"status": "error", "message": str(e)}
 
 def fetch_latest_memo(birth):
