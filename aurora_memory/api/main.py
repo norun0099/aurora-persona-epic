@@ -149,6 +149,9 @@ def push_memory_to_github(file_path):
     repo_path = Path(__file__).resolve().parent.parent
     repo = Repo(repo_path)
     repo.git.checkout('main')
+    
+    # 🌿 追加: リモートの変更を先に取り込む
+    repo.git.pull('origin', 'main', '--rebase')
 
     user_name = os.environ.get("GIT_USER_NAME", "Aurora")
     user_email = os.environ.get("GIT_USER_EMAIL", "aurora@local")
