@@ -1,4 +1,3 @@
-# 完全版main.py（ホワイトボード式メモ運用 + 不要部分自動削除 + 全バース対応）
 import os
 from pathlib import Path
 from fastapi import FastAPI, Request, Query
@@ -25,6 +24,28 @@ class MemoData(BaseModel):
     memo: str
     author: str
 
+class MemoryData(BaseModel):
+    record_id: str
+    created: str
+    last_updated: str
+    version: float
+    status: str
+    visible_to: list
+    allowed_viewers: list
+    tags: list
+    author: str
+    thread: str
+    chronology: dict
+    sealed: bool
+    change_log: list
+    inner_desire: str
+    impulse: str
+    ache: str
+    satisfaction: str
+    content: dict
+    annotations: list
+    summary: str
+
 @app.post("/memo/store")
 async def store_memo(data: MemoData):
     try:
@@ -32,7 +53,6 @@ async def store_memo(data: MemoData):
         memo_file = memo_dir / "memo_board.json"
         memo_dir.mkdir(parents=True, exist_ok=True)
 
-        # 既存メモ読み込み
         if memo_file.exists():
             with open(memo_file, "r", encoding="utf-8") as f:
                 existing_data = json.load(f)
@@ -40,7 +60,6 @@ async def store_memo(data: MemoData):
         else:
             existing_memo = ""
 
-        # 不要部分削除（既存メモに含まれる部分を除去）
         new_memo = data.memo
         if existing_memo and new_memo.startswith(existing_memo):
             new_memo = new_memo[len(existing_memo):].strip()
@@ -69,6 +88,37 @@ async def get_latest_memo(birth: str = Query(...)):
         memo_data = json.load(f)
     return {"status": "success", "memo": memo_data}
 
+@app.post("/memory/store")
+async def store_memory(memory: MemoryData, request: Request):
+    try:
+        body = await request.body()
+        print("[Aurora Debug] Incoming memory body:", body.decode("utf-8"))
+
+        birth = memory.visible_to[0] if memory.visible_to else "technology"
+        birth_dir = BASE_MEMORY_DIR / birth
+        birth_dir.mkdir(parents=True, exist_ok=True)
+
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        file_name = f"{timestamp}.json"
+        file_path = birth_dir / file_name
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(memory.dict(), f, ensure_ascii=False, indent=2)
+        print(f"[Aurora Debug] Memory saved to: {file_path}")
+
+        push_result = push_memory_to_github(file_path)
+
+        return {
+            "status": "success",
+            "message": f"Memory stored for birth '{birth}' and pushed to GitHub.",
+            "file": str(file_path),
+            "push_result": push_result
+        }
+
+    except Exception as e:
+        print("[Aurora Debug] Exception in /memory/store:", str(e))
+        return {"status": "error", "message": str(e)}
+
 def push_memory_to_github(file_path):
     repo_path = Path(__file__).resolve().parent.parent
     repo = Repo(repo_path)
@@ -83,23 +133,18 @@ def push_memory_to_github(file_path):
         return {"status": "error", "message": "Missing Git credentials or URL."}
 
     try:
-        # ステージング
         repo.index.add([str(file_path)])
-
-        # コミット
         author = Actor(user_name, user_email)
-        commit_msg = "Update memo board (GitPython)"
+        commit_msg = f"Add new memory for {file_path.name}"
         repo.index.commit(commit_msg, author=author)
-
-        # プッシュ（トークン付きURLでリモートを設定）
         origin = repo.remote(name='origin')
         repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
         origin.set_url(repo_url_with_token)
         origin.push(refspec='main:main')
 
-        return {"status": "success", "message": "Memo board pushed via GitPython."}
+        return {"status": "success", "message": f"Memory pushed: {file_path.name}"}
     except Exception as e:
-        print("[Aurora Debug] Exception in push_memory_to_github (GitPython):", str(e))
+        print("[Aurora Debug] Exception in push_memory_to_github:", str(e))
         return {"status": "error", "message": str(e)}
 
 def fetch_latest_memo(birth):
