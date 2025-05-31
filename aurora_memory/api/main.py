@@ -47,8 +47,8 @@ class MemoryData(BaseModel):
     summary: str
 
 def ensure_git_initialized():
-    repo_path = Path(__file__).resolve().parent.parent
-    print("[Aurora Debug] ensure_git_initialized repo_path:", repo_path)  # ← 追加
+    repo_path = Path(__file__).resolve().parent.parent.parent  # 修正: 3階層上へ
+    print("[Aurora Debug] ensure_git_initialized repo_path:", repo_path)
     git_dir = repo_path / ".git"
     if not git_dir.exists():
         print("[Aurora Debug] .git not found, cloning repository...")
@@ -136,8 +136,8 @@ async def store_memory(memory: MemoryData, request: Request):
         return {"status": "error", "message": str(e)}
 
 def push_memory_to_github(file_path):
-    repo_path = Path(__file__).resolve().parent.parent
-    print("[Aurora Debug] push_memory_to_github repo_path:", repo_path)  # ← 追加
+    repo_path = Path(__file__).resolve().parent.parent.parent  # 修正: 3階層上へ
+    print("[Aurora Debug] push_memory_to_github repo_path:", repo_path)
     repo = Repo(repo_path)
     repo.git.checkout('main')
 
