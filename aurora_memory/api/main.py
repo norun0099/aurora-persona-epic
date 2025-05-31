@@ -160,7 +160,7 @@ def push_memory_to_github(file_path):
         author = Actor(user_name, user_email)
         commit_msg = f"Add new memory for {file_path.name}"
         repo.index.commit(commit_msg, author=author)
-        repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
+        repo_url_with_token = repo_url.replace("https://", f"https://{user_name}:{token}@")
         repo.git.push(repo_url_with_token, "main")
 
         return {"status": "success", "message": f"Memory pushed: {file_path.name}"}
