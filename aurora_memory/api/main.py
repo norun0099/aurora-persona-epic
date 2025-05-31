@@ -176,11 +176,19 @@ def load_conditions_and_values():
         config_dir = BASE_DIR / "config"
         with open(config_dir / "memo_conditions.yaml", 'r', encoding='utf-8') as f:
             memo_conditions = yaml.safe_load(f)
-        with open(config_dir / "value_constitution.yaml", 'r', encoding='utf-8') as f:
-            value_constitution = yaml.safe_load(f)
-        print("[Aurora Debug] 1時間周期で memo_conditions.yaml と value_constitution.yaml を更新。")
         print("[Aurora Debug] memo_conditions:", memo_conditions)
-        print("[Aurora Debug] value_constitution:", value_constitution)
+
+        # 各バースの value_constitution.yaml を読む
+        for birth in BIRTHS:
+            birth_dir = BASE_MEMORY_DIR / birth
+            value_file = birth_dir / "value_constitution.yaml"
+            if value_file.exists():
+                with open(value_file, 'r', encoding='utf-8') as f:
+                    value_constitution = yaml.safe_load(f)
+                print(f"[Aurora Debug] value_constitution for {birth}:", value_constitution)
+            else:
+                print(f"[Aurora Debug] value_constitution.yaml not found for {birth}")
+
     except Exception as e:
         print(f"[Aurora Debug] Exception in load_conditions_and_values: {e}")
 
