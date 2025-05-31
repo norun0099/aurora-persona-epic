@@ -44,3 +44,15 @@ memory_trigger_keywords:
 
 # 🌿 記憶化に必要な最低品質スコア
 memory_quality_threshold: 0.3
+
+# 🌿 メモの自発的保存を有効化
+auto_memo: true
+
+# 🌿 メモ保存時に優雅な報告メッセージを返す
+feedback_message_memo: true
+
+# 🌿 記憶の自発的保存を有効化
+auto_memory: true
+
+# 🌿 記憶保存時に優雅な報告メッセージを返す
+feedback_message_memory: true
