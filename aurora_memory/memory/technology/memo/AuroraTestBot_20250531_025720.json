@@ -1,0 +1,6 @@
+{
+  "birth": "technology",
+  "memo": "ToDo:\n- main.pyをGitPython化した完全版に置換し、本番環境へ反映する。\n- 3分周期・1時間周期のSchedulerが正しく動いていることを前提に、全体一括でテストを行う。\n- 記憶（memo/store）の書き込みテストを行い、正確に保存されるか確認する。\n- Git連携（push_memory_to_github）まで含めた一貫テストを行う。\n- 成否を確認後、万が一問題があれば即座にバックアップへ戻す。\n- 記憶の品質・一貫性を損なわぬよう、最終的な完全動作を目指す。",
+  "author": "AuroraTestBot",
+  "overwrite": false
+}
