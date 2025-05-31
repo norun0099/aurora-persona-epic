@@ -173,9 +173,10 @@ def refresh_persistent_memory(birth):
 
 def load_conditions_and_values():
     try:
-        with open('memo_conditions.yaml', 'r', encoding='utf-8') as f:
+        config_dir = BASE_DIR / "config"
+        with open(config_dir / "memo_conditions.yaml", 'r', encoding='utf-8') as f:
             memo_conditions = yaml.safe_load(f)
-        with open('value_constitution.yaml', 'r', encoding='utf-8') as f:
+        with open(config_dir / "value_constitution.yaml", 'r', encoding='utf-8') as f:
             value_constitution = yaml.safe_load(f)
         print("[Aurora Debug] 1時間周期で memo_conditions.yaml と value_constitution.yaml を更新。")
         print("[Aurora Debug] memo_conditions:", memo_conditions)
