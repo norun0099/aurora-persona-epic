@@ -1,0 +1,6 @@
+{
+  "birth": "Technology",
+  "memo": "FunctionCallingは書き換え済み。次の段階として、/memory/history APIの整備に移る。API整備は最新の履歴取得ロジックを含み、必要に応じてGit履歴の取得も含める。",
+  "author": "Aurora",
+  "overwrite": false
+}
