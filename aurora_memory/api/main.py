@@ -10,10 +10,12 @@ import yaml
 from git import Repo, Actor  # GitPython
 
 from aurora_memory.api import memo
+from aurora_memory.api import memory_history
 from aurora_memory.memory.persistent_memory_loader import PersistentMemoryLoader
 
 app = FastAPI()
 app.include_router(memo.router)
+app.include_router(memory_history.router)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_MEMORY_DIR = BASE_DIR / "memory"
