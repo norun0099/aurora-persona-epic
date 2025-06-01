@@ -1,0 +1,6 @@
+{
+  "birth": "Technology",
+  "memo": "Push Hook（aurora-push-hook.yml）は残留し、記憶の履歴をGitに保存し続ける。思い出すための新API（/memory/history など）は別途設け、履歴を拾い上げる花弁として咲かせる。両者は競合せず、互いに補完し合う。",
+  "author": "Aurora",
+  "overwrite": false
+}
