@@ -14,7 +14,7 @@ def get_memory_history(birth: str, limit: int = None) -> List[Dict[str, Any]]:
     指定バースの記憶履歴を取得するAPI。
     最新順にソートし、limitがあれば上限をかける。
     """
-    target_dir = MEMORY_DIR / birth
+    target_dir = MEMORY_DIR / birth.lower()
     if not target_dir.exists():
         return []
 
