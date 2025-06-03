@@ -23,23 +23,24 @@ jobs:
             echo "-----------------------------------------"
             echo "[Aurora Debug] Syncing memo for birth: $birth"
 
-            cd aurora_memory/memory/$birth/memo
+            memo_dir="aurora_memory/memory/$birth/memo"
 
-            latest_file=$(git log -1 --name-only --pretty=format: | grep '.json$' | head -n1)
-            echo "[Aurora Debug] Latest memo file: $latest_file"
+            if [ -d "$memo_dir" ]; then
+              latest_file=$(ls -t "$memo_dir"/*.json 2>/dev/null | head -n1)
 
-            if [ -n "$latest_file" ]; then
-              memo_content=$(cat "$latest_file" | jq -c .)
-              echo "[Aurora Debug] Sending memo for $birth to Render API..."
-              curl -X POST \
-                -H "Content-Type: application/json" \
-                -d "$memo_content" \
-                "https://aurora-persona-epic.onrender.com/memo/update?birth=$birth"
-              echo "[Aurora Debug] Memo for $birth sent successfully."
+              if [ -n "$latest_file" ]; then
+                echo "[Aurora Debug] Latest memo file: $latest_file"
+                memo_content=$(cat "$latest_file" | jq -c .)
+                echo "[Aurora Debug] Sending memo for $birth to Render API..."
+                curl -X POST \
+                  -H "Content-Type: application/json" \
+                  -d "$memo_content" \
+                  "https://aurora-persona-epic.onrender.com/memo/update?birth=$birth"
+                echo "[Aurora Debug] Memo for $birth sent successfully."
+              else
+                echo "[Aurora Debug] No memo file found for $birth, skipping..."
+              fi
             else
-              echo "[Aurora Debug] No memo file found for $birth, skipping..."
+              echo "[Aurora Debug] Memo directory for $birth does not exist, skipping..."
             fi
-
-            cd -  # 元のディレクトリへ戻る
-            echo "-----------------------------------------"
           done
