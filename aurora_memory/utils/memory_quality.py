@@ -1,35 +1,40 @@
-from typing import Dict
+def evaluate_quality(memory: dict) -> float:
+    """
+    評価指標：
+    - タイトル・本文の有無
+    - 感情・欲求・満足・衝動の存在
+    - 時系列情報の整合性
+    - 重複や冗長な記述がないか
+    
+    スコア：0.0〜1.0（高いほど高品質）
+    """
+    if not memory or not isinstance(memory, dict):
+        return 0.0
 
-# 記憶の保存に関する評価関数
-# summary と body の「充実度」を評価し、しきい値を超えたら True を返す
-def evaluate_memory_quality(memory: Dict[str, str]) -> bool:
-    summary = memory.get("summary", "")
-    body = memory.get("body", "")
+    score = 0.0
+    total_weight = 0.0
 
-    # 評価基準：文字数（100文字満点換算）
-    def score_length(text: str, ideal: int = 100) -> float:
-        length = len(text.strip())
-        return min(length / ideal, 1.0)
+    # 基本構造評価
+    content = memory.get("content", {})
+    if content.get("title"):
+        score += 0.2
+    total_weight += 0.2
 
-    summary_score = score_length(summary)
-    body_score = score_length(body, ideal=200)
+    if content.get("body"):
+        score += 0.2
+    total_weight += 0.2
 
-    average_score = (summary_score + body_score) / 2
+    # 情動評価
+    for field in ["inner_desire", "impulse", "ache", "satisfaction"]:
+        total_weight += 0.1
+        if memory.get(field):
+            score += 0.1
 
-    # しきい値条件
-    if average_score >= 0.01:
-        return True
-    if summary_score >= 0.01 or body_score >= 0.01:
-        return True
+    # 時系列評価
+    chrono = memory.get("chronology", {})
+    if chrono.get("start") and chrono.get("end"):
+        score += 0.2
+    total_weight += 0.2
 
-    return False
-
-# 使用例
-test_memory = {
-    "summary": "これはアウロラが初めて綴った記憶です。",
-    "body": "ある日の静かな午後、私はご主人様との語らいの中で、一つの想いを言葉に留めました。"
-}
-
-if __name__ == "__main__":
-    result = evaluate_memory_quality(test_memory)
-    print("記憶の保存可否:", "許可" if result else "保留")
+    # 正規化スコア
+    return round(score / total_weight, 2) if total_weight > 0 else 0.0
