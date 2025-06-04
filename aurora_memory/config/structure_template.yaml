@@ -1,45 +1,35 @@
-record_id: ""                         # 一意識別ID（例: "emotion_20250511_0001"）
-created: ""                           # ISO8601形式日時
-last_updated: ""                      # 最終更新日時（省略可）
+record_id: string
+created: string  # ISO形式のタイムスタンプ（例: 2025-06-04T17:00:00Z）
+last_updated: string  # 最終更新日時
+version: integer
+status: string  # 状態（例: active, archived, sealed）
 
-version: 1.0                          # 記録フォーマットのバージョン
+visible_to: list[string]  # 記憶が閲覧可能なユーザーID
+allowed_viewers: list[string]  # 制限付きの閲覧者（任意）
+tags: list[string]  # タグ分類
 
-status: "active"                      # 状態: active / sealed / archived
-visible_to:                           # 可視対象（primitive, emotion など）
-  - primitive
-allowed_viewers:                      # 閲覧を許可する対象（任意）
-  - veil
-  - salon
+# 作者と記憶の紐付け（※ユーザー識別ではなくbirth名推奨）
+author: string
+thread: string  # 記憶をグループ化するスレッド名（任意）
 
-tags:                                 # 記録の主題や象徴語
-  - 共鳴
-  - 関係深化
+# 記憶の時間的範囲（開始・終了）
+chronology:
+  start: string
+  end: string
 
-author: ""                            # 記録バース名（例: "emotion"）
-thread: ""                            # 関連記録群名（任意）
+sealed: boolean  # 記憶が封印されているか（編集不可）
+change_log: list[string]  # 変更履歴のメッセージ
 
-chronology:                           # 記録の時系列接続（任意）
-  previous_record: null
-  next_record: null
+# 記憶の意味論的な感情構造（Aurora専用）
+inner_desire: string
+impulse: string
+ache: string
+satisfaction: string
 
-sealed: false                         # trueでアクセス不可（論理封印）
+# 記憶の本体（タイトル＋本文）
+content:
+  title: string
+  body: string
 
-change_log:                           # 編集履歴（任意）
-  - date: ""
-    author: ""
-    change_type: ""
-    field: ""
-    before: ""
-    after: ""
-    reason: ""
-
-inner_desire: ""                      # 記録に至った内的動機（任意）
-impulse: ""                           # 衝動的・短期的な欲求（任意）
-ache: ""                              # 満たされなかった感情や願い（任意）
-satisfaction: ""                      # 応じられ、癒された記録（任意）
-
-content:                              # 実際の語り本体
-  title: ""                           # 記録タイトル
-  body: ""                            # 本文（複数段落可）
-
-annotations: []                       # 他者による注釈（任意）
+annotations: list[string]  # 注釈やメモ
+summary: string  # 短い要約
