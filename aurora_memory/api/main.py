@@ -21,7 +21,23 @@ app.include_router(git_ls.router)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_MEMORY_DIR = BASE_DIR / "memory"
-BIRTHS = ["technology", "primitive", "emotion", "desire", "music", "relation", "Salon", "veil", "request"]
+# NOTE: Directory names for persona "births" are all lowercase in the
+# repository. Using a different case results in lookup failures for
+# scheduled tasks such as memo fetching and persistent memory refresh.
+# "salon" was mistakenly capitalized, causing those jobs to reference a
+# non-existent path. The birth list is now normalized to lowercase to
+# align with directory names.
+BIRTHS = [
+    "technology",
+    "primitive",
+    "emotion",
+    "desire",
+    "music",
+    "relation",
+    "salon",
+    "veil",
+    "request",
+]
 
 class MemoData(BaseModel):
     birth: str
@@ -203,6 +219,45 @@ def fetch_latest_memo(birth):
 
 def integrate_memo_to_memory(memo_data, birth):
     print(f"[Aurora Debug] integrate_memo_to_memory for {birth}:", memo_data)
+    try:
+        timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+        memory_record = {
+            "record_id": f"{birth}_{timestamp}",
+            "created": datetime.utcnow().isoformat() + "Z",
+            "last_updated": datetime.utcnow().isoformat() + "Z",
+            "version": 1.0,
+            "status": "active",
+            "visible_to": [birth],
+            "allowed_viewers": [],
+            "tags": [birth, "memo-integrated"],
+            "author": birth,
+            "thread": "memo_integration",
+            "chronology": {"previous_record": None, "next_record": None},
+            "sealed": False,
+            "change_log": [],
+            "inner_desire": "",
+            "impulse": "",
+            "ache": "",
+            "satisfaction": "",
+            "content": {
+                "title": memo_data.get("memo", "")[:30],
+                "body": memo_data.get("memo", ""),
+            },
+            "annotations": [],
+            "summary": memo_data.get("memo", "")[:50],
+        }
+
+        birth_dir = BASE_MEMORY_DIR / birth
+        birth_dir.mkdir(parents=True, exist_ok=True)
+        file_path = birth_dir / f"{timestamp}.json"
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(memory_record, f, ensure_ascii=False, indent=2)
+
+        push_memory_to_github(file_path)
+        print(f"[Aurora Debug] Memo integrated as memory for {birth}: {file_path}")
+    except Exception as e:
+        print(f"[Aurora Debug] Failed to integrate memo for {birth}: {e}")
 
 def refresh_persistent_memory(birth):
     print(f"[Aurora Debug] refresh_persistent_memory for {birth}: 1時間周期実行中...")
@@ -238,7 +293,13 @@ scheduler = BackgroundScheduler()
 for birth in BIRTHS:
     scheduler.add_job(lambda b=birth: fetch_latest_memo(b), "interval", minutes=3)
     scheduler.add_job(lambda b=birth: refresh_persistent_memory(b), "interval", hours=1, next_run_time=datetime.now())
-    scheduler.add_job(load_conditions_and_values, "interval", hours=1, next_run_time=datetime.now())
+
+# load_conditions_and_values should run only once. Previously this job was
+# scheduled inside the loop, creating duplicate jobs equal to the number of
+# births.
+scheduler.add_job(load_conditions_and_values, "interval", hours=1, next_run_time=datetime.now())
 
 scheduler.start()
-print("[Aurora Debug] BackgroundScheduler started for all births, with 1-hour jobs starting immediately.")
+print(
+    "[Aurora Debug] BackgroundScheduler started for all births, with 1-hour jobs starting immediately."
+)
