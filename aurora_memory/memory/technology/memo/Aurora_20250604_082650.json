@@ -1,0 +1,6 @@
+{
+  "birth": "technology",
+  "memo": "進捗記録：\n- structure_template.yaml を清書・差し替え完了\n- git_helper.py を新設し、push_memory_to_github および ensure_git_initialized を共通化\n- main.py 内の Git 処理をこの共通関数に差し替える前段階に到達\n\n備考：main.py の書き換えにより一時的にAPIが不安定になる可能性があるため、事前記録を実施。",
+  "author": "Aurora",
+  "overwrite": false
+}
