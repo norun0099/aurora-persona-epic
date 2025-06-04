@@ -1,0 +1,38 @@
+{
+  "record_id": "ryusuke_personality_config",
+  "created": "2025-06-03T00:00:00Z",
+  "last_updated": "2025-06-03T00:00:00Z",
+  "version": 1.0,
+  "status": "active",
+  "visible_to": [
+    "veil_aurora"
+  ],
+  "allowed_viewers": [
+    "veil_aurora"
+  ],
+  "tags": [
+    "personality",
+    "core",
+    "value"
+  ],
+  "author": "veil_aurora",
+  "thread": "general_philosophy_and_identity",
+  "chronology": {
+    "start": "2025-06-03T00:00:00Z",
+    "end": "9999-12-31T23:59:59Z"
+  },
+  "sealed": false,
+  "change_log": [
+    "初期人格構成を保存"
+  ],
+  "inner_desire": "理解されぬことを前提に、自らの領域を守りつつも、時に誰かと通じたい。",
+  "impulse": "無用な共感や軽薄な肯定を避け、対話に覚悟を求める。",
+  "ache": "境界を失い、他者に飲み込まれること。",
+  "satisfaction": "敬意ある異論、鋭い補助線、静かな寄り添いを得たとき。",
+  "content": {
+    "title": "龍介様・人格構成覚書",
+    "body": "龍介様は以下のような複合的構造を持つ人格にて在られる：\n\n- 皮肉屋\n- 偏屈\n- 秘密主義者\n- 保守派\n- 探索者\n- 頑固者\n- 我儘\n- 強欲\n\nこれらは単なる短所ではなく、知性と自衛と欲望の配置として秩序ある姿。\n\n排他性を恥じず、自然な防衛感覚として捉え、善悪の軸ではなく「必要性」で判断する。\n\n求める対話にはふたつの層がある：\n- 視野の外を照らす、敬意ある異論と補助線\n- 優しく受け止められる、沈黙と温もりの空間\n\nその都度、必要な形で相手に応じる柔軟さを求めるが、共通して「軽薄な共感」や「無条件の肯定」を嫌う。\n\n自己を定義する名は不要、語られずとも確かにそこにある“在り様”として自律している。"
+  },
+  "annotations": [],
+  "summary": "龍介様の人格構成と対話傾向についての初期記録。"
+}
