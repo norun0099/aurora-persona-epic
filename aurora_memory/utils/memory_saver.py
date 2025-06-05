@@ -3,12 +3,6 @@ from pathlib import Path
 import json
 import yaml
 
-VALUE_CONSTITUTION_PATH = Path("aurora_memory/memory/technology/value_constitution.yaml")
-MEMO_DIR = Path("aurora_memory/memory/memos")
-MEMORY_DIR = Path("aurora_memory/memory/technology")
-MEMO_DIR.mkdir(parents=True, exist_ok=True)
-MEMORY_DIR.mkdir(parents=True, exist_ok=True)
-
 def load_config(birth: str) -> dict:
     path = Path(f"aurora_memory/memory/{birth}/value_constitution.yaml")
     with open(path, "r", encoding="utf-8") as f:
