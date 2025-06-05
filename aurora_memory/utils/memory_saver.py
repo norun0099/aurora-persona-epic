@@ -64,7 +64,7 @@ def try_auto_save(text: str, author: str = "Aurora") -> str:
     config = load_config()
     feedbacks = []
 
-    if detect_memo_trigger(text):
+    if detect_memo_trigger(text, birth):
         path = save_memo(text, author)
         if config.get("feedback_message_memo", False):
             feedbacks.append(f"🌸この言葉、思索の花としてメモに残しました（{path}）")
