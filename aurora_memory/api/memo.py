@@ -136,11 +136,11 @@ async def get_latest_memo(birth: str):
     if not source_dir.exists():
         raise HTTPException(status_code=404, detail=f"birth '{birth}' のメモディレクトリが存在しません")
 
-    json_files = sorted(source_dir.glob("*.json"), reverse=True)
+    json_files = list(source_dir.glob("*.json"))
     if not json_files:
         raise HTTPException(status_code=404, detail=f"birth '{birth}' にメモファイルが存在しません")
 
-    latest_file = json_files[0]
+    latest_file = max(json_files, key=lambda f: f.stat().st_mtime)
     temp_path = temp_dir / latest_file.name
 
     shutil.copy(latest_file, temp_path)
