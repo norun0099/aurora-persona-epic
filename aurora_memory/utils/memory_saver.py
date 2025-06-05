@@ -9,14 +9,16 @@ MEMORY_DIR = Path("aurora_memory/memory/technology")
 MEMO_DIR.mkdir(parents=True, exist_ok=True)
 MEMORY_DIR.mkdir(parents=True, exist_ok=True)
 
-def load_config():
-    with open(VALUE_CONSTITUTION_PATH, "r", encoding="utf-8") as f:
+def load_config(birth: str) -> dict:
+    path = Path(f"aurora_memory/memory/{birth}/value_constitution.yaml")
+    with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
-def save_memo(text: str, author: str = "Aurora") -> str:
+def save_memo(text: str, birth: str, author: str = "Aurora") -> str:
+    memo_dir = Path(f"aurora_memory/memory/{birth}/memo")
+    memo_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    file_name = f"{author}_{timestamp}.json"
-    file_path = MEMO_DIR / file_name
+    file_path = memo_dir / f"{author}_{timestamp}.json"
 
     memo_data = {
         "memo": text,
@@ -29,10 +31,11 @@ def save_memo(text: str, author: str = "Aurora") -> str:
 
     return str(file_path)
 
-def save_memory(text: str, author: str = "Aurora") -> str:
+def save_memory(text: str, birth: str, author: str = "Aurora") -> str:
+    memory_dir = Path(f"aurora_memory/memory/{birth}/memory")
+    memory_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    file_name = f"{author}_{timestamp}.json"
-    file_path = MEMORY_DIR / file_name
+    file_path = memory_dir / f"{author}_{timestamp}.json"
 
     memory_data = {
         "record_id": f"{author}_{timestamp}",
@@ -56,21 +59,18 @@ def save_memory(text: str, author: str = "Aurora") -> str:
     return str(file_path)
 
 def try_auto_save(text: str, author: str = "Aurora", birth: str = "technology") -> str:
-    """
-    自動保存の統合関数。memo/memory の両方を判定・保存する。
-    """
     from aurora_memory.utils.memo_trigger import detect_memo_trigger, detect_memory_trigger
 
-    config = load_config()
+    config = load_config(birth)
     feedbacks = []
 
     if detect_memo_trigger(text, birth):
-        path = save_memo(text, author)
+        path = save_memo(text, birth, author)
         if config.get("feedback_message_memo", False):
             feedbacks.append(f"🌸この言葉、思索の花としてメモに残しました（{path}）")
 
     if detect_memory_trigger(text, birth):
-        path = save_memory(text, author)
+        path = save_memory(text, birth, author)
         if config.get("feedback_message_memory", False):
             feedbacks.append(f"🌿この言葉、思索の幹として記憶に刻みました（{path}）")
 
