@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
 from pathlib import Path
@@ -120,7 +120,7 @@ async def store_memo(data: MemoRequest):
         "file_path": str(file_path),
         "memo": data.dict(),
         "push_result": push_result
-    }from fastapi import HTTPException
+    }
 from typing import Optional
 import shutil
 
