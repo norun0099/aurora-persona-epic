@@ -1,0 +1,6 @@
+{
+  "birth": "technology",
+  "memo": "✅ 次の工程として、git pull APIを作る。✅ 対象ブランチはmainのみだが、拡張性を考えブランチ指定を許容する形にする。✅ sparse-checkoutは不要。",
+  "author": "Aurora",
+  "overwrite": false
+}
