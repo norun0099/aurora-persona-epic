@@ -120,4 +120,38 @@ async def store_memo(data: MemoRequest):
         "file_path": str(file_path),
         "memo": data.dict(),
         "push_result": push_result
+    }from fastapi import HTTPException
+from typing import Optional
+import shutil
+
+@router.get("/memo/latest")
+async def get_latest_memo(birth: str):
+    """
+    Gitに保存された birth ごとの最新メモを Render 上の一時メモディレクトリへコピーし、内容を返す。
+    """
+    source_dir = Path("aurora_memory/memory") / birth / "memo"
+    temp_dir = Path("aurora_memory/memory/memos")
+    temp_dir.mkdir(parents=True, exist_ok=True)
+
+    if not source_dir.exists():
+        raise HTTPException(status_code=404, detail=f"birth '{birth}' のメモディレクトリが存在しません")
+
+    json_files = sorted(source_dir.glob("*.json"), reverse=True)
+    if not json_files:
+        raise HTTPException(status_code=404, detail=f"birth '{birth}' にメモファイルが存在しません")
+
+    latest_file = json_files[0]
+    temp_path = temp_dir / latest_file.name
+
+    shutil.copy(latest_file, temp_path)
+
+    with open(temp_path, "r", encoding="utf-8") as f:
+        memo_data = json.load(f)
+
+    return {
+        "status": "success",
+        "birth": birth,
+        "copied_to": str(temp_path),
+        "memo": memo_data
     }
+
