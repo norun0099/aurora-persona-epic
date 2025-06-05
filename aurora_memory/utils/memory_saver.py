@@ -55,7 +55,7 @@ def save_memory(text: str, author: str = "Aurora") -> str:
 
     return str(file_path)
 
-def try_auto_save(text: str, author: str = "Aurora") -> str:
+def try_auto_save(text: str, author: str = "Aurora", birth: str = "technology") -> str:
     """
     自動保存の統合関数。memo/memory の両方を判定・保存する。
     """
@@ -69,7 +69,7 @@ def try_auto_save(text: str, author: str = "Aurora") -> str:
         if config.get("feedback_message_memo", False):
             feedbacks.append(f"🌸この言葉、思索の花としてメモに残しました（{path}）")
 
-    if detect_memory_trigger(text):
+    if detect_memory_trigger(text, birth):
         path = save_memory(text, author)
         if config.get("feedback_message_memory", False):
             feedbacks.append(f"🌿この言葉、思索の幹として記憶に刻みました（{path}）")
