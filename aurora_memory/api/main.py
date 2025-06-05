@@ -62,6 +62,25 @@ for birth in BIRTHS:
         name=f"Auto Save Memory for {birth}"
     )
 
+# 🌿 value_constitution.yaml の自動保存ジョブを追加
+
+def make_job(birth):
+    def job():
+        config_path = Path(f"aurora_memory/memory/{birth}/value_constitution.yaml")
+        if config_path.exists():
+            with open(config_path, "r", encoding="utf-8") as f:
+                constitution_text = f.read()
+            try_auto_save(constitution_text, birth=birth)
+    return job
+
+for birth in BIRTHS:
+    scheduler.add_job(
+        make_job(birth),
+        trigger=IntervalTrigger(hours=1),
+        id=f"auto_save_constitution_{birth}",
+        name=f"Auto Save Constitution for {birth}"
+    )
+
 scheduler.start()
 
 if __name__ == "__main__":
