@@ -4,7 +4,8 @@ from datetime import datetime
 from pathlib import Path
 
 MEMORY_ROOT = Path(__file__).resolve().parent.parent / "memory"
-VALID_BIRTHS = {"technology", "primitive", "emotion", "logic", "narrative", "identity"}
++ from aurora_memory.config.birth_loader import load_births_from_yaml
++ VALID_BIRTHS = set(load_births_from_yaml())
 
 def validate_memory_structure(data: dict) -> None:
     if not isinstance(data.get("visible_to"), list) or not data["visible_to"]:
