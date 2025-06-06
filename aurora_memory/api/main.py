@@ -29,9 +29,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-BIRTHS = [
-    "technology", "emotion", "desire", "relation", "request", "primitive", "music", "veil", "salon"
-]
++ from aurora_memory.config.birth_loader import load_births_from_yaml
++ BIRTHS = load_births_from_yaml()
 
 @app.post("/memory/store")
 async def store_memory(request: Request):
