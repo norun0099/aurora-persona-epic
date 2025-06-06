@@ -4,7 +4,7 @@ import yaml
 
 def load_value_constitution(birth: str):
     path = f"aurora_memory/memory/{birth}/value_constitution.yaml"
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
