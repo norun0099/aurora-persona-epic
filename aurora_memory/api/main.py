@@ -10,7 +10,6 @@ from aurora_memory.utils.memo_trigger import trigger_auto_memo
 from aurora_memory.utils.memory_saver import try_auto_save
 from aurora_memory.utils.memory_quality import evaluate_quality
 from aurora_memory.core.memory_io import save_memory_file
-from aurora_memory.utils.memory_quality import evaluate_quality
 import uvicorn
 import os
 import json
@@ -56,7 +55,7 @@ scheduler = BackgroundScheduler()
 
 for birth in BIRTHS:
     scheduler.add_job(
-        lambda b=birth: try_auto_save(b),
+        lambda b=birth: try_auto_save("", birth=b),
         trigger=IntervalTrigger(hours=1),
         id=f"auto_save_{birth}",
         name=f"Auto Save Memory for {birth}"
