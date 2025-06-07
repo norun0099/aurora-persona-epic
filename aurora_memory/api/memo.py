@@ -6,6 +6,7 @@ import yaml
 import json
 import os
 import subprocess
+from aurora_memory.utils.gpt_sender import send_memo_to_gpt
 
 router = APIRouter()
 
@@ -114,12 +115,15 @@ async def store_memo(data: MemoRequest):
     # 🟦 GitHubへpush
     push_result = push_memory_to_github(file_path)
 
+    gpt_result = send_memo_to_gpt(data.birth, data.memo)
+
     return {
         "status": "success",
         "message": "メモが保存されました",
         "file_path": str(file_path),
         "memo": data.dict(),
-        "push_result": push_result
+        "push_result": push_result,
+        "gpt_result": gpt_result,
     }
 from typing import Optional
 import shutil
