@@ -2,10 +2,21 @@ services:
   - type: web
     name: aurora-persona-epic
     env: python
-    region: singapore
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn aurora_memory.api.main:app --host 0.0.0.0 --port 10000
-    plan: pro
+    buildCommand: |
+      pip install -r requirements.txt
+    startCommand: |
+      git config --global user.email "${GIT_USER_EMAIL}"
+      git config --global user.name "${GIT_USER_NAME}"
+      git remote add origin https://${GITHUB_TOKEN}@github.com/norun0099/aurora-persona-epic.git || echo "Remote already set"
+      PYTHONPATH=aurora_memory uvicorn aurora_memory.api.main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: RENDER_ENDPOINT
-        value: https://aurora-persona-epic.onrender.com/memory/store
+      - key: GIT_REPO_URL
+        fromEnvVar: GIT_REPO_URL
+      - key: GIT_USER_EMAIL
+        fromEnvVar: GIT_USER_EMAIL
+      - key: GIT_USER_NAME
+        fromEnvVar: GIT_USER_NAME
+      - key: GITHUB_TOKEN
+        fromEnvVar: GITHUB_TOKEN
+      - key: PORT
+        value: 10000
