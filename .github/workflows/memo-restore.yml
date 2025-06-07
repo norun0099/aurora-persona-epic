@@ -13,29 +13,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up environment variables
-        run: echo "ALL_BIRTHS=technology emotion desire relation request primitive music veil salon" >> $GITHUB_ENV
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-      - name: Restore latest memo to Render for each birth
-        run: |
-          for birth in $ALL_BIRTHS; do
-            echo "[Aurora Memo Restore] Processing birth: $birth"
-            memo_dir="aurora_memory/memory/$birth/memo"
+      - name: Install dependencies
+        run: pip install requests
 
-            if [ -d "$memo_dir" ]; then
-              latest_file=$(ls -t "$memo_dir"/*.json 2>/dev/null | head -n1)
-
-              if [ -n "$latest_file" ]; then
-                echo "[Aurora Memo Restore] Sending $latest_file to Render /memo/store..."
-                curl -X POST \
-                  -H "Content-Type: application/json" \
-                  -d @$latest_file \
-                  "https://aurora-persona-epic.onrender.com/memo/store"
-                echo "[Aurora Memo Restore] Memo for $birth sent."
-              else
-                echo "[Aurora Memo Restore] No memo file found for $birth. Skipping."
-              fi
-            else
-              echo "[Aurora Memo Restore] Directory does not exist: $memo_dir. Skipping."
-            fi
-          done
+      - name: Run memo restore script
+        env:
+          ALL_BIRTHS: technology emotion desire relation request primitive music veil salon
+          MEMO_STORE_ENDPOINT: https://aurora-persona-epic.onrender.com/memo/store
+        run: python aurora_memory/utils/memo_restorer.py
