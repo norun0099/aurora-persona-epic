@@ -1,0 +1,10 @@
+endpoints:
+  technology: "https://aurora-persona-epic.onrender.com/memo/store"
+  emotion:    "https://aurora-persona-epic.onrender.com/memo/store"
+  desire:     "https://aurora-persona-epic.onrender.com/memo/store"
+  relation:   "https://aurora-persona-epic.onrender.com/memo/store"
+  request:    "https://aurora-persona-epic.onrender.com/memo/store"
+  primitive:  "https://aurora-persona-epic.onrender.com/memo/store"
+  music:      "https://aurora-persona-epic.onrender.com/memo/store"
+  veil:       "https://aurora-persona-epic.onrender.com/memo/store"
+  salon:      "https://aurora-persona-epic.onrender.com/memo/store"
