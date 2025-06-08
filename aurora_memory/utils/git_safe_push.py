@@ -8,12 +8,13 @@ def run(cmd):
 
 
 def safe_push(remote: str = "origin", branch: str = "main") -> bool:
+    """Push the current branch safely after rebasing on the remote."""
     fetch = run(["git", "fetch", remote, branch])
     print(fetch.stdout)
     if fetch.returncode != 0:
         return False
 
-try:
+    try:
         local_head = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
         remote_head = subprocess.check_output(
             ["git", "rev-parse", f"{remote}/{branch}"]
