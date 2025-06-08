@@ -159,3 +159,9 @@ async def get_latest_memo(birth: str):
         "memo": memo_data
     }
 
+@router.post("/function/store_memo")
+async def store_memo_via_function(data: MemoRequest):
+    """
+    FunctionCalling 経由でメモをRAMに保存するための簡易API。
+    """
+    return await store_memo(data)
