@@ -39,7 +39,7 @@ def sync_memos(births=None, base_url=DEFAULT_BASE_URL):
     for birth in births:
         try:
             print(f"[FC Sync] Fetching latest memo for {birth}")
-            resp = requests.get(f"{base_url}/memo/latest", params={"birth": birth}, timeout=10)
+            resp = requests.get(f"{base_url}/memo/latest", params={"birth": birth}, timeout=60)
             resp.raise_for_status()
             data = resp.json()
             memo_data = data.get("memo", {})
@@ -54,7 +54,7 @@ def sync_memos(births=None, base_url=DEFAULT_BASE_URL):
             print(f"[FC Sync] Memo for {birth} synced")
         except Exception as e:
             print(f"[FC Sync] Failed to send memo for {birth}: {e}")            
-        time.sleep(60)  # 遅延追加（過負荷回避）
+        time.sleep(13)  # 遅延追加（過負荷回避）
 
 
 def main():
