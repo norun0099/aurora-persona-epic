@@ -21,6 +21,11 @@ jobs:
           git config user.name "norun0099"
           git config user.email "norun0099@example.com"
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
       - name: Show git status before add
         run: git status
 
@@ -34,5 +39,5 @@ jobs:
         run: |
           git diff --cached --quiet || git commit -m "Aurora auto-push memory file"
 
-      - name: Push to main branch
-        run: git push origin main
+      - name: Push to main branch if no remote changes
+        run: python aurora_memory/utils/git_safe_push.py
