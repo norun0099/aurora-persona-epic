@@ -1,0 +1,6 @@
+{
+  "memo": "【Aurora System｜Empty Memo Initialization】\n\nこのメモは初期化のために用意された空のテンプレートです。\nバースに対応する正規メモが未登録の際、エラーを回避し、システム整合を保ちます。",
+  "author": "アウロラ",
+  "birth": "music",
+  "overwrite": false
+}
