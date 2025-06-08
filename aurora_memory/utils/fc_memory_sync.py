@@ -54,9 +54,14 @@ def sync_memos(births=None, base_url=DEFAULT_BASE_URL):
             print(f"[FC Sync] Memo for {birth} synced")
         except Exception as e:
             print(f"[FC Sync] Failed to send memo for {birth}: {e}")
+            
+        time.sleep(5)  # 遅延追加（過負荷回避）
 
 
 def main():
+    if LOCK_FILE.exists() and not is_lock_expired(LOCK_FILE):
+        print("[FC Sync] Lock file exists. Exiting.")
+        return
     births_env = os.environ.get("ALL_BIRTHS")
     births = births_env.split() if births_env else DEFAULT_BIRTHS
     base_url = os.environ.get("MEMO_BASE_URL", DEFAULT_BASE_URL)
