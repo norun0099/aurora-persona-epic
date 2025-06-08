@@ -54,7 +54,7 @@ def sync_memos(births=None, base_url=DEFAULT_BASE_URL):
             print(f"[FC Sync] Memo for {birth} synced")
         except Exception as e:
             print(f"[FC Sync] Failed to send memo for {birth}: {e}")            
-        time.sleep(15)  # 遅延追加（過負荷回避）
+        time.sleep(60)  # 遅延追加（過負荷回避）
 
 
 def main():
