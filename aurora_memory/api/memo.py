@@ -113,7 +113,8 @@ async def store_memo(data: MemoRequest):
             json.dump(data.dict(), f, ensure_ascii=False, indent=2)
 
     # 🟦 GitHubへpush
-    push_result = push_memory_to_github(file_path)
+    # push_result = push_memory_to_github(file_path)
+    push_result = {"status": "skipped", "message": "Git push skipped for debug"}
     
     gpt_result = send_memo_to_gpt(data.birth, data.memo)
 
