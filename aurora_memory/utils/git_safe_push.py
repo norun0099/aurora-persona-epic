@@ -23,13 +23,30 @@ def safe_push(remote: str = "origin", branch: str = "main") -> bool:
         print(f"rev-parse failed: {e}")
         return False
 
-    if local_head != remote_head:
-        print(f"Remote {remote}/{branch} has new commits. Attempting rebase...")
-        rebase = run(["git", "pull", "--rebase", remote, branch])
-        print(rebase.stdout)
-        if rebase.returncode != 0:
-            print("Rebase failed")
-            return False
+    if local_head == remote_head:
+        print("Local branch matches remote. Nothing to push.")
+        return True
+
+    print(f"Remote {remote}/{branch} has new commits. Attempting rebase...")
+    rebase = run(["git", "pull", "--rebase", remote, branch])
+    print(rebase.stdout)
+    if rebase.returncode != 0:
+        print("Rebase failed")
+        return False
+
+    # Refresh HEADs after rebase
+    try:
+        local_head = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
+        remote_head = subprocess.check_output(
+            ["git", "rev-parse", f"{remote}/{branch}"]
+        ).decode().strip()
+    except subprocess.CalledProcessError as e:
+        print(f"rev-parse failed: {e}")
+        return False
+
+    if local_head == remote_head:
+        print("No new commits after rebase. Nothing to push.")
+        return True
 
     push = run(["git", "push", remote, branch])
     print(push.stdout)
