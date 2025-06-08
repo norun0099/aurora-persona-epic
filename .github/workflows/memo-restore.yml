@@ -1,9 +1,7 @@
-name: Aurora Memo Restore to Render
-
-on:
-  schedule:
-    - cron: '*/53 * * * *' # 53分ごとに実行
-  workflow_dispatch:
+# on:
+#   schedule:
+#     - cron: '*/53 * * * *' # 53分ごとに実行
+#   workflow_dispatch:
 
 jobs:
   restore_memo:
