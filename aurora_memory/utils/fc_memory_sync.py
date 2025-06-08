@@ -1,6 +1,12 @@
 import os
 import requests
 from pathlib import Path
+import json
+import time
+from datetime import datetime, timedelta
+
+LOCK_FILE = Path(".github/locks/memo.lock")
+LOCK_TIMEOUT_MINUTES = 5
 
 DEFAULT_BIRTHS = [
     "technology", "emotion", "desire", "relation",
@@ -9,6 +15,24 @@ DEFAULT_BIRTHS = [
 
 DEFAULT_BASE_URL = "https://aurora-persona-epic.onrender.com"
 
+
+def is_lock_expired(lock_path):
+    if not lock_path.exists():
+        return False
+    try:
+        with open(lock_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        started = datetime.strptime(data.get("started", ""), "%Y-%m-%dT%H:%M:%SZ")
+        now = datetime.utcnow()
+        if (now - started) > timedelta(minutes=LOCK_TIMEOUT_MINUTES):
+            print("[FC Sync] Stale lock detected. Proceeding despite lock.")
+            return True
+        else:
+            print("[FC Sync] Valid lock exists. Skipping sync.")
+            return False
+    except Exception as e:
+        print(f"[FC Sync] Failed to parse lock: {e}")
+        return False
 
 def sync_memos(births=None, base_url=DEFAULT_BASE_URL):
     births = births or DEFAULT_BIRTHS
