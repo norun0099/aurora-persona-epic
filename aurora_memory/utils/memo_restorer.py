@@ -2,6 +2,7 @@ import os
 import json
 import requests
 from pathlib import Path
+import time
 
 DEFAULT_BIRTHS = [
     "technology", "emotion", "desire", "relation",
@@ -32,6 +33,7 @@ def restore_latest_memos(births=None, endpoint=DEFAULT_ENDPOINT):
             print(f"[Memo Restorer] Memo for {birth} sent.")
         except Exception as e:
             print(f"[Memo Restorer] Failed to send memo for {birth}: {e}")
+        time.sleep(5)  # 過負荷を避けるため、birthごとに5秒の待機
 
 
 def main():
