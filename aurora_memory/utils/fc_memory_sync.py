@@ -50,7 +50,7 @@ def sync_memos(births=None, base_url=DEFAULT_BASE_URL):
         try:
             print(f"[FC Sync] Sending memo for {birth}")
             post_resp = requests.post(f"{base_url}/function/store_memo", json=memo_data, timeout=60)
-            post_resp = {"status": "skipped", "message": "Memory sync disabled for Render stability"}
+            # post_resp = {"status": "skipped", "message": "Memory sync disabled for Render stability"}
             print(f"[FC Sync] Memo for {birth} skipped for stability")
             post_resp.raise_for_status()
             print(f"[FC Sync] Memo for {birth} synced")
