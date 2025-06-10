@@ -4,7 +4,7 @@ import yaml
 import time
 from pathlib import Path
 from datetime import datetime
-from aurora_memory.utils.config.birth_loader import load_births_from_yaml
+from aurora_memory.config.birth_loader import load_births_from_yaml
 from aurora_memory.utils.git_helper import push_memory_to_github
 
 LOCK_FILE = "/tmp/constitution_rewriter.lock"
