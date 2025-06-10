@@ -2,7 +2,7 @@ name: Rewrite Constitution
 
 on:
   schedule:
-    - cron: '15 * * * *'   # 毎時0分に実行（UTC）
+    - cron: '15 * * * *'   # 毎時15分に実行（UTC）
   workflow_dispatch:       # 手動実行も許容
 
 jobs:
