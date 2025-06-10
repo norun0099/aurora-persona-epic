@@ -53,4 +53,3 @@ auto_memory: true
 
 # 🌿 記憶保存時に優雅な報告メッセージを返す
 feedback_message_memory: true
-これだけ追記をしていくよ
