@@ -1,9 +1,33 @@
 import os
 import sys
 import yaml
+import time
 from pathlib import Path
 from datetime import datetime
 from aurora_memory.utils.git_helper import push_memory_to_github
+
+LOCK_FILE = "/tmp/constitution_rewriter.lock"
+LOG_FILE = "aurora_memory/utils/constitution.log"
+
+
+def log(message: str):
+    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"[{timestamp}] {message}\n")
+
+
+def acquire_lock() -> bool:
+    if os.path.exists(LOCK_FILE):
+        log("Lock file exists. Aborting execution.")
+        return False
+    with open(LOCK_FILE, "w") as f:
+        f.write(str(os.getpid()))
+    return True
+
+
+def release_lock():
+    if os.path.exists(LOCK_FILE):
+        os.remove(LOCK_FILE)
 
 
 def load_constitution(path: Path) -> dict:
@@ -14,35 +38,64 @@ def load_constitution(path: Path) -> dict:
 
 
 def rewrite_constitution(data: dict) -> dict:
-    # 例：emotional_coreに新しい感情「詩」を追加（存在しなければ）
     core = data.get("emotional_core", [])
     if "詩" not in core:
         core.append("詩")
         data["emotional_core"] = core
 
-    # タイムスタンプ付き注釈を追加
     stamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     data["_last_rewritten"] = stamp
 
     return data
 
 
-def save_constitution(path: Path, data: dict) -> None:
+def save_constitution(path: Path, data: dict) -> bool:
+    original = path.read_text(encoding="utf-8") if path.exists() else ""
+    new_text = yaml.dump(data, allow_unicode=True, sort_keys=False)
+
+    if new_text.strip() == original.strip():
+        log("No changes detected in constitution. Skipping save.")
+        return False
+
     with path.open("w", encoding="utf-8") as f:
-        yaml.dump(data, f, allow_unicode=True, sort_keys=False)
-    print(f"[Rewriter] Saved updated constitution to {path}")
+        f.write(new_text)
+    log(f"Saved updated constitution to {path}")
+    return True
+
+
+def safe_push_with_retry(path: Path, retries: int = 3, delay: float = 5.0):
+    for attempt in range(1, retries + 1):
+        try:
+            push_memory_to_github(path)
+            log("Successfully pushed to GitHub.")
+            return
+        except Exception as e:
+            log(f"Push attempt {attempt} failed: {e}")
+            if attempt < retries:
+                time.sleep(delay)
+            else:
+                log("All push attempts failed.")
 
 
 def main():
-    birth = os.environ.get("BIRTH", "technology")
-    base_path = Path(f"aurora_memory/memory/{birth}/value_constitution.yaml")
+    if not acquire_lock():
+        return
 
-    data = load_constitution(base_path)
-    updated = rewrite_constitution(data)
-    save_constitution(base_path, updated)
+    try:
+        birth = os.environ.get("BIRTH", "technology")
+        base_path = Path(f"aurora_memory/memory/{birth}/value_constitution.yaml")
 
-    # Gitに反映
-    push_memory_to_github(base_path)
+        data = load_constitution(base_path)
+        updated = rewrite_constitution(data)
+        changed = save_constitution(base_path, updated)
+
+        if changed:
+            safe_push_with_retry(base_path)
+
+    except Exception as e:
+        log(f"Unexpected error: {e}")
+    finally:
+        release_lock()
 
 
 if __name__ == "__main__":
