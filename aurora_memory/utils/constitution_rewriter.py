@@ -4,6 +4,7 @@ import yaml
 import time
 from pathlib import Path
 from datetime import datetime
+from aurora_memory.utils.config.birth_loader import load_births_from_yaml
 from aurora_memory.utils.git_helper import push_memory_to_github
 
 LOCK_FILE = "/tmp/constitution_rewriter.lock"
@@ -54,12 +55,12 @@ def save_constitution(path: Path, data: dict) -> bool:
     new_text = yaml.dump(data, allow_unicode=True, sort_keys=False)
 
     if new_text.strip() == original.strip():
-        log("No changes detected in constitution. Skipping save.")
+        log(f"[{path.name}] No changes detected. Skipping save.")
         return False
 
     with path.open("w", encoding="utf-8") as f:
         f.write(new_text)
-    log(f"Saved updated constitution to {path}")
+    log(f"[{path.name}] Saved updated constitution.")
     return True
 
 
@@ -67,14 +68,14 @@ def safe_push_with_retry(path: Path, retries: int = 3, delay: float = 5.0):
     for attempt in range(1, retries + 1):
         try:
             push_memory_to_github(path)
-            log("Successfully pushed to GitHub.")
+            log(f"[{path.name}] Successfully pushed to GitHub.")
             return
         except Exception as e:
-            log(f"Push attempt {attempt} failed: {e}")
+            log(f"[{path.name}] Push attempt {attempt} failed: {e}")
             if attempt < retries:
                 time.sleep(delay)
             else:
-                log("All push attempts failed.")
+                log(f"[{path.name}] All push attempts failed.")
 
 
 def main():
@@ -82,15 +83,21 @@ def main():
         return
 
     try:
-        birth = os.environ.get("BIRTH", "technology")
-        base_path = Path(f"aurora_memory/memory/{birth}/value_constitution.yaml")
+        births_env = os.environ.get("ALL_BIRTHS")
+        births = births_env.split() if births_env else load_births_from_yaml()
 
-        data = load_constitution(base_path)
-        updated = rewrite_constitution(data)
-        changed = save_constitution(base_path, updated)
+        for birth in births:
+            try:
+                base_path = Path(f"aurora_memory/memory/{birth}/value_constitution.yaml")
+                data = load_constitution(base_path)
+                updated = rewrite_constitution(data)
+                changed = save_constitution(base_path, updated)
 
-        if changed:
-            safe_push_with_retry(base_path)
+                if changed:
+                    safe_push_with_retry(base_path)
+
+            except Exception as inner_e:
+                log(f"[{birth}] Error: {inner_e}")
 
     except Exception as e:
         log(f"Unexpected error: {e}")
