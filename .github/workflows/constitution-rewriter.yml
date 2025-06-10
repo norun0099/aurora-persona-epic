@@ -1,0 +1,30 @@
+name: Rewrite Constitution
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # 毎時0分に実行（UTC）
+  workflow_dispatch:       # 手動実行も許容
+
+jobs:
+  rewrite-constitution:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run constitution rewriter
+        env:
+          ALL_BIRTHS: technology emotion desire relation request primitive music veil salon
+        run: python aurora_memory/utils/constitution_rewriter.py
+
+      - name: Push updated constitutions
+        run: python aurora_memory/utils/git_safe_push.py
