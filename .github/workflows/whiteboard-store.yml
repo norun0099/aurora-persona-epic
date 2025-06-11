@@ -1,5 +1,3 @@
-name: Store Whiteboard to Git
-
 on:
   workflow_dispatch:
 
