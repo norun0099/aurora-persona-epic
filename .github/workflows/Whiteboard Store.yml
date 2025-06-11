@@ -1,0 +1,40 @@
+name: Store Whiteboard to Git
+
+on:
+  workflow_dispatch:
+
+jobs:
+  store_whiteboard:
+    runs-on: ubuntu-latest
+
+    env:
+      GIT_REPO_URL: ${{ secrets.GIT_REPO_URL }}
+      GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
+      GIT_USER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Prepare temporary whiteboard file
+        run: |
+          echo "$WHITEBOARD_CONTENT" > temp_whiteboard.yaml
+        env:
+          WHITEBOARD_CONTENT: ${{ secrets.WHITEBOARD_CONTENT }}
+
+      - name: Store and sync whiteboard
+        run: |
+          python aurora_memory/config/whiteboard_sync.py "$BIRTH" temp_whiteboard.yaml
+        env:
+          BIRTH: ${{ secrets.BIRTH }}
+
+      - name: Clean up temporary file
+        run: rm -f temp_whiteboard.yaml
