@@ -2,14 +2,11 @@ import os
 import requests
 from datetime import datetime
 from aurora_memory.utils.whiteboard_logger import log
-from datetime import datetime
-
 
 GITHUB_API_URL = "https://api.github.com"
 REPO = "norun0099/aurora-persona-epic"
 WORKFLOW_FILE = "whiteboard-store.yml"
 BRANCH = "main"
-
 
 def trigger_whiteboard_store():
     token = os.getenv("GITHUB_TOKEN")
@@ -25,11 +22,7 @@ def trigger_whiteboard_store():
     payload = {
         "ref": BRANCH
     }
-    
-def log(message: str):
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[Whiteboard][{timestamp}] {message}")
-    
+
     try:
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code == 204:
@@ -38,4 +31,3 @@ def log(message: str):
             log(f"⚠️ Failed to trigger action: {response.status_code} - {response.text}")
     except Exception as e:
         log(f"Exception while triggering GitHub Action: {e}")
-    
