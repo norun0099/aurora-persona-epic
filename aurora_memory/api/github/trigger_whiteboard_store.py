@@ -1,31 +1,25 @@
-import logging
-import sys
+# aurora_memory/api/github/trigger_whiteboard_store.py
 
-# カスタムロガー設定
+import os
+import sys
+import logging
+import requests
+
+# --- ロガー統合部分 ---
 logger = logging.getLogger("WhiteboardLogger")
 logger.setLevel(logging.INFO)
-
-# 既存のHandlerを除去（再読み込み対応）
 logger.handlers.clear()
 
-# コンソール出力用のHandler
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-
-# 出力フォーマット設定（色付きログにも拡張可能）
 formatter = logging.Formatter("[%(asctime)s] 🧭 %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S")
 console_handler.setFormatter(formatter)
 
 logger.addHandler(console_handler)
 
-# 外部から利用するラッパー関数
 def log(message: str, level: str = "info"):
     """
-    ログを出力するユーティリティ関数
-
-    Args:
-        message (str): 出力するログメッセージ
-        level (str): ログレベル（info, warning, error, debug）
+    ログ出力ユーティリティ関数
     """
     level = level.lower()
     if level == "debug":
@@ -36,3 +30,34 @@ def log(message: str, level: str = "info"):
         logger.error(message)
     else:
         logger.info(message)
+
+# --- GitHub Actions トリガー関数 ---
+GITHUB_API_URL = "https://api.github.com"
+REPO = "norun0099/aurora-persona-epic"
+WORKFLOW_FILE = "whiteboard-store.yml"
+BRANCH = "main"
+
+def trigger_whiteboard_store():
+    """
+    GitHub Actions の workflow_dispatch を手動トリガー
+    """
+    token = os.getenv("GITHUB_TOKEN")
+    if not token:
+        log("GITHUB_TOKEN not set. Cannot trigger GitHub Action.", level="error")
+        return
+
+    url = f"{GITHUB_API_URL}/repos/{REPO}/actions/workflows/{WORKFLOW_FILE}/dispatches"
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github+json"
+    }
+    payload = {"ref": BRANCH}
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        if response.status_code == 204:
+            log("✅ GitHub Action 'whiteboard-store.yml' triggered successfully.")
+        else:
+            log(f"⚠️ Failed to trigger action: {response.status_code} - {response.text}", level="warning")
+    except Exception as e:
+        log(f"Exception while triggering GitHub Action: {e}", level="error")
