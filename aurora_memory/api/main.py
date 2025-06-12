@@ -10,6 +10,7 @@ from aurora_memory.utils.memo_trigger import trigger_auto_memo
 from aurora_memory.utils.memory_saver import try_auto_save
 from aurora_memory.utils.memory_quality import evaluate_quality
 from aurora_memory.core.memory_io import save_memory_file
+from aurora_memory.api.github.trigger_whiteboard_store import trigger_whiteboard_store
 import uvicorn
 import os
 import json
@@ -49,6 +50,37 @@ async def store_memory(request: Request):
     push_result = push_memory_to_github(file_path, f"Add new memory for {file_path.name}")
 
     return {"status": "success", "file": str(file_path), "push_result": push_result}
+    
+@app.post("/whiteboard/store")
+async def store_whiteboard(request: Request):
+    data = await request.json()
+    birth = data.get("birth")
+    notes = data.get("notes", "")
+
+    if birth not in BIRTHS:
+        return JSONResponse(status_code=400, content={"message": "Invalid birth type."})
+
+    wb_path = Path(f"aurora_memory/memory/{birth}/whiteboard.yaml")
+    wb_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # 重複確認（内容が同一ならスキップ）
+    if wb_path.exists():
+        with wb_path.open("r", encoding="utf-8") as f:
+            existing = f.read()
+        if existing.strip() == notes.strip():
+            return {"status": "skipped", "message": "No change to whiteboard."}
+
+    # 保存処理
+    with wb_path.open("w", encoding="utf-8") as f:
+        f.write(notes)
+
+    # GitHub Action トリガー（非同期的）
+    try:
+        trigger_whiteboard_store()
+    except Exception as e:
+        print(f"[WARN] GitHub Trigger failed: {e}")
+
+    return {"status": "success", "file": str(wb_path)}
 
 scheduler = BackgroundScheduler()
 
@@ -80,6 +112,3 @@ for birth in BIRTHS:
     )
 
 scheduler.start()
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
