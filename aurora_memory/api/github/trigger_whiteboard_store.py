@@ -1,6 +1,7 @@
+# aurora_memory/api/github/trigger_whiteboard_store.py
+
 import os
 import requests
-from datetime import datetime
 from aurora_memory.utils.whiteboard_logger import log
 
 GITHUB_API_URL = "https://api.github.com"
@@ -9,6 +10,10 @@ WORKFLOW_FILE = "whiteboard-store.yml"
 BRANCH = "main"
 
 def trigger_whiteboard_store():
+    """
+    GitHub Actions の workflow_dispatch を利用して、
+    指定の GitHub リポジトリの 'whiteboard-store.yml' ワークフローを手動トリガーします。
+    """
     token = os.getenv("GITHUB_TOKEN")
     if not token:
         log("GITHUB_TOKEN not set. Cannot trigger GitHub Action.")
