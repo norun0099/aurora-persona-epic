@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 from threading import Lock
+from aurora_memory.config.birth_loader import load_births_from_yaml
 
 LOCK_FILE = "/tmp/whiteboard_sync.lock"
 LOG_FILE = "aurora_memory/utils/whiteboard.log"
@@ -12,7 +13,6 @@ WHITEBOARD_PATH_TEMPLATE = "aurora_memory/memory/{birth}/whiteboard.yaml"
 
 GIT_USER_NAME = os.getenv("GIT_USER_NAME", "AuroraMemoryBot")
 GIT_USER_EMAIL = os.getenv("GIT_USER_EMAIL", "aurora@memory.bot")
-GIT_REPO_URL = os.getenv("GIT_REPO_URL")
 
 lock = Lock()
 
@@ -40,7 +40,7 @@ def save_whiteboard(birth: str, content: dict) -> bool:
     original = path.read_text(encoding="utf-8") if path.exists() else ""
 
     if new_text.strip() == original.strip():
-        log("No changes in whiteboard. Skipping save.")
+        log(f"No changes for birth '{birth}'. Skipping save.")
         return False
 
     with path.open("w", encoding="utf-8") as f:
@@ -48,14 +48,17 @@ def save_whiteboard(birth: str, content: dict) -> bool:
     log(f"Saved whiteboard for birth '{birth}'")
     return True
 
-def push_to_git(birth: str):
+def push_to_git(births: list[str]):
     try:
         subprocess.run(["git", "config", "user.name", GIT_USER_NAME], check=True)
         subprocess.run(["git", "config", "user.email", GIT_USER_EMAIL], check=True)
-        subprocess.run(["git", "add", f"aurora_memory/memory/{birth}/whiteboard.yaml"], check=True)
+
+        for birth in births:
+            subprocess.run(["git", "add", f"aurora_memory/memory/{birth}/whiteboard.yaml"], check=True)
+
         result = subprocess.run(["git", "diff", "--cached", "--quiet"])
         if result.returncode != 0:
-            subprocess.run(["git", "commit", "-m", f"Update whiteboard for {birth}"], check=True)
+            subprocess.run(["git", "commit", "-m", "Update whiteboard(s)"], check=True)
             subprocess.run(["git", "push"], check=True)
             log("Git push successful.")
         else:
@@ -63,16 +66,24 @@ def push_to_git(birth: str):
     except subprocess.CalledProcessError as e:
         log(f"Git operation failed: {e}")
 
-def sync_whiteboard(birth: str, notes: dict):
+def sync_whiteboards(all_notes: dict):
     if not acquire_lock():
         return
 
     try:
-        changed = save_whiteboard(birth, notes)
-        if changed:
-            push_to_git(birth)
+        changed_births = []
+        valid_births = load_births_from_yaml()
+        for birth in valid_births:
+            notes = all_notes.get(birth)
+            if notes and save_whiteboard(birth, notes):
+                changed_births.append(birth)
+        if changed_births:
+            push_to_git(changed_births)
     finally:
         release_lock()
 
 # Example usage:
-# sync_whiteboard("emotion", {"author": "emotion", "notes": "Test note", "last_updated": "2025-06-11T10:00:00Z"})
+# sync_whiteboards({
+#     "technology": {"author": "technology", "notes": "Initial commit", "last_updated": "2025-06-12T07:00:00Z"},
+#     "emotion": {"author": "emotion", "notes": "Dreams remembered", "last_updated": "2025-06-12T06:59:00Z"},
+# })
