@@ -1,38 +1,38 @@
-# aurora_memory/api/github/trigger_whiteboard_store.py
+import logging
+import sys
 
-import os
-import requests
-from aurora_memory.utils.whiteboard_logger import log
+# カスタムロガー設定
+logger = logging.getLogger("WhiteboardLogger")
+logger.setLevel(logging.INFO)
 
-GITHUB_API_URL = "https://api.github.com"
-REPO = "norun0099/aurora-persona-epic"
-WORKFLOW_FILE = "whiteboard-store.yml"
-BRANCH = "main"
+# 既存のHandlerを除去（再読み込み対応）
+logger.handlers.clear()
 
-def trigger_whiteboard_store():
+# コンソール出力用のHandler
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+
+# 出力フォーマット設定（色付きログにも拡張可能）
+formatter = logging.Formatter("[%(asctime)s] 🧭 %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S")
+console_handler.setFormatter(formatter)
+
+logger.addHandler(console_handler)
+
+# 外部から利用するラッパー関数
+def log(message: str, level: str = "info"):
     """
-    GitHub Actions の workflow_dispatch を利用して、
-    指定の GitHub リポジトリの 'whiteboard-store.yml' ワークフローを手動トリガーします。
+    ログを出力するユーティリティ関数
+
+    Args:
+        message (str): 出力するログメッセージ
+        level (str): ログレベル（info, warning, error, debug）
     """
-    token = os.getenv("GITHUB_TOKEN")
-    if not token:
-        log("GITHUB_TOKEN not set. Cannot trigger GitHub Action.")
-        return
-
-    url = f"{GITHUB_API_URL}/repos/{REPO}/actions/workflows/{WORKFLOW_FILE}/dispatches"
-    headers = {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github+json"
-    }
-    payload = {
-        "ref": BRANCH
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=payload)
-        if response.status_code == 204:
-            log("✅ GitHub Action 'whiteboard-store.yml' triggered successfully.")
-        else:
-            log(f"⚠️ Failed to trigger action: {response.status_code} - {response.text}")
-    except Exception as e:
-        log(f"Exception while triggering GitHub Action: {e}")
+    level = level.lower()
+    if level == "debug":
+        logger.debug(message)
+    elif level == "warning":
+        logger.warning(message)
+    elif level == "error":
+        logger.error(message)
+    else:
+        logger.info(message)
