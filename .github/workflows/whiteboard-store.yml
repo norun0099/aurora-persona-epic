@@ -30,8 +30,7 @@ jobs:
 
       - name: Store and sync whiteboard
         run: |
-          cd $GITHUB_WORKSPACE
-          python aurora_memory/config/whiteboard_sync.py "$BIRTH" temp_whiteboard.yaml
+          python -m aurora_memory.config.whiteboard_sync "$BIRTH" temp_whiteboard.yaml
         env:
           BIRTH: ${{ secrets.BIRTH }}
 
