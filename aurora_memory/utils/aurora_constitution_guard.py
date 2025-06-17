@@ -29,10 +29,12 @@ REQUIRED_FIELDS = [
 
 def log(message: str):
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    full_message = f"[{timestamp}] {message}"
+    print(full_message)  # コンソールにも出力
     try:
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         with LOG_PATH.open("a", encoding="utf-8") as log_file:
-            log_file.write(f"[{timestamp}] {message}\n")
+            log_file.write(full_message + "\n")
     except Exception as e:
         print(f"Logging failed: {e}")
 
