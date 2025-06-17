@@ -1,6 +1,7 @@
 import yaml
 from pathlib import Path
 from datetime import datetime
+import requests
 
 CONSTITUTION_PATH = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
 LOG_PATH = Path("aurora_memory/utils/constitution_guard.log")
