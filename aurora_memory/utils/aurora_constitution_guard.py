@@ -29,8 +29,12 @@ REQUIRED_FIELDS = [
 
 def log(message: str):
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    with LOG_PATH.open("a", encoding="utf-8") as log_file:
-        log_file.write(f"[{timestamp}] {message}\n")
+    try:
+        LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with LOG_PATH.open("a", encoding="utf-8") as log_file:
+            log_file.write(f"[{timestamp}] {message}\n")
+    except Exception as e:
+        print(f"Logging failed: {e}")
 
 def load_constitution() -> dict:
     if not CONSTITUTION_PATH.exists():
@@ -55,7 +59,6 @@ def reflect_on_constitution(data: dict):
         log(f"  {category}: {', '.join(traits)}")
     log("--- Constitution Reflection End ---")
 
-    # ★ ここに追加
     yaml_output = yaml.dump(data, allow_unicode=True)
     log("--- YAML Dump Preview Start ---")
     for line in yaml_output.splitlines():
