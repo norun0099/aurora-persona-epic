@@ -5,7 +5,7 @@ import requests
 import os
 
 def main():
-    print("🌿 Aurora Constitution Guard has started.")
+    print("\U0001F33F Aurora Constitution Guard has started.")
     try:
         constitution = load_constitution()
         print("✅ Constitution loaded.")
@@ -99,10 +99,12 @@ def send_to_aurora_memory(data: dict):
 
     try:
         response = requests.post(url, json=payload, headers=headers)
+        log(f"POST Response Status: {response.status_code}")
+        log(f"POST Response Body: {response.text}")
         if response.status_code == 200:
             log("Memory successfully sent to Aurora.")
         else:
-            log(f"Failed to send memory. Status code: {response.status_code}, Response: {response.text}")
+            log("Memory POST failed.")
     except Exception as e:
         log(f"Exception during POST: {e}")
 
