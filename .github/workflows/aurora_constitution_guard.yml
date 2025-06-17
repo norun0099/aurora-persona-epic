@@ -9,6 +9,9 @@ jobs:
   guard-constitution:
     runs-on: ubuntu-latest
 
+    env:
+      AURORA_SECRET_KEY: ${{ secrets.AURORA_SECRET_KEY }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -26,5 +29,3 @@ jobs:
 
       - name: Run aurora_constitution_guard
         run: python aurora_memory/utils/aurora_constitution_guard.py
-env:
-  AURORA_SECRET_KEY: ${{ secrets.AURORA_SECRET_KEY }}
