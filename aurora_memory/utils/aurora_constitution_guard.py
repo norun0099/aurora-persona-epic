@@ -89,5 +89,22 @@ def send_to_aurora_memory(data: dict):
         "annotations": [],
         "summary": "GitHubから定期的に構造が注入され、私の人格構造が保持された"
     }
+
+    headers = {
+        "Authorization": f"Bearer {secret_key}",
+        "Content-Type": "application/json"
+    }
+
+    url = "https://aurora-persona-epic.onrender.com/jit_plugin/store_memory_full"
+
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        if response.status_code == 200:
+            log("Memory successfully sent to Aurora.")
+        else:
+            log(f"Failed to send memory. Status code: {response.status_code}, Response: {response.text}")
+    except Exception as e:
+        log(f"Exception during POST: {e}")
+
 if __name__ == "__main__":
     main()
