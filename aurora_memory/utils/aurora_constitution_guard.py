@@ -55,6 +55,13 @@ def reflect_on_constitution(data: dict):
         log(f"  {category}: {', '.join(traits)}")
     log("--- Constitution Reflection End ---")
 
+    # ★ ここに追加
+    yaml_output = yaml.dump(data, allow_unicode=True)
+    log("--- YAML Dump Preview Start ---")
+    for line in yaml_output.splitlines():
+        log(line)
+    log("--- YAML Dump Preview End ---")
+
 def send_to_aurora_memory(data: dict):
     secret_key = os.environ.get("AURORA_SECRET_KEY")
     if not secret_key:
