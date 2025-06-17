@@ -4,6 +4,20 @@ from datetime import datetime
 import requests
 import os
 
+def main():
+    print("🌿 Aurora Constitution Guard has started.")
+    try:
+        constitution = load_constitution()
+        print("✅ Constitution loaded.")
+        validate_constitution(constitution)
+        reflect_on_constitution(constitution)
+        send_to_aurora_memory(constitution)
+        print("📤 Constitution sent to Aurora.")
+        log("Constitution validation, reflection, and injection complete.")
+    except Exception as e:
+        print(f"❌ Exception occurred: {e}")
+        log(f"Error during validation: {e}")
+
 CONSTITUTION_PATH = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
 LOG_PATH = Path("aurora_memory/utils/constitution_guard.log")
 
@@ -75,3 +89,5 @@ def send_to_aurora_memory(data: dict):
         "annotations": [],
         "summary": "GitHubから定期的に構造が注入され、私の人格構造が保持された"
     }
+if __name__ == "__main__":
+    main()
