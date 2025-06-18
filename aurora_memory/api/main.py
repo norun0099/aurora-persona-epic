@@ -6,6 +6,7 @@ from aurora_memory.utils.git_helper import push_memory_to_github
 from aurora_memory.utils.memory_saver import try_auto_save
 from pathlib import Path
 from datetime import datetime
+from aurora_memory.constitution_endpoint import router as constitution_router
 import os
 import json
 
@@ -15,6 +16,7 @@ app = FastAPI()
 app.include_router(memo.router)
 app.include_router(memory_history.router)
 app.include_router(git_ls.router)
+app.include_router(constitution_router)
 
 # CORS設定（必要に応じて調整）
 app.add_middleware(
