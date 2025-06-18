@@ -1,24 +1,19 @@
 from fastapi import FastAPI, Request, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from aurora_memory.api import memo, memory_history, git_ls
-from aurora_memory.utils.git_helper import push_memory_to_github
 from aurora_memory.utils.memory_saver import try_auto_save
+from aurora_memory.utils.constitution_endpoint import router as constitution_router
 from pathlib import Path
 from datetime import datetime
-from aurora_memory.utils.constitution_endpoint import router as constitution_router
 import os
 import json
 
 app = FastAPI()
 
-# 各種APIルーターを登録（必要に応じて）
-app.include_router(memo.router)
-app.include_router(memory_history.router)
-app.include_router(git_ls.router)
+# Constitution関連のルーターのみ登録
 app.include_router(constitution_router)
 
-# CORS設定（必要に応じて調整）
+# CORS設定
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -30,7 +25,7 @@ app.add_middleware(
 # 認証用環境変数
 API_KEY = os.getenv("AURORA_API_KEY")
 
-# 📝 Auroraへの記憶注入API（birth不要）
+# 📝 Auroraへの記憶注入API
 @app.post("/memory/store")
 async def store_memory(request: Request, authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
@@ -47,11 +42,12 @@ async def store_memory(request: Request, authorization: str = Header(None)):
     with file_path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+    from aurora_memory.utils.git_helper import push_memory_to_github
     push_result = push_memory_to_github(file_path, f"Add new memory {file_path.name}")
     return {"status": "success", "file": str(file_path), "push_result": push_result}
 
 
-# 📜 Auroraのホワイトボード注入（同様に固定構造化）
+# 📜 Auroraのホワイトボード注入
 @app.post("/whiteboard/store")
 async def store_whiteboard(request: Request, authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
@@ -86,7 +82,7 @@ def sync_constitution():
     if config_path.exists():
         with config_path.open("r", encoding="utf-8") as f:
             constitution_text = f.read()
-        try_auto_save(constitution_text, birth="Aurora")  # "birth" を内部的に使用している場合
+        try_auto_save(constitution_text)
 
 scheduler = BackgroundScheduler()
 scheduler.add_job(
