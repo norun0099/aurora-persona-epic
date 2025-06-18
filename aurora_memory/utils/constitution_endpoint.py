@@ -39,3 +39,15 @@ async def store_constitution(record: ConstitutionRecord, request: Request):
         return {"message": "constitution stored", "record_id": record.record_id}
     except Exception as e:
         return {"error": str(e)}
+
+@router.get("/constitution/core")
+async def get_constitution_core():
+    file_path = os.path.join("aurora_memory/utils/constitution_logs", "value_constitution_core.json")
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = json.load(f)
+        return content
+    except FileNotFoundError:
+        return {"error": "Constitution core not found"}
+    except Exception as e:
+        return {"error": str(e)}
