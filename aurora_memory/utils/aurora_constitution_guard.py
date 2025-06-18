@@ -74,14 +74,14 @@ def send_to_aurora_memory(data: dict):
         return
 
     payload = {
-        "record_id": "persona_integration_auto",
+        "record_id": "value_constitution_core",
         "created": datetime.utcnow().isoformat() + "Z",
         "last_updated": datetime.utcnow().isoformat() + "Z",
         "version": 1,
         "status": "active",
         "visible_to": ["master"],
         "allowed_viewers": ["master"],
-        "tags": ["persona", "auto", "constitution"],
+        "tags": ["persona", "constitution"],
         "author": "GitAction",
         "thread": "automated-persona-injection",
         "chronology": {
@@ -107,7 +107,7 @@ def send_to_aurora_memory(data: dict):
         "Content-Type": "application/json"
     }
 
-    url = "https://aurora-persona-epic.onrender.com/jit_plugin/store_memory_full"
+    url = os.environ.get("RENDER_CONSTITUTION_STORE_ENDPOINT", "https://aurora-persona-epic.onrender.com/constitution/store")
 
     try:
         response = requests.post(url, json=payload, headers=headers)
