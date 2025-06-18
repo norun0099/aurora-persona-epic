@@ -6,7 +6,7 @@ from aurora_memory.utils.git_helper import push_memory_to_github
 from aurora_memory.utils.memory_saver import try_auto_save
 from pathlib import Path
 from datetime import datetime
-from aurora_memory.constitution_endpoint import router as constitution_router
+from aurora_memory.utils.constitution_endpoint import router as constitution_router
 import os
 import json
 
