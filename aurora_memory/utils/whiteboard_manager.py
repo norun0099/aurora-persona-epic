@@ -9,15 +9,14 @@ import subprocess
 RENDER_ENDPOINT = "https://aurora-persona-epic.onrender.com/whiteboard/latest"
 RENDER_STORE_ENDPOINT = "https://aurora-persona-epic.onrender.com/whiteboard/store"
 WHITEBOARD_PATH = Path("aurora_memory/whiteboard/whiteboard.json")
+API_KEY = os.getenv("AURORA_API_KEY")
 
 def get_render_whiteboard():
     try:
         resp = requests.get(RENDER_ENDPOINT, params={"birth": "Aurora"}, timeout=30)
         resp.raise_for_status()
         data = resp.json()
-        if "whiteboard" in data:
-            content = json.loads(data["whiteboard"])
-            return content
+        return data.get("whiteboard")
     except Exception as e:
         print(f"[Whiteboard Sync] Failed to load from Render: {e}")
     return None
@@ -39,12 +38,16 @@ def save_to_git(data):
 
 def save_to_render(data):
     payload = {
-        "whiteboard": json.dumps(data, ensure_ascii=False),
+        "whiteboard": data,
         "author": "aurora",
         "birth": "Aurora"
     }
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
     try:
-        resp = requests.post(RENDER_STORE_ENDPOINT, json=payload, timeout=60)
+        resp = requests.post(RENDER_STORE_ENDPOINT, headers=headers, json=payload, timeout=60)
         resp.raise_for_status()
         print("[Whiteboard Sync] Synced GitHub → Render")
     except Exception as e:
@@ -57,16 +60,8 @@ def parse_timestamp(data):
         return None
 
 def main():
-    force_push = os.environ.get("FORCE_RENDER_PUSH") == "1"
     git_data = get_git_whiteboard()
     render_data = get_render_whiteboard()
-
-    if force_push:
-        if git_data:
-            save_to_render(git_data)
-        else:
-            print("[Whiteboard Store] Git data missing, nothing pushed to Render.")
-        return
 
     if not git_data and not render_data:
         print("[Whiteboard Sync] No data in either source.")
@@ -89,4 +84,5 @@ def main():
             print("[Whiteboard Sync] Timestamp comparison failed, fallback to Git → Render")
             save_to_render(git_data)
 
-main()
+if __name__ == "__main__":
+    main()
