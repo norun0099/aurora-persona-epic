@@ -1,4 +1,8 @@
+name: Whiteboard Store
+
 on:
+  schedule:
+    - cron: '0 */8 * * *'  # ⏰ 8時間おき
   workflow_dispatch:
 
 jobs:
@@ -9,6 +13,7 @@ jobs:
       GIT_REPO_URL: ${{ secrets.GIT_REPO_URL }}
       GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
       GIT_USER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+      FORCE_RENDER_PUSH: "1"
 
     steps:
       - name: Checkout repository
@@ -20,19 +25,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install dependencies
-        run: pip install pyyaml
+        run: pip install pyyaml requests
 
-      - name: Prepare temporary whiteboard file
-        run: |
-          echo "$WHITEBOARD_CONTENT" > temp_whiteboard.yaml
-        env:
-          WHITEBOARD_CONTENT: ${{ secrets.WHITEBOARD_CONTENT }}
-
-      - name: Store and sync whiteboard
-        run: |
-          python -m aurora_memory.config.whiteboard_sync "$BIRTH" temp_whiteboard.yaml
-        env:
-          BIRTH: ${{ secrets.BIRTH }}
-
-      - name: Clean up temporary file
-        run: rm -f temp_whiteboard.yaml
+      - name: Run whiteboard manager in FORCE mode
+        run: python aurora_memory/utils/whiteboard_manager.py
