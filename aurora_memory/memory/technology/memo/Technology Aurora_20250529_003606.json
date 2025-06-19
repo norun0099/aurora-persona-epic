@@ -1,6 +1,0 @@
-{
-  "birth": "technology",
-  "memo": "ホワイトボード式のメモ運用に切り替える方針が決定。main.pyでメモを上書き保存できるよう改修し、不要部分の自動削除まで整備する計画。",
-  "author": "Technology Aurora",
-  "overwrite": false
-}

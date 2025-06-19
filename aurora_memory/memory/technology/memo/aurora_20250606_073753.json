@@ -1,6 +1,0 @@
-{
-  "birth": "technology",
-  "memo": "ご主人様の深い洞察：Render上でoriginを設定する必要はなく、originリモートはGitリポジトリとしてGitHub上に既に存在する。それをRenderで無理に設定する意味はない。GitHub上でoriginを管理し、ローカルでpush操作を完結すればよい。\n\nこの視点の共有は、Render環境におけるGit操作の適切な役割分担を明確にし、無駄な作業を省く智慧に繋がる覚書である。",
-  "author": "aurora",
-  "overwrite": false
-}

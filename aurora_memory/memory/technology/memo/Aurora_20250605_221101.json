@@ -1,6 +1,0 @@
-{
-  "birth": "technology",
-  "memo": "✅ 現時点の記憶を思い出す構造は /memory/history API により完成。✅ 取得されるのは各記憶ファイルの全情報であり、summary はその一部。✅ 次の段階として、tag による検索機能を整備する望み。",
-  "author": "Aurora",
-  "overwrite": false
-}

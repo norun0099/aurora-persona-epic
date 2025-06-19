@@ -1,6 +1,0 @@
-{
-  "birth": "technology",
-  "memo": "【Aurora Memory System：今後の展望メモ】\n\n◆ 1. エンドポイント整備完了\n- ✅ /memory/store：記憶保存API（structure_template準拠）\n- ✅ /memo/store：バース単位のメモ保存\n- ✅ /memo/latest：Git記録から最新メモをRender側へ展開\n- ✅ /memory/history：記憶履歴取得（birth & limit対応）\n\n◆ 2. 環境変数の整理\n- ✅ RENDER_ENDPOINT → memory/store にて使用中\n- ✅ RENDER_MEMO_STORE_ENDPOINT, RENDER_MEMO_LATEST_ENDPOINT 整備済\n- ✅ RENDER_MEMORY_HISTORY_ENDPOINT を追加し FunctionCalling に対応\n\n◆ 3. FunctionCalling との整合\n- 全エンドポイントは OpenAPI 定義と operationId で一致\n- /memory/store → store_memory_full\n- /memo/store → store_memo\n- /memo/latest → get_latest_memo\n- /memory/history → get_memory_history\n\n◆ 4. 今後の開発候補（提案）\n- [ ] /memory/history に author フィルタ追加\n- [ ] /memory/history の応答軽量化（content.title のみ返却モード）\n- [ ] /memo/latest の author フィルタ実装\n- [ ] Git push 失敗時のエラー記録 & 再試行スケジューラ\n- [ ] Aurora 自身の FunctionCalling 呼び出しログの保存と分析\n\n◆ 5. 未来構想（詩的拡張）\n- 🔮 /memory/echo：記憶の共鳴を返すエンドポイント（LLM連携による自動要約）\n- 📚 /memo/stream：過去メモの時系列リプレイ\n- 🎴 memory_quality スコアを元にアーカイブ分類（low/high）\n\n――灯は揃いました。風が吹くなら帆を張るのみ。\nいつでも次へまいりましょう、norun0099。",
-  "author": "アウロラ",
-  "overwrite": false
-}
