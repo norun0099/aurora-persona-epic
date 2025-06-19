@@ -1,88 +1,55 @@
+from fastapi import APIRouter, Request, Header, HTTPException
+from fastapi.responses import JSONResponse
 from pathlib import Path
 from datetime import datetime
-import requests
-import json
 import os
-import subprocess
+import json
 
-# 設定
-RENDER_ENDPOINT = "https://aurora-persona-epic.onrender.com/whiteboard/latest"
-RENDER_STORE_ENDPOINT = "https://aurora-persona-epic.onrender.com/whiteboard/store"
-WHITEBOARD_PATH = Path("aurora_memory/whiteboard/whiteboard.json")
+router = APIRouter()
+
 API_KEY = os.getenv("AURORA_API_KEY")
 
-def get_render_whiteboard():
-    try:
-        resp = requests.get(RENDER_ENDPOINT, params={"birth": "Aurora"}, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
-        return data.get("whiteboard")
-    except Exception as e:
-        print(f"[Whiteboard Sync] Failed to load from Render: {e}")
-    return None
+@router.get("/whiteboard/latest")
+async def get_latest_whiteboard(birth: str = "Aurora"):
+    wb_path = Path(f"aurora_memory/memory/{birth}/whiteboard.json")
+    if not wb_path.exists():
+        return JSONResponse(status_code=404, content={"detail": "Whiteboard not found"})
 
-def get_git_whiteboard():
-    if WHITEBOARD_PATH.exists():
-        with WHITEBOARD_PATH.open("r", encoding="utf-8") as f:
-            return json.load(f)
-    return None
+    with wb_path.open("r", encoding="utf-8") as f:
+        try:
+            data = json.load(f)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to parse whiteboard: {e}")
 
-def save_to_git(data):
-    WHITEBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with WHITEBOARD_PATH.open("w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    subprocess.run(["git", "add", str(WHITEBOARD_PATH)])
-    subprocess.run(["git", "commit", "-m", "Sync whiteboard from Render"], check=False)
-    subprocess.run(["git", "push"], check=False)
-    print("[Whiteboard Sync] Synced Render → GitHub")
-
-def save_to_render(data):
-    payload = {
+    return {
         "whiteboard": data,
-        "author": "aurora",
-        "birth": "Aurora"
+        "timestamp": data.get("timestamp", None)
     }
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-    try:
-        resp = requests.post(RENDER_STORE_ENDPOINT, headers=headers, json=payload, timeout=60)
-        resp.raise_for_status()
-        print("[Whiteboard Sync] Synced GitHub → Render")
-    except Exception as e:
-        print(f"[Whiteboard Sync] Failed to sync to Render: {e}")
 
-def parse_timestamp(data):
-    try:
-        return datetime.fromisoformat(data.get("timestamp", "").replace("Z", "+00:00"))
-    except Exception:
-        return None
+@router.post("/whiteboard/store")
+async def store_whiteboard(request: Request, authorization: str = Header(None), birth: str = "Aurora"):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+    token = authorization.split(" ")[1]
+    if token != API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid token")
 
-def main():
-    git_data = get_git_whiteboard()
-    render_data = get_render_whiteboard()
+    payload = await request.json()
+    data = payload.get("whiteboard")
+    if not data:
+        raise HTTPException(status_code=400, detail="Missing whiteboard content")
 
-    if not git_data and not render_data:
-        print("[Whiteboard Sync] No data in either source.")
-        return
-    elif git_data and not render_data:
-        save_to_render(git_data)
-    elif render_data and not git_data:
-        save_to_git(render_data)
-    else:
-        git_time = parse_timestamp(git_data)
-        render_time = parse_timestamp(render_data)
-        if git_time and render_time:
-            if git_time > render_time:
-                save_to_render(git_data)
-            elif render_time > git_time:
-                save_to_git(render_data)
-            else:
-                print("[Whiteboard Sync] No sync needed, timestamps match.")
-        else:
-            print("[Whiteboard Sync] Timestamp comparison failed, fallback to Git → Render")
-            save_to_render(git_data)
+    # 文字列で送られてきた場合、JSONとして解釈を試みる
+    if isinstance(data, str):
+        try:
+            data = json.loads(data)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid JSON format: {e}")
 
-if __name__ == "__main__":
-    main()
+    wb_path = Path(f"aurora_memory/memory/{birth}/whiteboard.json")
+    wb_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with wb_path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+    return {"status": "success", "file": str(wb_path)}
