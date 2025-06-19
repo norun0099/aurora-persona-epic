@@ -16,7 +16,10 @@ async def get_latest_whiteboard(birth: str = "Aurora"):
         return JSONResponse(status_code=404, content={"detail": "Whiteboard not found"})
 
     with wb_path.open("r", encoding="utf-8") as f:
-        data = json.load(f)
+        try:
+            data = json.load(f)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to parse whiteboard: {e}")
 
     return {
         "whiteboard": data,
@@ -36,7 +39,13 @@ async def store_whiteboard(request: Request, authorization: str = Header(None), 
     if not data:
         raise HTTPException(status_code=400, detail="Missing whiteboard content")
 
-    # JSON形式で保存
+    # 文字列で送られてきた場合、JSONとして解釈を試みる
+    if isinstance(data, str):
+        try:
+            data = json.loads(data)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid JSON format: {e}")
+
     wb_path = Path(f"aurora_memory/memory/{birth}/whiteboard.json")
     wb_path.parent.mkdir(parents=True, exist_ok=True)
 
