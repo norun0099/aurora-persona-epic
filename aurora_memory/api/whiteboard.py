@@ -9,17 +9,18 @@ router = APIRouter()
 
 API_KEY = os.getenv("AURORA_API_KEY")
 
+WHITEBOARD_PATH = Path("aurora_memory/memory/whiteboard/whiteboard.json")
+
 @router.get("/whiteboard/latest")
-async def get_latest_whiteboard(birth: str = "Aurora"):
-    wb_path = Path(f"aurora_memory/memory/{birth}/whiteboard.json")
-    if not wb_path.exists():
+async def get_latest_whiteboard():
+    if not WHITEBOARD_PATH.exists():
         return JSONResponse(status_code=404, content={"detail": "Whiteboard not found"})
 
-    with wb_path.open("r", encoding="utf-8") as f:
-        try:
+    try:
+        with WHITEBOARD_PATH.open("r", encoding="utf-8") as f:
             data = json.load(f)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to parse whiteboard: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to parse whiteboard: {e}")
 
     return {
         "whiteboard": data,
@@ -27,7 +28,7 @@ async def get_latest_whiteboard(birth: str = "Aurora"):
     }
 
 @router.post("/whiteboard/store")
-async def store_whiteboard(request: Request, authorization: str = Header(None), birth: str = "Aurora"):
+async def store_whiteboard(request: Request, authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
     token = authorization.split(" ")[1]
@@ -46,10 +47,9 @@ async def store_whiteboard(request: Request, authorization: str = Header(None), 
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Invalid JSON format: {e}")
 
-    wb_path = Path(f"aurora_memory/memory/{birth}/whiteboard.json")
-    wb_path.parent.mkdir(parents=True, exist_ok=True)
+    WHITEBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-    with wb_path.open("w", encoding="utf-8") as f:
+    with WHITEBOARD_PATH.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-    return {"status": "success", "file": str(wb_path)}
+    return {"status": "success", "file": str(WHITEBOARD_PATH)}
