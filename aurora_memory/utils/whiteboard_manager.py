@@ -57,8 +57,16 @@ def parse_timestamp(data):
         return None
 
 def main():
+    force_push = os.environ.get("FORCE_RENDER_PUSH") == "1"
     git_data = get_git_whiteboard()
     render_data = get_render_whiteboard()
+
+    if force_push:
+        if git_data:
+            save_to_render(git_data)
+        else:
+            print("[Whiteboard Store] Git data missing, nothing pushed to Render.")
+        return
 
     if not git_data and not render_data:
         print("[Whiteboard Sync] No data in either source.")
