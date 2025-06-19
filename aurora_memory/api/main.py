@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from aurora_memory.utils.memory_saver import try_auto_save
 from aurora_memory.utils.constitution_endpoint import router as constitution_router
+from aurora_memory.api import whiteboard  # ←追記
 from pathlib import Path
 from datetime import datetime
 import os
@@ -12,6 +13,7 @@ app = FastAPI()
 
 # Constitution関連のルーターのみ登録
 app.include_router(constitution_router)
+app.include_router(whiteboard.router)
 
 # CORS設定
 app.add_middleware(
