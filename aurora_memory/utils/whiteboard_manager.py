@@ -8,7 +8,7 @@ import subprocess
 # 設定
 RENDER_ENDPOINT = "https://aurora-persona-epic.onrender.com/whiteboard/latest"
 RENDER_STORE_ENDPOINT = "https://aurora-persona-epic.onrender.com/whiteboard/store"
-WHITEBOARD_PATH = Path("aurora_memory/memory/Aurora/whiteboard/whiteboard.json")
+WHITEBOARD_PATH = Path("aurora_memory/memory/whiteboard/whiteboard.json")
 API_KEY = os.getenv("AURORA_API_KEY")
 
 def get_render_whiteboard():
