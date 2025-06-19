@@ -37,27 +37,16 @@ def save_to_git(data):
     WHITEBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
     with WHITEBOARD_PATH.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    subprocess.run(["git", "add", str(WHITEBOARD_PATH)])
-    subprocess.run(["git", "commit", "-m", "Sync whiteboard from Render"], check=False)
-    subprocess.run(["git", "push"], check=False)
-    print("[Whiteboard Sync] Synced Render → GitHub")
 
-
-def save_to_render(data):
-    payload = {
-        "whiteboard": data,
-        "author": "aurora"
-    }
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-    try:
-        resp = requests.post(RENDER_STORE_ENDPOINT, headers=headers, json=payload, timeout=60)
-        resp.raise_for_status()
-        print("[Whiteboard Sync] Synced GitHub → Render")
-    except Exception as e:
-        print(f"[Whiteboard Sync] Failed to sync to Render: {e}")
+    # Gitコミット前に差分が存在するか確認
+    result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
+    if result.stdout.strip():
+        subprocess.run(["git", "add", str(WHITEBOARD_PATH)])
+        subprocess.run(["git", "commit", "-m", "Sync whiteboard from Render"], check=False)
+        subprocess.run(["git", "push"], check=False)
+        print("[Whiteboard Sync] Synced Render → GitHub")
+    else:
+        print("[Whiteboard Sync] No changes to commit.")
 
 
 def parse_timestamp(data):
@@ -68,13 +57,12 @@ def parse_timestamp(data):
 
 
 def main():
-    git_data = get_git_whiteboard()
     render_data = get_render_whiteboard()
-
     if not render_data:
         print("[Whiteboard Sync] No data on Render. Abort Git update.")
         return
 
+    git_data = get_git_whiteboard()
     render_time = parse_timestamp(render_data)
     git_time = parse_timestamp(git_data) if git_data else None
 
