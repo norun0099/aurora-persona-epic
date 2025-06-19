@@ -25,8 +25,5 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Wait to avoid race condition
-        run: sleep 15  # 🔸ここで15秒の遅延を追加（必要に応じて調整可）
-
-      - name: Run whiteboard sync script
-        run: python aurora_memory/utils/whiteboard_sync.py
+      - name: Run whiteboard manager in sync mode
+        run: python aurora_memory/utils/whiteboard_manager.py
