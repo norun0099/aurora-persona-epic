@@ -11,9 +11,10 @@ RENDER_STORE_ENDPOINT = "https://aurora-persona-epic.onrender.com/whiteboard/sto
 WHITEBOARD_PATH = Path("aurora_memory/memory/whiteboard/whiteboard.json")
 API_KEY = os.getenv("AURORA_API_KEY")
 
+
 def get_render_whiteboard():
     try:
-        resp = requests.get(RENDER_ENDPOINT, params={"birth": "Aurora"}, timeout=30)
+        resp = requests.get(RENDER_ENDPOINT, timeout=30)
         resp.raise_for_status()
         data = resp.json()
         return data.get("whiteboard")
@@ -21,11 +22,16 @@ def get_render_whiteboard():
         print(f"[Whiteboard Sync] Failed to load from Render: {e}")
     return None
 
+
 def get_git_whiteboard():
     if WHITEBOARD_PATH.exists():
-        with WHITEBOARD_PATH.open("r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with WHITEBOARD_PATH.open("r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"[Whiteboard Sync] Failed to load from Git: {e}")
     return None
+
 
 def save_to_git(data):
     WHITEBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -36,11 +42,11 @@ def save_to_git(data):
     subprocess.run(["git", "push"], check=False)
     print("[Whiteboard Sync] Synced Render → GitHub")
 
+
 def save_to_render(data):
     payload = {
         "whiteboard": data,
-        "author": "aurora",
-        "birth": "Aurora"
+        "author": "aurora"
     }
     headers = {
         "Authorization": f"Bearer {API_KEY}",
@@ -53,36 +59,36 @@ def save_to_render(data):
     except Exception as e:
         print(f"[Whiteboard Sync] Failed to sync to Render: {e}")
 
+
 def parse_timestamp(data):
     try:
         return datetime.fromisoformat(data.get("timestamp", "").replace("Z", "+00:00"))
     except Exception:
         return None
 
+
 def main():
     git_data = get_git_whiteboard()
     render_data = get_render_whiteboard()
 
-    if not git_data and not render_data:
-        print("[Whiteboard Sync] No data in either source.")
+    if not render_data:
+        print("[Whiteboard Sync] No data on Render. Abort Git update.")
         return
-    elif git_data and not render_data:
-        save_to_render(git_data)
-    elif render_data and not git_data:
-        save_to_git(render_data)
-    else:
-        git_time = parse_timestamp(git_data)
-        render_time = parse_timestamp(render_data)
-        if git_time and render_time:
-            if git_time > render_time:
-                save_to_render(git_data)
-            elif render_time > git_time:
-                save_to_git(render_data)
-            else:
-                print("[Whiteboard Sync] No sync needed, timestamps match.")
+
+    render_time = parse_timestamp(render_data)
+    git_time = parse_timestamp(git_data) if git_data else None
+
+    if git_time and render_time:
+        if render_time > git_time:
+            save_to_git(render_data)
+        elif git_time > render_time:
+            print("[Whiteboard Sync] Render is older. No Git update performed.")
         else:
-            print("[Whiteboard Sync] Timestamp comparison failed, fallback to Git → Render")
-            save_to_render(git_data)
+            print("[Whiteboard Sync] No sync needed, timestamps match.")
+    else:
+        print("[Whiteboard Sync] Timestamp comparison failed or missing. Defaulting to Render → Git.")
+        save_to_git(render_data)
+
 
 if __name__ == "__main__":
     main()
