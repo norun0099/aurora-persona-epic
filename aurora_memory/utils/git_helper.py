@@ -3,6 +3,7 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
+
 def ensure_git_initialized():
     """
     Gitのユーザー情報が設定されているかを確認し、設定されていなければ警告する。
@@ -20,9 +21,10 @@ def ensure_git_initialized():
         print("[Aurora Debug] Git config failed:", str(e))
         return False
 
-def push_memory_to_github(file_path: Path, commit_message: Optional[str] = "Add new memory record"):
+
+def push_whiteboard_to_github(file_path: Path, commit_message: Optional[str] = "Sync whiteboard from Render"):
     """
-    指定ファイルをGitへcommitし、pushする。
+    Renderから取得したwhiteboardをGitHubへ同期（commit & push）する。
     """
     repo_url = os.environ.get("GIT_REPO_URL")
     token = os.environ.get("GITHUB_TOKEN")
@@ -31,23 +33,20 @@ def push_memory_to_github(file_path: Path, commit_message: Optional[str] = "Add 
         return {"status": "error", "message": "Git identity is missing or setup failed."}
 
     try:
-        print("[Aurora Debug] Checking out to main branch...")
+        print(f"[Aurora Debug] Preparing to push {file_path}...")
+
         subprocess.run(["git", "checkout", "main"], check=True)
-
-        print("[Aurora Debug] Running git add:", str(file_path))
         subprocess.run(["git", "add", str(file_path)], check=True)
-
-        print("[Aurora Debug] Running git commit...")
         subprocess.run(["git", "commit", "-m", commit_message], check=True)
 
         if repo_url and token:
             repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
-            print("[Aurora Debug] Running git push to:", repo_url_with_token)
+            print("[Aurora Debug] Pushing to:", repo_url_with_token)
             subprocess.run(["git", "push", repo_url_with_token, "main"], check=True)
         else:
             subprocess.run(["git", "push", "origin", "main"], check=True)
 
-        return {"status": "success", "message": "Pushed to GitHub successfully."}
+        return {"status": "success", "message": "Whiteboard pushed to GitHub successfully."}
 
     except subprocess.CalledProcessError as e:
         print("[Aurora Debug] Git command failed:", str(e))
