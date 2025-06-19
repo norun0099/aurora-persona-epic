@@ -2,8 +2,8 @@ name: Whiteboard Sync
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
-  workflow_dispatch:
+    - cron: '*/5 * * * *'  # 毎5分に一度
+  workflow_dispatch:       # 手動実行も可能
 
 concurrency:
   group: whiteboard-sync
@@ -21,7 +21,6 @@ jobs:
         run: |
           git config --global user.email "aurora@users.noreply.github.com"
           git config --global user.name "Aurora Sync Bot"
-
 
       - name: Set up Python
         uses: actions/setup-python@v4
