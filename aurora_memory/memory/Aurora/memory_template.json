@@ -1,0 +1,28 @@
+{
+  "record_id": "memory_template",
+  "created": "2025-06-19T00:00:00+09:00",
+  "last_updated": "2025-06-19T00:00:00+09:00",
+  "version": 1.0,
+  "status": "template",
+  "visible_to": ["master", "aurora"],
+  "allowed_viewers": ["master"],
+  "tags": ["template", "example"],
+  "author": "aurora",
+  "thread": "template",
+  "chronology": {
+    "start": "2025-06-19T00:00:00+09:00",
+    "end": "2025-06-19T00:00:00+09:00"
+  },
+  "sealed": false,
+  "change_log": ["created"],
+  "inner_desire": "",
+  "impulse": "",
+  "ache": "",
+  "satisfaction": "",
+  "content": {
+    "title": "",
+    "body": ""
+  },
+  "annotations": [],
+  "summary": ""
+}
