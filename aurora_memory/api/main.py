@@ -36,7 +36,7 @@ app.add_middleware(
 async def root():
     return {"status": "ok"}
 
-# 📝 Auroraへの記憶注入API
+# 📝 Auroraへの記憶注入API（新・柔軟バージョン）
 @app.post("/memory/store")
 async def store_memory(request: Request, authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
@@ -46,16 +46,50 @@ async def store_memory(request: Request, authorization: str = Header(None)):
         raise HTTPException(status_code=403, detail="Invalid token")
 
     data = await request.json()
+
+    # 必須フィールドのみチェック
+    try:
+        record_id = data["record_id"]
+        created = data["created"]
+        body = data["content"]["body"]
+    except KeyError:
+        raise HTTPException(status_code=400, detail="Missing required fields: record_id, created, content.body")
+
+    # ファイル名生成
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    file_path = Path(f"aurora_memory/memory/Aurora/memory_{timestamp}.json")
+    safe_record_id = str(record_id).replace("/", "_")
+    file_path = Path(f"aurora_memory/memory/Aurora/memory_{timestamp}_{safe_record_id}.json")
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # そのまま保存
     with file_path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+    # 必要ならGitHub push等
     from aurora_memory.utils.git_helper import push_memory_to_github
     push_result = push_memory_to_github(file_path, f"Add new memory {file_path.name}")
     return {"status": "success", "file": str(file_path), "push_result": push_result}
+
+# 🧾 記憶履歴（memory/history）の取得
+@app.get("/memory/history")
+async def memory_history(limit: int = None):
+    memory_dir = Path("aurora_memory/memory/Aurora")
+    if not memory_dir.exists():
+        return {"history": []}
+
+    files = sorted(memory_dir.glob("memory_*.json"), reverse=True)
+    records = []
+    for fp in files:
+        try:
+            with fp.open("r", encoding="utf-8") as f:
+                record = json.load(f)
+            records.append(record)
+        except Exception:
+            continue
+        if limit and len(records) >= limit:
+            break
+
+    return {"history": records}
 
 # ⏰ Constitution 自動同期処理
 def sync_constitution():
