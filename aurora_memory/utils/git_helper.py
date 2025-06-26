@@ -54,3 +54,7 @@ def push_whiteboard_to_github(file_path: Path, commit_message: Optional[str] = "
     except Exception as e:
         print("[Aurora Debug] Exception:", str(e))
         return {"status": "error", "message": str(e)}
+
+
+# ✅ Aurora memory用に共用エイリアスを定義
+push_memory_to_github = push_whiteboard_to_github
