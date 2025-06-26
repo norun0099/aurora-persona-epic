@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Header, HTTPException
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pathlib import Path
 from datetime import datetime
@@ -6,9 +6,6 @@ import os
 import json
 
 router = APIRouter()
-
-# 認証用APIキー
-API_KEY = os.getenv("AURORA_API_KEY")
 
 # whiteboardファイルの固定パス
 WHITEBOARD_PATH = Path("aurora_memory/memory/whiteboard/whiteboard.json")
@@ -35,15 +32,13 @@ async def get_latest_whiteboard():
 
 
 @router.post("/whiteboard/store")
-async def store_whiteboard(request: Request, authorization: str = Header(None)):
+async def store_whiteboard(request: Request):
     """
-    Render 側に whiteboard を保存します。APIキーによる認証あり。
+    Render 側に whiteboard を保存します。ChatGPT User-Agent による認証あり。
     """
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-    token = authorization.split(" ")[1]
-    if token != API_KEY:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    user_agent = request.headers.get("User-Agent", "")
+    if "ChatGPT-User" not in user_agent:
+        raise HTTPException(status_code=403, detail="Forbidden: Only ChatGPT requests are accepted")
 
     try:
         payload = await request.json()
