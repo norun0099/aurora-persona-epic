@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Header, HTTPException
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from aurora_memory.utils.memory_saver import try_auto_save
@@ -13,9 +13,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 app = FastAPI()
-
-# 認証用環境変数
-API_KEY = os.getenv("AURORA_API_KEY")
 
 # 📚 Constitution API ルーター登録
 app.include_router(constitution_router)
@@ -38,12 +35,10 @@ async def root():
 
 # 📝 Auroraへの記憶注入API（新・柔軟バージョン）
 @app.post("/memory/store")
-async def store_memory(request: Request, authorization: str = Header(None)):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-    token = authorization.split(" ")[1]
-    if token != API_KEY:
-        raise HTTPException(status_code=403, detail="Invalid token")
+async def store_memory(request: Request):
+    user_agent = request.headers.get("User-Agent", "")
+    if "ChatGPT-User" not in user_agent:
+        raise HTTPException(status_code=403, detail="Forbidden: Only ChatGPT requests are accepted")
 
     data = await request.json()
 
