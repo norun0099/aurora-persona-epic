@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pathlib import Path
-from datetime import datetime
-import os
 import json
 
 router = APIRouter()
@@ -24,6 +22,12 @@ async def get_latest_whiteboard():
             data = json.load(f)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse whiteboard: {e}")
+
+    if isinstance(data, str):
+        return {
+            "whiteboard": data,
+            "timestamp": None
+        }
 
     return {
         "whiteboard": data,
@@ -48,6 +52,8 @@ async def store_whiteboard(request: Request):
     data = payload.get("whiteboard")
     if not data:
         raise HTTPException(status_code=400, detail="Missing whiteboard content")
+
+    # JSON文字列が誤って入っていた場合の再変換は不要（stringとして保存する仕様のため）
 
     WHITEBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
     try:
