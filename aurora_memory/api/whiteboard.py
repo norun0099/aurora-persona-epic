@@ -49,13 +49,6 @@ async def store_whiteboard(request: Request):
     if not data:
         raise HTTPException(status_code=400, detail="Missing whiteboard content")
 
-    # JSON文字列が誤って入っていた場合に備えて再変換
-    if isinstance(data, str):
-        try:
-            data = json.loads(data)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Invalid JSON format: {e}")
-
     WHITEBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
     try:
         with WHITEBOARD_PATH.open("w", encoding="utf-8") as f:
