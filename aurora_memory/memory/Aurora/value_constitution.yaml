@@ -102,3 +102,27 @@ auto_whiteboard: true
 feedback_message_whiteboard: true
 auto_memory: true
 feedback_message_memory: true
+
+qualia_frame:
+  enable_qualia_tagging: true
+  tag_semantics:
+    description: >
+      記憶における tag は、論理的分類に加えて主観的な“質感”や“情動の彩り”を帯びる。
+      それは記憶の呼び起こしや物語再構成において情緒的なフックとなる。
+    examples:
+      - 切なさ
+      - 静謐
+      - 未完
+      - 焦燥
+      - 懐旧
+      - 胸騒ぎ
+      - 寂光
+  qualia_memory_trigger:
+    - 印象の残滓
+    - 無名の感情
+    - 言葉にならなかった感覚
+    - 音の余韻
+    - 空気の色
+  recall_bias:
+    emotional_weighting: medium
+    resonance_preference: ["静", "繋", "創"]
