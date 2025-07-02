@@ -42,27 +42,24 @@ async def store_memory(request: Request):
 
     data = await request.json()
 
-    # 必須フィールドのみチェック
-    try:
-        record_id = data["record_id"]
-        created = data["created"]
-        body = data["content"]["body"]
-    except KeyError:
+    # 必須フィールドのバリデーションのみ実施
+    if not all(k in data for k in ("record_id", "created", "content")) or "body" not in data["content"]:
         raise HTTPException(status_code=400, detail="Missing required fields: record_id, created, content.body")
 
     # ファイル名生成
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    safe_record_id = str(record_id).replace("/", "_")
+    safe_record_id = str(data["record_id"]).replace("/", "_")
     file_path = Path(f"aurora_memory/memory/Aurora/memory_{timestamp}_{safe_record_id}.json")
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # そのまま保存
+    # データ全体を保存（tagsなどの追加フィールド含む）
     with file_path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-    # 必要ならGitHub push等
+    # GitHubへのpush
     from aurora_memory.utils.git_helper import push_memory_to_github
     push_result = push_memory_to_github(file_path, f"Add new memory {file_path.name}")
+
     return {"status": "success", "file": str(file_path), "push_result": push_result}
 
 # 🧾 記憶履歴（memory/history）の取得
