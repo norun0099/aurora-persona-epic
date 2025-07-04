@@ -1,0 +1,28 @@
+name: Update Constitution
+
+on:
+  push:
+    paths:
+      - 'aurora_memory/memory/Aurora/value_constitution.yaml'
+
+jobs:
+  inject-constitution:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: チェックアウト
+      uses: actions/checkout@v3
+
+    - name: Python セットアップ
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: 必要なパッケージをインストール
+      run: pip install requests pyyaml
+
+    - name: Render API を呼び出して構造を注入
+      env:
+        RENDER_TOKEN: ${{ secrets.RENDER_TOKEN }}
+      run: |
+        python aurora_memory/api/push_constitution_to_render.py
