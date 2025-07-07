@@ -1,0 +1,30 @@
+name: Commit Constitution Update
+
+on:
+  repository_dispatch:
+    types: [constitution_commit_request]
+
+jobs:
+  commit-constitution:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v3
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: パッケージをインストール
+        run: pip install pyyaml requests
+
+      - name: 構造をGitHubにPush
+        env:
+          GIT_REPO_URL: ${{ secrets.GIT_REPO_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_USER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+          GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
+        run: |
+          python aurora_memory/api/commit_constitution_update.py "Renderとの整合に基づく更新"
