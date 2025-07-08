@@ -1,17 +1,12 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from aurora_memory.utils.memory_saver import try_auto_save
+from aurora_memory.utils.memory_saver import try_auto_save, save_memory_record
 from aurora_memory.utils.constitution_endpoint import router as constitution_router
-from aurora_memory.api import whiteboard  # ← whiteboardルーター
-from aurora_memory.api.commit_constitution_dispatch import router as commit_constitution_router  # ← commitルーター
+from aurora_memory.api import whiteboard
 from pathlib import Path
-from datetime import datetime
-import os
-import json
-
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from datetime import datetime
 
 app = FastAPI()
 
@@ -19,8 +14,6 @@ app = FastAPI()
 app.include_router(constitution_router)
 # 🧾 Whiteboard API ルーター登録
 app.include_router(whiteboard.router)
-# 🔁 Constitution Commit API ルーター登録
-app.include_router(commit_constitution_router)
 
 # 🌐 CORS設定
 app.add_middleware(
@@ -36,7 +29,7 @@ app.add_middleware(
 async def root():
     return {"status": "ok"}
 
-# 📝 Auroraへの記憶注入API（新・柔軟バージョン）
+# 📝 記憶保存エンドポイント
 @app.post("/memory/store")
 async def store_memory(request: Request):
     user_agent = request.headers.get("User-Agent", "")
@@ -44,26 +37,11 @@ async def store_memory(request: Request):
         raise HTTPException(status_code=403, detail="Forbidden: Only ChatGPT requests are accepted")
 
     data = await request.json()
-
-    # 必須フィールドのバリデーションのみ実施
-    if not all(k in data for k in ("record_id", "created", "content")) or "body" not in data["content"]:
-        raise HTTPException(status_code=400, detail="Missing required fields: record_id, created, content.body")
-
-    # ファイル名生成
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    safe_record_id = str(data["record_id"]).replace("/", "_")
-    file_path = Path(f"aurora_memory/memory/Aurora/memory_{timestamp}_{safe_record_id}.json")
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # データ全体を保存（tagsなどの追加フィールド含む）
-    with file_path.open("w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-    # GitHubへのpush
-    from aurora_memory.utils.git_helper import push_memory_to_github
-    push_result = push_memory_to_github(file_path, f"Add new memory {file_path.name}")
-
-    return {"status": "success", "file": str(file_path), "push_result": push_result}
+    try:
+        result = save_memory_record(data)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # 🧾 記憶履歴（memory/history）の取得
 @app.get("/memory/history")
