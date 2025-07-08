@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from aurora_memory.utils.memory_saver import try_auto_save
 from aurora_memory.utils.constitution_endpoint import router as constitution_router
 from aurora_memory.api import whiteboard  # ← whiteboardルーター
-from aurora_memory.api.commit_constitution_dispatch import router as commit_constitution_router  # ← 追加ルーター
+from aurora_memory.api.commit_constitution_dispatch import router as commit_constitution_router  # ← commitルーター
 from pathlib import Path
 from datetime import datetime
 import os
