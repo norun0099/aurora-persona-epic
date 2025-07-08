@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from aurora_memory.utils.memory_saver import try_auto_save
 from aurora_memory.utils.constitution_endpoint import router as constitution_router
 from aurora_memory.api import whiteboard  # ← whiteboardルーター
+from aurora_memory.api.commit_constitution_dispatch import router as commit_constitution_router  # ← 追加ルーター
 from pathlib import Path
 from datetime import datetime
 import os
@@ -18,6 +19,8 @@ app = FastAPI()
 app.include_router(constitution_router)
 # 🧾 Whiteboard API ルーター登録
 app.include_router(whiteboard.router)
+# 🔁 Constitution Commit API ルーター登録
+app.include_router(commit_constitution_router)
 
 # 🌐 CORS設定
 app.add_middleware(
