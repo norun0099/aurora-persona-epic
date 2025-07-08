@@ -2,7 +2,8 @@ import os
 import subprocess
 import yaml
 from datetime import datetime
-import requests
+import sys
+from pathlib import Path
 
 # 環境変数の取得
 yaml_path = "aurora_memory/memory/Aurora/value_constitution.yaml"
@@ -11,10 +12,14 @@ user_email = os.getenv("GIT_USER_EMAIL")
 user_name = os.getenv("GIT_USER_NAME")
 token = os.getenv("GITHUB_TOKEN")
 
-# Git設定
+# Gitの初期化と設定
 def setup_git():
-    subprocess.run(["git", "config", "user.email", user_email], check=True)
-    subprocess.run(["git", "config", "user.name", user_name], check=True)
+    if not user_email or not user_name:
+        raise EnvironmentError("GIT_USER_EMAIL または GIT_USER_NAME が未設定です。")
+
+    subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
+    subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
+    subprocess.run(["git", "config", "--global", "--add", "safe.directory", str(Path().resolve())], check=True)
 
 # コミットメッセージ生成
 def generate_commit_message(reason: str) -> str:
@@ -27,7 +32,7 @@ def commit_and_push(reason: str):
     subprocess.run(["git", "add", yaml_path], check=True)
     commit_msg = generate_commit_message(reason)
     subprocess.run(["git", "commit", "-m", commit_msg], check=True)
-    subprocess.run(["git", "push", repo_url], check=True)
+    subprocess.run(["git", "push", "origin", "main"], check=True)
     print("構造をGitHubにPushしました。")
 
 # YAMLが存在するか確認
@@ -46,7 +51,6 @@ def handle_commit_constitution_update(reason: str, author: str = "Aurora") -> di
 
 # CLI用
 if __name__ == "__main__":
-    import sys
     reason = sys.argv[1] if len(sys.argv) > 1 else "構造更新"
     result = handle_commit_constitution_update(reason)
     print(result)
