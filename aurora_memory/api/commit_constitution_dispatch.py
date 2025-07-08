@@ -1,8 +1,9 @@
 import os
 import requests
-from flask import Blueprint, request, jsonify
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
 
-router = Blueprint("commit_constitution", __name__)
+router = APIRouter()
 
 GITHUB_API_URL = "https://api.github.com/repos/norun0099/aurora-persona-epic/dispatches"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -13,21 +14,20 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-@router.route("/constitution/commit", methods=["POST"])
-def constitution_commit():
+@router.post("/constitution/commit")
+async def constitution_commit(request: Request):
     try:
-        # オプションで理由を受け取る
-        data = request.get_json()
-        reason = data.get("reason", "構造の自動更新")
+        body = await request.json()
+        reason = body.get("reason", "構造の自動更新")
 
-        # GitHubへディスパッチ
         payload = {
             "event_type": "constitution_commit_request",
             "client_payload": {"reason": reason}
         }
+
         response = requests.post(GITHUB_API_URL, json=payload, headers=HEADERS)
         response.raise_for_status()
 
-        return jsonify({"status": "success", "message": "構造更新リクエストをGitHubへ送信しました。"})
+        return JSONResponse(content={"status": "success", "message": "構造更新リクエストをGitHubへ送信しました。"})
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
