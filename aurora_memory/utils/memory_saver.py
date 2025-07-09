@@ -8,19 +8,19 @@ from aurora_memory.utils.git_helper import push_memory_to_github
 MEMORY_DIR = Path("aurora_memory/memory/Aurora")
 MEMORY_DIR.mkdir(parents=True, exist_ok=True)
 
-# 記憶をファイルに保存し、GitHubにpushする
-
+# Constitution構造を固定ファイルに保存し、GitHubにpushする
 def try_auto_save(memory_text: str, prefix: str = "constitution"):
-    now = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    file_path = MEMORY_DIR / f"{prefix}_{now}.yaml"
+    file_path = MEMORY_DIR / "value_constitution.yaml"
 
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(memory_text)
 
-    push_result = push_memory_to_github(file_path, f"Auto-save {prefix} {now}")
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+    push_result = push_memory_to_github(file_path, f"Auto-save {prefix} at {now}")
     return {"file": str(file_path), "push_result": push_result}
 
 
+# 一般的な記憶保存処理
 def save_memory_record(data: dict):
     # バリデーション
     if not all(k in data for k in ("record_id", "created", "content")) or "body" not in data["content"]:
