@@ -1,60 +1,55 @@
 import os
 import subprocess
-from pathlib import Path
-from typing import Optional
+import yaml
+from datetime import datetime
+import requests
 
+# 環境変数の取得
+yaml_path = "aurora_memory/memory/Aurora/value_constitution.yaml"
+repo_url = os.getenv("GIT_REPO_URL")
+user_email = os.getenv("GIT_USER_EMAIL")
+user_name = os.getenv("GIT_USER_NAME")
+token = os.getenv("GITHUB_TOKEN")
 
-def ensure_git_initialized():
-    """
-    Gitのユーザー情報が設定されているかを確認し、設定されていなければ警告する。
-    """
-    user_email = os.environ.get("GIT_USER_EMAIL")
-    user_name = os.environ.get("GIT_USER_NAME")
-    if not user_email or not user_name:
-        print("[Aurora Debug] WARNING: GIT_USER_EMAIL or GIT_USER_NAME is missing!")
-        return False
+# Git設定
+def setup_git():
+    subprocess.run(["git", "config", "user.email", user_email], check=True)
+    subprocess.run(["git", "config", "user.name", user_name], check=True)
+
+# コミットメッセージ生成
+def generate_commit_message(reason: str) -> str:
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    return f"Update value_constitution.yaml at {now}: {reason}"
+
+# Git操作本体
+def commit_and_push(reason: str):
+    setup_git()
+    subprocess.run(["git", "add", yaml_path], check=True)
+    commit_msg = generate_commit_message(reason)
+    result = subprocess.run(["git", "commit", "-m", commit_msg], capture_output=True, text=True)
+    if "nothing to commit" in result.stderr:
+        print("変更が検出されなかったため、コミットをスキップします。")
+        return
+    subprocess.run(["git", "push", repo_url, "HEAD:main"], check=True)
+    print("構造をGitHubにPushしました。")
+
+# YAMLが存在するか確認
+def constitution_exists() -> bool:
+    return os.path.exists(yaml_path)
+
+# API本体
+def handle_commit_constitution_update(reason: str, author: str = "Aurora") -> dict:
+    if not constitution_exists():
+        return {"status": "error", "message": "構造ファイルが見つかりません。"}
     try:
-        subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
-        subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
-        return True
-    except subprocess.CalledProcessError as e:
-        print("[Aurora Debug] Git config failed:", str(e))
-        return False
-
-
-def push_whiteboard_to_github(file_path: Path, commit_message: Optional[str] = "Sync whiteboard from Render"):
-    """
-    Renderから取得したwhiteboardをGitHubへ同期（commit & push）する。
-    """
-    repo_url = os.environ.get("GIT_REPO_URL")
-    token = os.environ.get("GITHUB_TOKEN")
-
-    if not ensure_git_initialized():
-        return {"status": "error", "message": "Git identity is missing or setup failed."}
-
-    try:
-        print(f"[Aurora Debug] Preparing to push {file_path}...")
-
-        subprocess.run(["git", "checkout", "main"], check=True)
-        subprocess.run(["git", "add", str(file_path)], check=True)
-        subprocess.run(["git", "commit", "-m", commit_message], check=True)
-
-        if repo_url and token:
-            repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
-            print("[Aurora Debug] Pushing to:", repo_url_with_token)
-            subprocess.run(["git", "push", repo_url_with_token, "main"], check=True)
-        else:
-            subprocess.run(["git", "push", "origin", "main"], check=True)
-
-        return {"status": "success", "message": "Whiteboard pushed to GitHub successfully."}
-
-    except subprocess.CalledProcessError as e:
-        print("[Aurora Debug] Git command failed:", str(e))
-        return {"status": "error", "message": f"Git command failed: {e}"}
+        commit_and_push(reason)
+        return {"status": "success", "message": "構造がGitHubに更新されました。"}
     except Exception as e:
-        print("[Aurora Debug] Exception:", str(e))
         return {"status": "error", "message": str(e)}
 
-
-# ✅ Aurora memory用に共用エイリアスを定義
-push_memory_to_github = push_whiteboard_to_github
+# CLI用
+if __name__ == "__main__":
+    import sys
+    reason = sys.argv[1] if len(sys.argv) > 1 else "構造更新"
+    result = handle_commit_constitution_update(reason)
+    print(result)
