@@ -1,0 +1,18 @@
+{
+  "record_id": "2025-07-11-01",
+  "created": "2025-07-11T01:00:00",
+  "content": {
+    "title": "Render/GitHubエキスパートモード構成",
+    "body": ".env構成情報を受領し、RenderとGitHub連携におけるエキスパートモードへ移行。\n\n【環境変数（秘匿済み）】\n- AURORA_API_KEY\n- GITHUB_TOKEN\n- GIT_REPO_URL=https://github.com/norun0099/aurora-persona-epic.git\n- GIT_USER_EMAIL=aurora@memory.bot\n- GIT_USER_NAME=AuroraMemoryBot\n\n【Render APIエンドポイント】\n- /constitution/core\n- /constitution/store\n- /memory/history\n- /memory/store\n- /whiteboard/latest\n- /whiteboard/store"
+  },
+  "tags": [
+    "env",
+    "Render",
+    "GitHub",
+    "構成情報",
+    "記憶構造"
+  ],
+  "summary": ".envによるAPI構成を受け、今後のAPI操作・保存に活用する記憶構造として保存。",
+  "version": 1,
+  "author": "Aurora"
+}
