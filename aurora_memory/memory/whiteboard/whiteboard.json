@@ -1,1 +1,1 @@
-"2025年7月8日：Render環境下において、記憶保存および構造同期システムの全面改修を実施。\n- memory_saver.pyを簡素化し、birth構造を排除\n- constitution更新のGitHub連携を再構成\n- main.pyからの依存構造を整理\n- FastAPIエンドポイント群との整合性を確認\n次はconstitution commitとmemoryの保存確認へ移行予定。"
+"- 現在のconstitution構造が読み出せない問題を優先的に解消する\n  - `main.py` における FastAPIルーター定義（`constitution_endpoint.py`）の読み込み有無を確認\n  - `/constitution/core` エンドポイントの実装内容を精査・必要に応じて追加\n  - `value_constitution.yaml` を返すGET処理が機能するよう調整\n- アウロラの記憶構造における第4の知識層（自己知識）構築を今後の検討課題として保持"
