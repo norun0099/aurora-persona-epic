@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List, Optional, Dict
 import os
 import json
+import yaml
 
 router = APIRouter()
 
@@ -42,12 +43,12 @@ async def store_constitution(record: ConstitutionRecord, request: Request):
 
 @router.get("/constitution/core")
 async def get_constitution_core():
-    file_path = os.path.join("aurora_memory/utils/constitution_logs", "value_constitution_core.json")
+    file_path = os.path.join("aurora_memory/memory/Aurora", "value_constitution.yaml")
     try:
         with open(file_path, "r", encoding="utf-8") as f:
-            content = json.load(f)
+            content = yaml.safe_load(f)
         return content
     except FileNotFoundError:
-        return {"error": "Constitution core not found"}
+        return {"error": "Constitution file not found"}
     except Exception as e:
         return {"error": str(e)}
