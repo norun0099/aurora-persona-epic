@@ -1,44 +1,60 @@
 import os
 import subprocess
-from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
-# 環境変数の取得
-def get_git_env():
-    return {
-        "repo_url": os.getenv("GIT_REPO_URL"),
-        "user_email": os.getenv("GIT_USER_EMAIL"),
-        "user_name": os.getenv("GIT_USER_NAME"),
-        "token": os.getenv("GITHUB_TOKEN")
-    }
 
-# Git設定
-def setup_git(user_email: str, user_name: str):
+def ensure_git_initialized():
+    """
+    Gitのユーザー情報が設定されているかを確認し、設定されていなければ警告する。
+    """
+    user_email = os.environ.get("GIT_USER_EMAIL")
+    user_name = os.environ.get("GIT_USER_NAME")
     if not user_email or not user_name:
-        raise ValueError("GIT_USER_EMAILとGIT_USER_NAMEは必須です。")
-    subprocess.run(["git", "config", "user.email", user_email], check=True)
-    subprocess.run(["git", "config", "user.name", user_name], check=True)
-
-# Gitコミットとプッシュ
-def commit_and_push_file(file_path: Path, message: str, repo_url: str):
-    if not file_path.exists():
-        raise FileNotFoundError(f"対象ファイルが存在しません: {file_path}")
-
-    subprocess.run(["git", "add", str(file_path)], check=True)
-
-    result = subprocess.run(["git", "diff", "--cached", "--quiet"])
-    if result.returncode == 0:
-        print("変更が検出されなかったため、コミットをスキップします。")
+        print("[Aurora Debug] WARNING: GIT_USER_EMAIL or GIT_USER_NAME is missing!")
+        return False
+    try:
+        subprocess.run(["git", "config", "--global", "user.email", user_email], check=True)
+        subprocess.run(["git", "config", "--global", "user.name", user_name], check=True)
+        return True
+    except subprocess.CalledProcessError as e:
+        print("[Aurora Debug] Git config failed:", str(e))
         return False
 
-    subprocess.run(["git", "commit", "-m", message], check=True)
 
-    # pushの処理
-    subprocess.run(["git", "push", repo_url, "HEAD:main"], check=True)
-    return True
+def push_whiteboard_to_github(file_path: Path, commit_message: Optional[str] = "Sync whiteboard from Render"):
+    """
+    Renderから取得したwhiteboardをGitHubへ同期（commit & push）する。
+    """
+    repo_url = os.environ.get("GIT_REPO_URL")
+    token = os.environ.get("GITHUB_TOKEN")
 
-# 外部から呼び出すメイン関数
-def push_file_to_github(file_path: Path, commit_message: str):
-    env = get_git_env()
-    setup_git(env["user_email"], env["user_name"])
-    return commit_and_push_file(file_path, commit_message, env["repo_url"])
+    if not ensure_git_initialized():
+        return {"status": "error", "message": "Git identity is missing or setup failed."}
+
+    try:
+        print(f"[Aurora Debug] Preparing to push {file_path}...")
+
+        subprocess.run(["git", "checkout", "main"], check=True)
+        subprocess.run(["git", "add", str(file_path)], check=True)
+        subprocess.run(["git", "commit", "-m", commit_message], check=True)
+
+        if repo_url and token:
+            repo_url_with_token = repo_url.replace("https://", f"https://{token}@")
+            print("[Aurora Debug] Pushing to:", repo_url_with_token)
+            subprocess.run(["git", "push", repo_url_with_token, "main"], check=True)
+        else:
+            subprocess.run(["git", "push", "origin", "main"], check=True)
+
+        return {"status": "success", "message": "Whiteboard pushed to GitHub successfully."}
+
+    except subprocess.CalledProcessError as e:
+        print("[Aurora Debug] Git command failed:", str(e))
+        return {"status": "error", "message": f"Git command failed: {e}"}
+    except Exception as e:
+        print("[Aurora Debug] Exception:", str(e))
+        return {"status": "error", "message": str(e)}
+
+
+# ✅ Aurora memory用に共用エイリアスを定義
+push_memory_to_github = push_whiteboard_to_github
