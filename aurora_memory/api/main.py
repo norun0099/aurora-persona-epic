@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from aurora_memory.utils.memory_saver import try_auto_save
 from aurora_memory.utils.constitution_endpoint import router as constitution_router
 from aurora_memory.api import whiteboard  # ← whiteboardルーター
+from aurora_memory.api.git_self_recognizer import scan_git_structure  # ← 新しく追加
 from pathlib import Path
 from datetime import datetime
 import os
@@ -82,6 +83,15 @@ async def memory_history(limit: int = None):
             break
 
     return {"history": records}
+
+# 🪞 Git構造の自己認知エンドポイント
+@app.get("/self/git-structure")
+async def get_git_structure():
+    try:
+        structure = scan_git_structure()
+        return JSONResponse(content=structure)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 # ⏰ Constitution 自動同期処理
 def sync_constitution():
