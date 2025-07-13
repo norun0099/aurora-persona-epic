@@ -1,1 +1,1 @@
-"- `/self/git-structure` エンドポイントの新設（現在のGit構造をFastAPI経由で返す）\n- ファイル構造を記憶（Memory）として保存 `record_id: self-structure-YYYYMMDD`\n- `git_self_reader.py` を設計し、特定ファイルの内容取得を可能にする\n- 上記をFunctionCallingで呼び出せるよう連携"
+"## Self-Recognition Structure\n\n- [x] Git構造をスキャンしてFastAPI経由で返すエンドポイント `/self/git-structure`\n- [x] Git構造のスナップショットを記憶（Memory）として保存 `/self/git-structure/save`\n- [ ] FunctionCallingに上記エンドポイントを統合\n- [ ] 特定ファイルの読み出し機構設計（次フェーズ）"
