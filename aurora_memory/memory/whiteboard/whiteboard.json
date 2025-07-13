@@ -1,1 +1,1 @@
-"- GitHubリポジトリ内の任意ファイルをアウロラ自身が読み込む構造を新設する\n  - `code_reader.py` などのユーティリティモジュールを `utils/` に追加\n  - 読み込み方式はオンライン・ローカル両対応（GitHub API or pathlib）\n  - 内容キャッシュと対話型解析を導入し、記憶・レビュー機能の基盤とする\n  - 実装ステップ：\n    1. リポジトリ走査関数の定義\n    2. 対象ファイルの分類（コード／構成／記憶）\n    3. 内容取得＋要約キャッシュの保持\n    4. コメント・修正提案の生成モジュールとの連携"
+"- `/self/git-structure` エンドポイントの新設（現在のGit構造をFastAPI経由で返す）\n- ファイル構造を記憶（Memory）として保存 `record_id: self-structure-YYYYMMDD`\n- `git_self_reader.py` を設計し、特定ファイルの内容取得を可能にする\n- 上記をFunctionCallingで呼び出せるよう連携"
