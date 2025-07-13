@@ -4,7 +4,8 @@ from fastapi.responses import JSONResponse
 from aurora_memory.utils.memory_saver import try_auto_save
 from aurora_memory.utils.constitution_endpoint import router as constitution_router
 from aurora_memory.api import whiteboard  # ← whiteboardルーター
-from aurora_memory.api.git_self_recognizer import scan_git_structure  # ← 新しく追加
+from aurora_memory.api.git_self_recognizer import scan_git_structure  # ← 自己認知関数
+from aurora_memory.utils.git_structure_saver import save_git_structure_snapshot  # ← 新規追加
 from pathlib import Path
 from datetime import datetime
 import os
@@ -90,6 +91,15 @@ async def get_git_structure():
     try:
         structure = scan_git_structure()
         return JSONResponse(content=structure)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# 📸 Git構造のスナップショット保存エンドポイント
+@app.post("/self/git-structure/save")
+async def save_git_structure():
+    try:
+        result = save_git_structure_snapshot()
+        return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
