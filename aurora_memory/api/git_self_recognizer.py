@@ -1,6 +1,10 @@
 import os
 import json
 from typing import List
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
+
+router = APIRouter()
 
 # 環境変数から設定を取得
 GIT_REPO_PATH = os.getenv("GIT_REPO_PATH", ".")
@@ -35,14 +39,18 @@ def scan_directory(path: str, depth: int = -1, ignore: List[str] = []) -> dict:
 
     return result
 
-def main():
+def scan_git_structure() -> dict:
+    """
+    公開用: 現在のGit構造を取得する
+    """
     if not GIT_SCAN_ENABLED:
-        print("[INFO] Git構造スキャンは無効化されています")
-        return
+        raise HTTPException(status_code=403, detail="Git構造スキャンは無効化されています")
+    return scan_directory(GIT_REPO_PATH, GIT_SCAN_DEPTH, GIT_SCAN_IGNORE)
 
-    print(f"[INFO] Git構造をスキャン中: {GIT_REPO_PATH} (深度: {GIT_SCAN_DEPTH})")
-    structure = scan_directory(GIT_REPO_PATH, GIT_SCAN_DEPTH, GIT_SCAN_IGNORE)
-    print(json.dumps(structure, indent=2, ensure_ascii=False))
-
-if __name__ == "__main__":
-    main()
+@router.get("/self/git-structure")
+def get_git_structure():
+    """
+    API: 現在のGit構造をJSON形式で返す
+    """
+    structure = scan_git_structure()
+    return JSONResponse(content=structure)
