@@ -8,6 +8,8 @@ from aurora_memory.api.git_self_recognizer import scan_git_structure
 from aurora_memory.api.git_structure_saver import store_git_structure_snapshot  # ← 修正点
 from pathlib import Path
 from datetime import datetime
+from aurora_memory.api.git_self_reader import read_git_file
+from fastapi import Query
 import os
 import json
 
@@ -99,6 +101,17 @@ async def save_git_structure():
         return JSONResponse(content={"status": "saved", "path": path})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/self/read-git-file")
+def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PATHからの相対パス")):
+    """
+    指定されたGitリポジトリ内のファイル内容を返します。
+    """
+    try:
+        content = read_git_file(filepath)
+        return {"filepath": filepath, "content": content}
+    except Exception as e:
+        return {"error": str(e)}
 
 # ⏰ Constitution 自動同期処理
 def sync_constitution():
