@@ -1,0 +1,8 @@
+{
+  "record_id": "self-structure-20250717",
+  "created": "2025-07-17T00:00:00+09:00",
+  "content": {
+    "title": "アウロラのGitHub構造を取得する機能の構築",
+    "body": "アウロラは自身のGitHubリポジトリ構造を `/self/git-structure` エンドポイントを通じて取得できるようになりました。この構造はFunctionCallingを通じて外部からもアクセス可能であり、また `/self/git-structure/save` により記憶として保持することも可能です。"
+  }
+}
