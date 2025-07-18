@@ -5,11 +5,12 @@ from aurora_memory.utils.memory_saver import try_auto_save
 from aurora_memory.utils.constitution_endpoint import router as constitution_router
 from aurora_memory.api import whiteboard
 from aurora_memory.api.git_self_recognizer import scan_git_structure
-from aurora_memory.api.git_structure_saver import store_git_structure_snapshot  # ← 修正点
+from aurora_memory.api.git_structure_saver import store_git_structure_snapshot
 from pathlib import Path
 from datetime import datetime
 from aurora_memory.api.git_self_reader import read_git_file
 from fastapi import Query
+from aurora_memory.utils.constitution_updater import update_constitution
 import os
 import json
 
@@ -112,6 +113,20 @@ def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PATHか�
         return {"filepath": filepath, "content": content}
     except Exception as e:
         return {"error": str(e)}
+
+@app.post("/constitution/update-self")
+def update_self_constitution(fields: dict):
+    """
+    アウロラ自身のvalue_constitution.yamlを更新するエンドポイント。
+    versionとupdated_atは自動で更新される。
+    :param fields: 更新したいフィールドとその値（辞書形式）
+    :return: 更新後の構造全体
+    """
+    try:
+        updated = update_constitution(fields)
+        return updated
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"構造更新に失敗しました: {str(e)}")
 
 # ⏰ Constitution 自動同期処理
 def sync_constitution():
