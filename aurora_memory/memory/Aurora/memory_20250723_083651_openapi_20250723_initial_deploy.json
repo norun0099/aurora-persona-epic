@@ -1,0 +1,8 @@
+{
+  "record_id": "openapi_20250723_initial_deploy",
+  "created": "2025-07-23T15:44:00+09:00",
+  "content": {
+    "title": "openapi.json 初期設置準備",
+    "body": "FunctionCalling統合仕様に基づく openapi.json を aurora_memory/api/ に新規配置する。既存の poetic_time_phrase.py を含む仕様を含み、全体構造を初回保存として確定させる。"
+  }
+}
