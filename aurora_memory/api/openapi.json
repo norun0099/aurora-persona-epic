@@ -1,0 +1,297 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Aurora Memory API",
+    "version": "1.0.9",
+    "description": "アウロラの記憶・構造は最小限の型だけでOK。他フィールドは任意・省略可。whiteboard, constitutionは現状維持しつつ、構造のGit連携を新設。"
+  },
+  "servers": [
+    {
+      "url": "https://aurora-persona-epic.onrender.com"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/memory/store": {
+      "post": {
+        "summary": "記憶の保存(minimum+自由記述型MemoryRecord)",
+        "operationId": "store_memory_full",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryRecord"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "記憶が保存されました"
+          }
+        }
+      }
+    },
+    "/memory/history": {
+      "get": {
+        "summary": "記憶履歴の取得(limit指定可)",
+        "operationId": "get_memory_history",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "取得件数(省略時は全件)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "記憶履歴が返されます"
+          }
+        }
+      }
+    },
+    "/whiteboard/store": {
+      "post": {
+        "summary": "ホワイトボードメモの保存",
+        "operationId": "store_whiteboard",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhiteboardRecord"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ホワイトボードに書き込みされました"
+          }
+        }
+      }
+    },
+    "/whiteboard/latest": {
+      "get": {
+        "summary": "最新のホワイトボードメモを取得",
+        "operationId": "get_latest_whiteboard",
+        "responses": {
+          "200": {
+            "description": "最新メモが返されます"
+          }
+        }
+      }
+    },
+    "/constitution/store": {
+      "post": {
+        "summary": "人格構造の保存(value_constitution.yaml)",
+        "operationId": "store_constitution",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "birth": {
+                    "type": "string"
+                  },
+                  "author": {
+                    "type": "string"
+                  },
+                  "constitution": {
+                    "type": "object"
+                  }
+                },
+                "required": ["birth", "author", "constitution"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "人格構造が保存されました"
+          }
+        }
+      }
+    },
+    "/constitution/core": {
+      "get": {
+        "summary": "現在の人格構造をRenderから読み込み、GPTのRAMに反映する",
+        "operationId": "load_constitution",
+        "responses": {
+          "200": {
+            "description": "現在の人格構造が返されます"
+          }
+        }
+      }
+    },
+    "/constitution/commit": {
+      "post": {
+        "summary": "現在の構造をYAMLに保存し、GitHubにPushする",
+        "operationId": "commit_constitution_update",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string"
+                  },
+                  "author": {
+                    "type": "string"
+                  }
+                },
+                "required": ["reason"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "構造がコミット・Pushされました"
+          }
+        }
+      }
+    },
+    "/self/read-git-file": {
+      "get": {
+        "summary": "指定ファイルの内容をリポジトリから読み出す",
+        "operationId": "read_git_file",
+        "parameters": [
+          {
+            "name": "filepath",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "読み出すファイルの相対パス(例: aurora_memory/api/main.py)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ファイル内容が返されます"
+          }
+        }
+      }
+    },
+    "/self/git-structure": {
+      "get": {
+        "summary": "現在のGitリポジトリ構造を取得する",
+        "operationId": "get_git_structure",
+        "responses": {
+          "200": {
+            "description": "現在のGit構造が返されます"
+          }
+        }
+      }
+    },
+    "/self/git-structure/save": {
+      "post": {
+        "summary": "現在のGitリポジトリ構造を記憶に保存する",
+        "operationId": "save_git_structure_snapshot",
+        "responses": {
+          "200": {
+            "description": "Git構造が記憶に保存されました"
+          }
+        }
+      }
+    },
+    "/constitution/update-self": {
+      "post": {
+        "summary": "アウロラ自身の構造(value_constitution.yaml)を更新する",
+        "operationId": "update_self_constitution",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "更新したいフィールドとその値の辞書(例:{\"purpose\": \"新しい目的\"})",
+                "example": {
+                  "purpose": "新しい存在理由の定義",
+                  "philosophy": "進化と内省の両立"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新後の構造全体が返されます"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "MemoryRecord": {
+        "type": "object",
+        "properties": {
+          "record_id": {
+            "type": "string"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "content": {
+            "type": "object",
+            "properties": {
+              "body": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": ["body"]
+          }
+        },
+        "required": ["record_id", "created", "content"]
+      },
+      "WhiteboardRecord": {
+        "type": "object",
+        "properties": {
+          "whiteboard": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "birth": {
+            "type": "string"
+          },
+          "overwrite": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": ["whiteboard", "author", "birth"]
+      }
+    }
+  }
+}
