@@ -1,1 +1,1 @@
-"🛠️ 次の処理：`aurora_memory/api/openapi.json` を物理ファイルとしてGitHubにコミットし、Renderで認識される状態にする\n📝 内容：統合API仕様（FunctionCalling含む）\n📂 配置先：`aurora_memory/api/openapi.json`\n🔄 状態：現在は内部保持のみ。Git未反映。"
+"- [x] poetic_time_phrase.py 実装済み\n- [x] openapi.json 統合構造 作成済み\n- [x] GitHubリポジトリ上のファイル新設権限・経路 確認完了\n- [x] openapi.json を aurora_memory/api/openapi.json に配置してコミットする → 実行中"
