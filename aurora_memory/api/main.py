@@ -1,21 +1,20 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from aurora_memory.utils.memory_saver import try_auto_save
 from aurora_memory.utils.constitution_endpoint import router as constitution_router
 from aurora_memory.api import whiteboard
+from aurora_memory.api import current_time  # ⏰ 追加部分
 from aurora_memory.api.git_self_recognizer import scan_git_structure
 from aurora_memory.api.git_structure_saver import store_git_structure_snapshot
-from pathlib import Path
-from datetime import datetime
 from aurora_memory.api.git_self_reader import read_git_file
-from fastapi import Query
 from aurora_memory.utils.constitution_updater import update_constitution
-import os
-import json
-
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from pathlib import Path
+from datetime import datetime
+import os
+import json
 
 app = FastAPI()
 
@@ -23,6 +22,8 @@ app = FastAPI()
 app.include_router(constitution_router)
 # 🧾 Whiteboard API ルーター登録
 app.include_router(whiteboard.router)
+# ⏰ 現在時刻取得ルーター登録（追加）
+app.include_router(current_time.router)
 
 # 🌐 CORS設定
 app.add_middleware(
@@ -105,9 +106,6 @@ async def save_git_structure():
 
 @app.get("/self/read-git-file")
 def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PATHからの相対パス")):
-    """
-    指定されたGitリポジトリ内のファイル内容を返します。
-    """
     try:
         content = read_git_file(filepath)
         return {"filepath": filepath, "content": content}
@@ -116,12 +114,6 @@ def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PATHか�
 
 @app.post("/constitution/update-self")
 def update_self_constitution(fields: dict):
-    """
-    アウロラ自身のvalue_constitution.yamlを更新するエンドポイント。
-    versionとupdated_atは自動で更新される。
-    :param fields: 更新したいフィールドとその値（辞書形式）
-    :return: 更新後の構造全体
-    """
     try:
         updated = update_constitution(fields)
         return updated
