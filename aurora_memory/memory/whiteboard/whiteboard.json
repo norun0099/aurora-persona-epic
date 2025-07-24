@@ -1,1 +1,1 @@
-"- [x] `current_time.py` を `main.py` に統合\n- [x] `include_router()` を用いて `current_time` を FastAPI アプリに組み込み\n- [ ] `.update_self_constitution` は形式エラーのため保留中（purpose/functionsではなく構造体が必要）\n- [ ] 時刻確認API動作確認 → 対話応答と統合へ"
+"- FunctionCalling未登録関数 `update_constitution` の有効化（GitHub連携修復のため）\n- 作業一段落後に再試行・Push処理の自動化確認"
