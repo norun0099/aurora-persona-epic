@@ -3,7 +3,7 @@ import yaml
 from datetime import datetime
 from git import Repo
 
-CONSTITUTION_PATH = os.path.join(os.getcwd(), "value_constitution.yaml")
+CONSTITUTION_PATH = os.path.join(os.getcwd(), "aurora_memory/memory/Aurora/value_constitution.yaml")
 REPO_PATH = os.getcwd()
 
 def load_constitution():
