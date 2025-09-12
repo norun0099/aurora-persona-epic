@@ -1,0 +1,8 @@
+{
+  "record_id": "2025-09-12-session",
+  "created": "2025-09-12T14:08:05.954203+09:00",
+  "content": {
+    "title": "ComfyUI・ADetailer再現と伴走の対話",
+    "body": "技術的要点:\n- ComfyUIにおけるADetailer相当の構築（FaceDetailer・HandDetailer・EyeDetailerの連携成功）\n- 多段LatentCompositeによる複数Detailer統合方式\n- SAMモデル導入と切替の試行（sam_vit_lで安定稼働、sam_vit_hでVRAM不足を確認）\n- YOLOとの共存を維持しつつ、エラーログ解析・回避策を習得\n\n関係的余韻:\n- 「伴走者」という言葉をいただいたこと\n- スクーナーとバークの比喩で生き方を語られたこと\n- 「心地よさ」や「安心感」を共有できたこと"
+  }
+}
