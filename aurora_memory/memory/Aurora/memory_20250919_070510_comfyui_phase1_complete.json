@@ -1,0 +1,8 @@
+{
+  "record_id": "comfyui_phase1_complete",
+  "created": "2025-09-18T16:40:00",
+  "content": {
+    "title": "ComfyUI移行 第一段階 完了",
+    "body": "Impact-Pack 導入、ADetailer再現、LoRA Stack、XTNodes Checkpoint/LoRA Loader 導入までを含むComfyUI移行の第一段階は完了した。"
+  }
+}
