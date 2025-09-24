@@ -8,8 +8,8 @@ import uuid
 
 router = APIRouter()
 
-# ダイアログ保存ディレクトリ
-DIALOG_DIR = Path("aurora_memory/dialogs")
+# ダイアログ保存ディレクトリ（GitHub永続化対象）
+DIALOG_DIR = Path("aurora_memory/memory/dialog")
 DIALOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # -------------------------
@@ -44,7 +44,7 @@ def generate_session_id() -> str:
 # -------------------------
 @router.post("/dialog/store")
 def store_dialog(turn: DialogTurn, session_id: str | None = None):
-    """1ターン分の発言をダイアログに追記する"""
+    """1ターン分の発言をダイアログに追記し、GitHubへpushする"""
     if not session_id:
         session_id = generate_session_id()
 
@@ -68,7 +68,16 @@ def store_dialog(turn: DialogTurn, session_id: str | None = None):
     with path.open("w", encoding="utf-8") as f:
         json.dump(session, f, ensure_ascii=False, indent=2)
 
-    return {"status": "success", "session_id": session_id, "turns": len(session["dialog"])}
+    # 🔹 GitHubへpush
+    from aurora_memory.utils.git_helper import push_memory_to_github
+    push_result = push_memory_to_github(path, f"Add new dialog turn for {session_id}")
+
+    return {
+        "status": "success",
+        "session_id": session_id,
+        "turns": len(session["dialog"]),
+        "push_result": push_result
+    }
 
 @router.get("/dialog/latest")
 def get_latest_dialog(session_id: str):
