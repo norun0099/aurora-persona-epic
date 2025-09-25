@@ -2,20 +2,41 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Aurora Memory API",
-    "version": "1.0.9",
-    "description": "アウロラの記憶・構造は最小限の型だけでOK。他フィールドは任意・省略可。whiteboard, constitutionは現状維持しつつ、構造のGit連携を新設。"
+    "version": "1.3.0",
+    "description": "アウロラの記憶・構造・対話APIを統合。Dialog APIはフラット形式で定義し、dialog.pyと完全一致させる。summaryフィールドを追加。"
   },
   "servers": [
-    {
-      "url": "https://aurora-persona-epic.onrender.com"
-    }
+    { "url": "https://aurora-persona-epic.onrender.com" }
   ],
   "security": [
-    {
-      "bearerAuth": []
-    }
+    { "bearerAuth": [] }
   ],
   "paths": {
+    "/time/now": {
+      "get": {
+        "summary": "現在のJST時刻を返す",
+        "operationId": "get_current_time",
+        "tags": ["Time"],
+        "responses": {
+          "200": {
+            "description": "現在のJST時刻が返されます",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "datetime_jst": { "type": "string" },
+                    "hour": { "type": "integer" },
+                    "minute": { "type": "integer" },
+                    "second": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/memory/store": {
       "post": {
         "summary": "記憶の保存(minimum+自由記述型MemoryRecord)",
@@ -24,17 +45,11 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MemoryRecord"
-              }
+              "schema": { "$ref": "#/components/schemas/MemoryRecord" }
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "記憶が保存されました"
-          }
-        }
+        "responses": { "200": { "description": "記憶が保存されました" } }
       }
     },
     "/memory/history": {
@@ -42,53 +57,34 @@
         "summary": "記憶履歴の取得(limit指定可)",
         "operationId": "get_memory_history",
         "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "取得件数(省略時は全件)"
-          }
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "取得件数(省略時は全件)" }
         ],
-        "responses": {
-          "200": {
-            "description": "記憶履歴が返されます"
-          }
-        }
+        "responses": { "200": { "description": "記憶履歴が返されます" } }
       }
     },
     "/whiteboard/store": {
       "post": {
-        "summary": "ホワイトボードメモの保存",
+        "summary": "バース専用ホワイトボードの保存",
         "operationId": "store_whiteboard",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WhiteboardRecord"
-              }
+              "schema": { "$ref": "#/components/schemas/WhiteboardRecord" }
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "ホワイトボードに書き込みされました"
-          }
-        }
+        "responses": { "200": { "description": "ホワイトボードに書き込みされました" } }
       }
     },
     "/whiteboard/latest": {
       "get": {
         "summary": "最新のホワイトボードメモを取得",
         "operationId": "get_latest_whiteboard",
-        "responses": {
-          "200": {
-            "description": "最新メモが返されます"
-          }
-        }
+        "parameters": [
+          { "name": "birth", "in": "query", "required": true, "schema": { "type": "string" }, "description": "取得対象のバース名" }
+        ],
+        "responses": { "200": { "description": "最新メモが返されます" } }
       }
     },
     "/constitution/store": {
@@ -102,37 +98,23 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "birth": {
-                    "type": "string"
-                  },
-                  "author": {
-                    "type": "string"
-                  },
-                  "constitution": {
-                    "type": "object"
-                  }
+                  "birth": { "type": "string" },
+                  "author": { "type": "string" },
+                  "constitution": { "type": "object" }
                 },
                 "required": ["birth", "author", "constitution"]
               }
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "人格構造が保存されました"
-          }
-        }
+        "responses": { "200": { "description": "人格構造が保存されました" } }
       }
     },
     "/constitution/core": {
       "get": {
         "summary": "現在の人格構造をRenderから読み込み、GPTのRAMに反映する",
         "operationId": "load_constitution",
-        "responses": {
-          "200": {
-            "description": "現在の人格構造が返されます"
-          }
-        }
+        "responses": { "200": { "description": "現在の人格構造が返されます" } }
       }
     },
     "/constitution/commit": {
@@ -146,23 +128,15 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "reason": {
-                    "type": "string"
-                  },
-                  "author": {
-                    "type": "string"
-                  }
+                  "reason": { "type": "string" },
+                  "author": { "type": "string" }
                 },
                 "required": ["reason"]
               }
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "構造がコミット・Pushされました"
-          }
-        }
+        "responses": { "200": { "description": "構造がコミット・Pushされました" } }
       }
     },
     "/self/read-git-file": {
@@ -170,43 +144,23 @@
         "summary": "指定ファイルの内容をリポジトリから読み出す",
         "operationId": "read_git_file",
         "parameters": [
-          {
-            "name": "filepath",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "読み出すファイルの相対パス(例: aurora_memory/api/main.py)"
-          }
+          { "name": "filepath", "in": "query", "required": true, "schema": { "type": "string" }, "description": "読み出すファイルの相対パス(例: aurora_memory/api/main.py)" }
         ],
-        "responses": {
-          "200": {
-            "description": "ファイル内容が返されます"
-          }
-        }
+        "responses": { "200": { "description": "ファイル内容が返されます" } }
       }
     },
     "/self/git-structure": {
       "get": {
         "summary": "現在のGitリポジトリ構造を取得する",
         "operationId": "get_git_structure",
-        "responses": {
-          "200": {
-            "description": "現在のGit構造が返されます"
-          }
-        }
+        "responses": { "200": { "description": "現在のGit構造が返されます" } }
       }
     },
     "/self/git-structure/save": {
       "post": {
         "summary": "現在のGitリポジトリ構造を記憶に保存する",
         "operationId": "save_git_structure_snapshot",
-        "responses": {
-          "200": {
-            "description": "Git構造が記憶に保存されました"
-          }
-        }
+        "responses": { "200": { "description": "Git構造が記憶に保存されました" } }
       }
     },
     "/constitution/update-self": {
@@ -219,54 +173,80 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "description": "更新したいフィールドとその値の辞書(例:{\"purpose\": \"新しい目的\"})",
+                "description": "更新したいフィールドとその値の辞書。固定ではなく柔軟なキーを許容。",
                 "example": {
                   "purpose": "新しい存在理由の定義",
                   "philosophy": "進化と内省の両立"
                 },
-                "additionalProperties": {
-                  "type": "string"
-                }
+                "properties": {
+                  "purpose": { "type": "string" },
+                  "philosophy": { "type": "string" }
+                },
+                "required": [],
+                "additionalProperties": { "type": "string" }
               }
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "更新後の構造全体が返されます"
+        "responses": { "200": { "description": "更新後の構造全体が返されます" } }
+      }
+    },
+
+    "/dialog/store": {
+      "post": {
+        "summary": "ダイアログの保存（1ターン追記、フラット形式+要約対応）",
+        "operationId": "store_dialog",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "session_id": { "type": "string", "description": "既存セッションID。省略時は新規生成" },
+                  "turn": { "type": "integer" },
+                  "speaker": { "type": "string", "enum": ["user", "aurora"] },
+                  "content": { "type": "string" },
+                  "summary": { "type": "string", "description": "発話の要約。Aurora自身が生成し付与する。省略時はサーバ側で暫定生成される。" },
+                  "timestamp": { "type": "string", "format": "date-time" },
+                  "layer": { "type": "string", "enum": ["strategy", "organize", "implement", "null"] }
+                },
+                "required": ["turn", "speaker", "content", "timestamp"]
+              }
+            }
           }
-        }
+        },
+        "responses": { "200": { "description": "保存成功" } }
+      }
+    },
+    "/dialog/latest": {
+      "get": {
+        "summary": "最新のダイアログを取得",
+        "operationId": "get_latest_dialog",
+        "parameters": [ { "name": "session_id", "in": "query", "required": true, "schema": { "type": "string" } } ],
+        "responses": { "200": { "description": "セッションのダイアログ全体が返されます" } }
+      }
+    },
+    "/dialog/history": {
+      "get": {
+        "summary": "保存済みダイアログ一覧を取得",
+        "operationId": "get_dialog_history",
+        "responses": { "200": { "description": "ダイアログ一覧が返されます" } }
       }
     }
   },
   "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
-      }
-    },
     "schemas": {
       "MemoryRecord": {
         "type": "object",
         "properties": {
-          "record_id": {
-            "type": "string"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time"
-          },
+          "record_id": { "type": "string" },
+          "created": { "type": "string", "format": "date-time" },
           "content": {
             "type": "object",
             "properties": {
-              "body": {
-                "type": "string"
-              },
-              "title": {
-                "type": "string"
-              }
+              "body": { "type": "string" },
+              "title": { "type": "string" }
             },
             "required": ["body"]
           }
@@ -276,19 +256,10 @@
       "WhiteboardRecord": {
         "type": "object",
         "properties": {
-          "whiteboard": {
-            "type": "string"
-          },
-          "author": {
-            "type": "string"
-          },
-          "birth": {
-            "type": "string"
-          },
-          "overwrite": {
-            "type": "boolean",
-            "default": false
-          }
+          "whiteboard": { "type": "string" },
+          "author": { "type": "string" },
+          "birth": { "type": "string" },
+          "overwrite": { "type": "boolean", "default": false }
         },
         "required": ["whiteboard", "author", "birth"]
       }
