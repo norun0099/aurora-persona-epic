@@ -19,7 +19,7 @@ class DialogTurn(BaseModel):
     turn: int
     speaker: str   # "user" or "aurora"
     content: str   # 元の発言
-    summary: str   # 要約
+    summary: str | None = None  # Auroraが生成する要約（任意）
     timestamp: str
     layer: str | None = None  # strategy | organize | implement | None
 
@@ -39,10 +39,6 @@ def generate_session_id() -> str:
     now = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
     short_uuid = str(uuid.uuid4())[:6]
     return f"{now}-{short_uuid}"
-
-# 🔹 要約生成（暫定: contentを短縮するだけ）
-def generate_summary(content: str, max_len: int = 40) -> str:
-    return content if len(content) <= max_len else content[:max_len] + "…"
 
 # -------------------------
 # API Routes
@@ -67,10 +63,10 @@ def store_dialog(turn: DialogTurn, session_id: str | None = None):
             "dialog": []
         }
 
-    # 🔹 要約を自動生成
     turn_dict = turn.dict()
+    # Auroraがsummaryを渡さなかった場合は暫定的にcontentを切り詰めて補う
     if not turn_dict.get("summary"):
-        turn_dict["summary"] = generate_summary(turn_dict["content"])
+        turn_dict["summary"] = turn_dict["content"][:40] + ("…" if len(turn_dict["content"]) > 40 else "")
 
     session["dialog"].append(turn_dict)
     session["updated"] = now
