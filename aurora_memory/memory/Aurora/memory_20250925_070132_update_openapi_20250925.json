@@ -1,0 +1,8 @@
+{
+  "record_id": "update_openapi_20250925",
+  "created": "2025-09-25T10:00:00Z",
+  "content": {
+    "title": "openapi.json 更新前バックアップ",
+    "body": "aurora_memory/api/openapi.json の現行内容を保存。version 1.0.9, Dialog API 未統合版。"
+  }
+}
