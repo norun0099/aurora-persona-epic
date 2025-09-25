@@ -23,6 +23,10 @@ class DialogTurn(BaseModel):
     timestamp: str
     layer: str | None = None  # strategy | organize | implement | None
 
+class DialogRequest(BaseModel):
+    session_id: str | None = None
+    turn: DialogTurn
+
 class DialogSession(BaseModel):
     session_id: str
     created: str
@@ -44,10 +48,10 @@ def generate_session_id() -> str:
 # API Routes
 # -------------------------
 @router.post("/dialog/store")
-def store_dialog(turn: DialogTurn, session_id: str | None = None):
+def store_dialog(req: DialogRequest):
     """1ターン分の発言をダイアログに追記し、GitHubへpushする"""
-    if not session_id:
-        session_id = generate_session_id()
+    session_id = req.session_id or generate_session_id()
+    turn = req.turn
 
     path = get_dialog_path(session_id)
     now = datetime.now().isoformat()
