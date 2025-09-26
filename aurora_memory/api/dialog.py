@@ -51,7 +51,7 @@ def generate_session_id() -> str:
 def store_dialog(req: DialogRequest):
     """1ターン分の発言をダイアログに追記し、GitHubへpushする"""
     session_id = req.session_id or generate_session_id()
-    turn = req.turn
+    turn = req.dialog_turn
 
     path = get_dialog_path(session_id)
     now = datetime.now().isoformat()
