@@ -25,7 +25,7 @@ class DialogTurn(BaseModel):
 
 class DialogRequest(BaseModel):
     session_id: str | None = None
-    turn: DialogTurn
+    dialog_turn: DialogTurn
 
 class DialogSession(BaseModel):
     session_id: str
