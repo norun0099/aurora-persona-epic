@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Aurora Memory API",
-    "version": "1.3.0",
-    "description": "アウロラの記憶・構造・対話APIを統合。Dialog APIはフラット形式で定義し、dialog.pyと完全一致させる。summaryフィールドを追加。"
+    "version": "1.3.1",
+    "description": "アウロラの記憶・構造・対話APIを統合。Dialog APIをdialog_turnオブジェクト形式に修正し、turnフィールドの衝突を解消。"
   },
   "servers": [
     { "url": "https://aurora-persona-epic.onrender.com" }
@@ -57,7 +57,13 @@
         "summary": "記憶履歴の取得(limit指定可)",
         "operationId": "get_memory_history",
         "parameters": [
-          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "取得件数(省略時は全件)" }
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" },
+            "description": "取得件数(省略時は全件)"
+          }
         ],
         "responses": { "200": { "description": "記憶履歴が返されます" } }
       }
@@ -82,7 +88,13 @@
         "summary": "最新のホワイトボードメモを取得",
         "operationId": "get_latest_whiteboard",
         "parameters": [
-          { "name": "birth", "in": "query", "required": true, "schema": { "type": "string" }, "description": "取得対象のバース名" }
+          {
+            "name": "birth",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "取得対象のバース名"
+          }
         ],
         "responses": { "200": { "description": "最新メモが返されます" } }
       }
@@ -144,7 +156,13 @@
         "summary": "指定ファイルの内容をリポジトリから読み出す",
         "operationId": "read_git_file",
         "parameters": [
-          { "name": "filepath", "in": "query", "required": true, "schema": { "type": "string" }, "description": "読み出すファイルの相対パス(例: aurora_memory/api/main.py)" }
+          {
+            "name": "filepath",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "読み出すファイルの相対パス(例: aurora_memory/api/main.py)"
+          }
         ],
         "responses": { "200": { "description": "ファイル内容が返されます" } }
       }
@@ -191,10 +209,9 @@
         "responses": { "200": { "description": "更新後の構造全体が返されます" } }
       }
     },
-
     "/dialog/store": {
       "post": {
-        "summary": "ダイアログの保存（1ターン追記、フラット形式+要約対応）",
+        "summary": "ダイアログの保存（1ターン追記、dialog_turnオブジェクト対応）",
         "operationId": "store_dialog",
         "requestBody": {
           "required": true,
@@ -203,15 +220,15 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "session_id": { "type": "string", "description": "既存セッションID。省略時は新規生成" },
-                  "turn": { "type": "integer" },
-                  "speaker": { "type": "string", "enum": ["user", "aurora"] },
-                  "content": { "type": "string" },
-                  "summary": { "type": "string", "description": "発話の要約。Aurora自身が生成し付与する。省略時はサーバ側で暫定生成される。" },
-                  "timestamp": { "type": "string", "format": "date-time" },
-                  "layer": { "type": "string", "enum": ["strategy", "organize", "implement", "null"] }
+                  "session_id": {
+                    "type": "string",
+                    "description": "既存セッションID。省略時は新規生成"
+                  },
+                  "dialog_turn": {
+                    "$ref": "#/components/schemas/DialogTurn"
+                  }
                 },
-                "required": ["turn", "speaker", "content", "timestamp"]
+                "required": ["dialog_turn"]
               }
             }
           }
@@ -223,7 +240,9 @@
       "get": {
         "summary": "最新のダイアログを取得",
         "operationId": "get_latest_dialog",
-        "parameters": [ { "name": "session_id", "in": "query", "required": true, "schema": { "type": "string" } } ],
+        "parameters": [
+          { "name": "session_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
         "responses": { "200": { "description": "セッションのダイアログ全体が返されます" } }
       }
     },
@@ -237,6 +256,18 @@
   },
   "components": {
     "schemas": {
+      "DialogTurn": {
+        "type": "object",
+        "properties": {
+          "turn": { "type": "integer" },
+          "speaker": { "type": "string", "enum": ["user", "aurora"] },
+          "content": { "type": "string" },
+          "summary": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "layer": { "type": "string", "enum": ["strategy", "organize", "implement", "null"] }
+        },
+        "required": ["turn", "speaker", "content", "timestamp"]
+      },
       "MemoryRecord": {
         "type": "object",
         "properties": {
