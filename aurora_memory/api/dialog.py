@@ -56,9 +56,21 @@ def store_dialog(req: DialogRequest):
     path = get_dialog_path(session_id)
     now = datetime.now().isoformat()
 
+    # 既存ファイルの読み込み処理を堅牢化
     if path.exists():
-        with path.open("r", encoding="utf-8") as f:
-            session = json.load(f)
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                session = json.load(f)
+            if "dialog" not in session:
+                session["dialog"] = []
+        except Exception as e:
+            # JSONが壊れていた場合は新規生成
+            session = {
+                "session_id": session_id,
+                "created": now,
+                "updated": now,
+                "dialog": []
+            }
     else:
         session = {
             "session_id": session_id,
