@@ -1,0 +1,8 @@
+{
+  "record_id": "2025-09-28_render_update_repo_issue",
+  "created": "2025-09-28T23:39:59+09:00",
+  "content": {
+    "title": "Render ビルド問題と update_repo_file.yml のリスク",
+    "body": "### 要点\n\n1. **Render ビルド問題の核心**  \n- 原因：Build Command が `cd aurora_memory/api` に依存しており、ディレクトリ不一致で失敗。  \n- 解決：Build Command を `pip install -r requirements.txt` に修正 → クリアビルド成功を確認。\n\n2. **`update_repo_file.yml` の危険性**  \n- GitHub WebUI から追加すると、既存ファイルが全削除されるコミットが発生。  \n- 結果：Render 側で `requirements.txt` を含む全ファイルが消失 → ビルド失敗。  \n- 教訓：ワークフローの追加は **ローカルで commit & push** するのが安全。\n\n3. **復旧手順の確立**  \n- ローカルバックアップから `--force push` でリポジトリを復旧可能。  \n- GitHub 全削除からの迅速な回復手段として有効。\n\n4. **今後の必須作業**  \n- `update_repo_file.yml` を安全に追加する方法を設計（ローカルで commit & push に限定）。  \n- Render 側では Clear build cache → 再デプロイを必ず行い、影響を切り分ける。"
+  }
+}
