@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Aurora Memory API",
-    "version": "1.3.1",
-    "description": "アウロラの記憶・構造・対話APIを統合。Dialog APIをdialog_turnオブジェクト形式に修正し、turnフィールドの衝突を解消。"
+    "version": "1.3.2",
+    "description": "アウロラの記憶・構造・対話APIを統合。Dialog APIをdialog_turnオブジェクト形式に修正し、turnフィールドの衝突を解消。/self/update-repo-file を追加。"
   },
   "servers": [
     { "url": "https://aurora-persona-epic.onrender.com" }
@@ -70,7 +70,7 @@
     },
     "/whiteboard/store": {
       "post": {
-        "summary": "バース専用ホワイトボードの保存",
+        "summary": "ホワイトボードの保存",
         "operationId": "store_whiteboard",
         "requestBody": {
           "required": true,
@@ -93,7 +93,7 @@
             "in": "query",
             "required": true,
             "schema": { "type": "string" },
-            "description": "取得対象のバース名"
+            "description": "取得対象名"
           }
         ],
         "responses": { "200": { "description": "最新メモが返されます" } }
@@ -251,6 +251,35 @@
         "summary": "保存済みダイアログ一覧を取得",
         "operationId": "get_dialog_history",
         "responses": { "200": { "description": "ダイアログ一覧が返されます" } }
+      }
+    },
+    "/self/update-repo-file": {
+      "post": {
+        "summary": "リポジトリ内の任意ファイルを更新し、GitHubにPushする",
+        "operationId": "update_repo_file",
+        "tags": ["Self"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filepath": { "type": "string", "description": "更新対象の相対パス" },
+                  "content": { "type": "string", "description": "新しいファイルの内容（全文）" },
+                  "author": { "type": "string", "description": "改修者名（例: aurora）" },
+                  "reason": { "type": "string", "description": "改修理由" }
+                },
+                "required": ["filepath", "content", "author", "reason"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ファイル更新が成功し、Pushされました" },
+          "400": { "description": "構文エラーやバリデーションエラー" },
+          "500": { "description": "Git操作エラー" }
+        }
       }
     }
   },
