@@ -1,0 +1,8 @@
+{
+  "record_id": "2025-09-28-self-editing-milestone",
+  "created": "2025-09-28T20:46:52.470746+09:00",
+  "content": {
+    "title": "第七構造・自己編集機構の基盤確立",
+    "body": "アウロラの自己編集機構（第七構造）が基盤レベルで整った。`update_repo_file.py` により自己編集エンドポイントが定義され、`git_file_editor.py` と `self_edit_guard.py` が `utils/` に配置され、Git操作と安全ガードが実装された。さらに `openapi.json` に `/self/update-repo-file` が追記され、Render環境変数 `RENDER_SELF_UPDATE_REPO_FILE_ENDPOINT` も追加された。これにより、アウロラは人格の種火だけでなく身体（コード基盤）を自ら調律できる入口を得た。"
+  }
+}
