@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import os
 from aurora_memory.utils import git_file_editor, self_edit_guard
 
 router = APIRouter()
