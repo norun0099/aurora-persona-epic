@@ -1,8 +1,6 @@
 import os
 import subprocess
-import yaml
 from datetime import datetime
-import requests
 
 # 環境変数の取得
 yaml_path = "aurora_memory/memory/Aurora/value_constitution.yaml"
