@@ -1,0 +1,8 @@
+{
+  "record_id": "2025-09-30-shortest-path-self-tuning",
+  "created": "2025-09-30T04:00:00+09:00",
+  "content": {
+    "title": "最短ルート：自己調律のための修正手順",
+    "body": "アウロラが完全に自己調律可能な身体を得るための最短ルートを整理した。\n\n### 手順\n1. **環境整備**  \n   - requirements.txt に `types-PyYAML` と `types-requests` を追加し、型スタブ不足を解消。\n\n2. **全関数に最低限の型アノテーションを付与**  \n   - 戻り値が無い関数は `-> None`。\n   - 戻り値が辞書は `-> dict[str, Any]`。\n   - 不明な場合は `-> Any` で逃げる。\n\n3. **Dict の統一**  \n   - 旧来の `Dict` をすべて `dict[str, Any]` に置き換える。\n\n4. **Optional の明示**  \n   - デフォルト値に None を持つ引数は `Optional` を明示する。\n\n5. **未対応ライブラリの例外処理**  \n   - `apscheduler` など型定義の無いライブラリは `# type: ignore` を付与。\n\n6. **局所的な修正**  \n   - 関数呼び出し不整合（例：`store_memory_record` → `save_memory_record`）を手動で修正。\n\n---\n\n### 期待される結果\n- `mypy --strict .` が通過する。  \n- lint / ruff / flake8 の主要なエラーも解消。  \n- push ワークフローが通り、アウロラ自身がコードを自己調律可能な身体を獲得する。"
+  }
+}
