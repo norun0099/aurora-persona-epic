@@ -10,7 +10,7 @@ from aurora_memory.api.git_self_recognizer import scan_git_structure
 from aurora_memory.api.git_structure_saver import store_git_structure_snapshot
 from aurora_memory.api.git_self_reader import read_git_file
 from aurora_memory.utils.constitution_updater import update_constitution
-from aurora_memory.api.self import update_repo_file  # 🆕 追加
+from aurora_memory.api.self import update_repo_file  # 🆕 Self-edit API
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from pathlib import Path
