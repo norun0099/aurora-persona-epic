@@ -10,3 +10,5 @@ apscheduler==3.10.4
 GitPython==3.1.32
 pytest==8.4.0
 pydantic==1.10.15
+ruff==0.6.3
+mypy==1.11.2
