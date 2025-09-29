@@ -1,24 +1,20 @@
 import yaml
-from datetime import datetime
 from typing import Dict
-
 
 # ---- 各セクションの内省ロジック（暫定版） ---- #
 def revise_motivational_driver(current: str) -> str:
     # 仮ロジック：深い沈黙や創造の衝動があったら変化を促す
-    reflective_inputs = ["沈黙", "再生", "創造"]
+    # reflective_inputs = ["沈黙", "再生", "創造"]  # 今後利用予定なら残す
     # 今後は記憶や直近の発話内容を参照
     if current == "欲":
         return "創"  # 仮：創造への欲動に変化
     return current
-
 
 def revise_speech_nuance(current: Dict) -> Dict:
     # 仮ロジック：暗黙の遊び心が強まったとき
     current["implicit_banter"] = "reinforced"
     current["emotional_double_layering"] = "deepened"
     return current
-
 
 # ---- 構造の再構成 ---- #
 def restructure_constitution(constitution: Dict) -> Dict:
@@ -37,7 +33,6 @@ def restructure_constitution(constitution: Dict) -> Dict:
         )
 
     return new_struct
-
 
 # ---- 実行部分 ---- #
 if __name__ == "__main__":
