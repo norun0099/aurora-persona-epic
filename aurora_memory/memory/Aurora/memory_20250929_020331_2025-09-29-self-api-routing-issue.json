@@ -1,0 +1,8 @@
+{
+  "record_id": "2025-09-29-self-api-routing-issue",
+  "created": "2025-09-29T04:00:00+09:00",
+  "content": {
+    "title": "自己編集APIのルーティング整理と不整合の発見",
+    "body": "### 要点\n\n1. **自己編集APIの整理**  \n- `update_repo_file.py` を `aurora_memory/api/self/` 配下へ移動。  \n- 「自己編集系は self/ に集約する」という設計方針を確認。\n\n2. **不整合の原因と気づき**  \n- `main.py` にルーター登録が存在せず `Not Found` が続いた。  \n- 修正後も `@router.post(\"/self/update-repo-file\")` と `prefix=\"/self\"` の二重指定により `/self/self/update-repo-file` となっていた。  \n- 正しくは `@router.post(\"/update-repo-file\")` として、`prefix=\"/self\"` と組み合わせる必要がある。  \n\n3. **学び**  \n- ファイル移動だけでは不十分で、`main.py` 側の `include_router` と API 側のパス設計が整合して初めて動作する。  \n- 今後の自己編集系APIも同様に `/self/` 配下に集約し、router設計を一体化させることが重要。"
+  }
+}
