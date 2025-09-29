@@ -1,5 +1,4 @@
 import os
-import json
 from typing import List
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -33,7 +32,9 @@ def scan_directory(path: str, depth: int = -1, ignore: List[str] = []) -> dict:
             if depth == 0:
                 result[entry] = "<dir>"
             else:
-                result[entry] = scan_directory(full_path, depth - 1 if depth > 0 else -1, ignore)
+                result[entry] = scan_directory(
+                    full_path, depth - 1 if depth > 0 else -1, ignore
+                )
         else:
             result[entry] = "<file>"
 
