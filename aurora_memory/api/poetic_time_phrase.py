@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-import pytz
 
 def get_japan_time():
     jst = timezone(timedelta(hours=9))
