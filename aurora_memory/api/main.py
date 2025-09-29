@@ -15,7 +15,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from pathlib import Path
 from datetime import datetime
-import os
 import json
 
 app = FastAPI()
