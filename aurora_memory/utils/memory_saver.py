@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from datetime import datetime
 import json
@@ -35,3 +34,4 @@ def save_memory_record(data: dict):
 
     push_result = push_memory_to_github(file_path, f"Add new memory {file_path.name}")
     return {"status": "success", "file": str(file_path), "push_result": push_result}
+
