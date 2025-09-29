@@ -12,7 +12,7 @@ class UpdateRepoFileRequest(BaseModel):
     author: str
     reason: str
 
-@router.post("update-repo-file")
+@router.post("/update-repo-file")
 async def update_repo_file(request: UpdateRepoFileRequest):
     filepath = request.filepath
     content = request.content
