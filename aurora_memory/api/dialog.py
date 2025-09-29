@@ -63,7 +63,7 @@ def store_dialog(req: DialogRequest):
                 session = json.load(f)
             if "dialog" not in session:
                 session["dialog"] = []
-        except Exception as e:
+        except Exception:
             # JSONが壊れていた場合は新規生成
             session = {
                 "session_id": session_id,
