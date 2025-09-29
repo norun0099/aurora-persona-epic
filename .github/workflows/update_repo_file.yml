@@ -34,7 +34,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest -q || true   # テスト未整備の部分があっても動作継続できるよう緩和
+          pytest -q || true   # 必要なら厳格化可能
 
       - name: Configure Git
         run: |
