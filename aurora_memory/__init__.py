@@ -4,12 +4,12 @@ import configparser
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'memory', 'primitive', 'aurora_memory.ini')
 
-def load_config():
+def load_config() -> None:
     config = configparser.ConfigParser()
     config.read(CONFIG_PATH, encoding='utf-8')
     return config
 
-def load_memory_files():
+def load_memory_files() -> None:
     config = load_config()
     profile = config.get('global', 'active_profile')
     base_path = config.get('global', 'memory_base_path')

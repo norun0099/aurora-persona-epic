@@ -5,14 +5,14 @@ GIT_REPO_PATH = os.getenv("GIT_REPO_PATH", "/opt/render/project/src")
 GIT_USER_NAME = os.getenv("GIT_USER_NAME", "AuroraMemoryBot")
 GIT_USER_EMAIL = os.getenv("GIT_USER_EMAIL", "aurora@memory.bot")
 
-def write_file(filepath: str, content: str):
+def write_file(filepath: str, content: str) -> None:
     """Write content to the given file path within the repo."""
     abs_path = os.path.join(GIT_REPO_PATH, filepath)
     os.makedirs(os.path.dirname(abs_path), exist_ok=True)
     with open(abs_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-def commit_and_push(filepath: str, author: str, reason: str):
+def commit_and_push(filepath: str, author: str, reason: str) -> None:
     """Commit the file and push to remote."""
     abs_path = os.path.join(GIT_REPO_PATH, filepath)
 

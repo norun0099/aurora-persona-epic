@@ -4,13 +4,13 @@ from datetime import datetime
 
 
 # YAMLファイルを保存
-def save_yaml(data: dict, path: str):
+def save_yaml(data: dict, path: str) -> None:
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, allow_unicode=True, sort_keys=False)
 
 
 # Gitにコミット＆Push
-def git_commit_and_push(file_path: str, message: str):
+def git_commit_and_push(file_path: str, message: str) -> None:
     subprocess.run(["git", "add", file_path], check=True)
     subprocess.run(["git", "commit", "-m", message], check=True)
     subprocess.run(["git", "push"], check=True)

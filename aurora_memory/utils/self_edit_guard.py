@@ -2,7 +2,7 @@ import ast
 import yaml
 
 
-def validate_file_content(filepath: str, content: str):
+def validate_file_content(filepath: str, content: str) -> None:
     """
     Validate the content of a file before committing.
     Supports Python and YAML for now.

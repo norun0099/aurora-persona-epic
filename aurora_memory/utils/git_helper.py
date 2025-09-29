@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 
-def ensure_git_initialized():
+def ensure_git_initialized() -> None:
     """
     Gitのユーザー情報が設定されているかを確認し、設定されていなければ警告する。
     """
@@ -22,7 +22,7 @@ def ensure_git_initialized():
         return False
 
 
-def push_whiteboard_to_github(file_path: Path, commit_message: Optional[str] = "Sync whiteboard from Render"):
+def push_whiteboard_to_github(file_path: Path, commit_message: Optional[str] = "Sync whiteboard from Render") -> None:
     """
     Renderから取得したwhiteboardをGitHubへ同期（commit & push）する。
     """

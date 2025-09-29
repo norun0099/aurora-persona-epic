@@ -11,8 +11,8 @@ from aurora_memory.api.git_structure_saver import store_git_structure_snapshot
 from aurora_memory.api.git_self_reader import read_git_file
 from aurora_memory.utils.constitution_updater import update_constitution
 from aurora_memory.api.self import update_repo_file  # 🆕 Self-edit API
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
+from apscheduler.triggers.interval import IntervalTrigger  # type: ignore
 from pathlib import Path
 from datetime import datetime
 import json
@@ -71,7 +71,7 @@ async def store_memory(request: Request):
 
 # 🧾 記憶履歴の取得
 @app.get("/memory/history")
-async def memory_history(limit: int = None):
+async def memory_history(limit: Optional[int] = None):
     memory_dir = Path("aurora_memory/memory/Aurora")
     if not memory_dir.exists():
         return {"history": []}
@@ -110,7 +110,7 @@ async def save_git_structure():
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.get("/self/read-git-file")
-def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PATHからの相対パス")):
+def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PATHからの相対パス")) -> None:
     try:
         content = read_git_file(filepath)
         return {"filepath": filepath, "content": content}
@@ -118,7 +118,7 @@ def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PATHか�
         return {"error": str(e)}
 
 @app.post("/constitution/update-self")
-def update_self_constitution(fields: dict):
+def update_self_constitution(fields: dict) -> None:
     try:
         updated = update_constitution(fields)
         return updated
@@ -126,7 +126,7 @@ def update_self_constitution(fields: dict):
         raise HTTPException(status_code=500, detail=f"構造更新に失敗しました: {str(e)}")
 
 # ⏰ Constitution 自動同期処理
-def sync_constitution():
+def sync_constitution() -> None:
     config_path = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
     if config_path.exists():
         with config_path.open("r", encoding="utf-8") as f:

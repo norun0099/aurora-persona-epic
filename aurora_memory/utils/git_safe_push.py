@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 
-def run(cmd):
+def run(cmd) -> None:
     return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
 
@@ -56,7 +56,7 @@ def safe_push(remote: str = "origin", branch: str = "main") -> bool:
     return True
 
 
-def main():
+def main() -> None:
     remote = sys.argv[1] if len(sys.argv) > 1 else "origin"
     branch = sys.argv[2] if len(sys.argv) > 2 else "main"
     success = safe_push(remote, branch)

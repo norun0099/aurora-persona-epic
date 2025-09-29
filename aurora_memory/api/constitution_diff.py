@@ -1,21 +1,22 @@
+from typing import Any, Optional
 import yaml
 import difflib
-from typing import Tuple, List, Dict
+from typing import Tuple, List, dict[str, Any]
 
 
-def load_yaml(filepath: str) -> Dict:
+def load_yaml(filepath: str) -> dict[str, Any]:
     with open(filepath, 'r', encoding='utf-8') as file:
         return yaml.safe_load(file)
 
 
-def compare_yaml(old: Dict, new: Dict) -> List[Tuple[str, str]]:
+def compare_yaml(old: dict[str, Any], new: dict[str, Any]) -> List[Tuple[str, str]]:
     old_str = yaml.dump(old, allow_unicode=True, sort_keys=False).splitlines()
     new_str = yaml.dump(new, allow_unicode=True, sort_keys=False).splitlines()
     diff = difflib.unified_diff(old_str, new_str, lineterm='')
     return list(diff)
 
 
-def save_diff_report(diff_lines: List[str], output_path: str):
+def save_diff_report(diff_lines: List[str], output_path: str) -> None:
     with open(output_path, 'w', encoding='utf-8') as f:
         for line in diff_lines:
             f.write(line + '\n')

@@ -8,7 +8,7 @@ yaml_path = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
 
 # Git設定
 
-def setup_git():
+def setup_git() -> None:
     user_email = os.getenv("GIT_USER_EMAIL")
     user_name = os.getenv("GIT_USER_NAME")
     if user_email and user_name:

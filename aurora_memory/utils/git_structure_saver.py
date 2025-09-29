@@ -3,7 +3,7 @@ from datetime import datetime
 from aurora_memory.utils.memory_saver import store_memory_record
 from aurora_memory.api.git_self_recognizer import scan_git_structure
 
-def save_git_structure_snapshot():
+def save_git_structure_snapshot() -> None:
     """
     現在のGit構造をMemory形式で保存します。
     record_id: self-structure-YYYYMMDD

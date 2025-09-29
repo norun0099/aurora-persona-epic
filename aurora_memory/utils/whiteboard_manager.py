@@ -12,7 +12,7 @@ WHITEBOARD_PATH = Path("aurora_memory/memory/whiteboard/whiteboard.json")
 API_KEY = os.getenv("AURORA_API_KEY")
 
 
-def get_render_whiteboard():
+def get_render_whiteboard() -> None:
     try:
         resp = requests.get(RENDER_ENDPOINT, timeout=30)
         resp.raise_for_status()
@@ -23,7 +23,7 @@ def get_render_whiteboard():
     return None
 
 
-def get_git_whiteboard():
+def get_git_whiteboard() -> None:
     if WHITEBOARD_PATH.exists():
         try:
             with WHITEBOARD_PATH.open("r", encoding="utf-8") as f:
@@ -33,7 +33,7 @@ def get_git_whiteboard():
     return None
 
 
-def save_to_git(data):
+def save_to_git(data) -> None:
     WHITEBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
     with WHITEBOARD_PATH.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -49,14 +49,14 @@ def save_to_git(data):
         print("[Whiteboard Sync] No changes to commit.")
 
 
-def parse_timestamp(data):
+def parse_timestamp(data) -> None:
     try:
         return datetime.fromisoformat(data.get("timestamp", "").replace("Z", "+00:00"))
     except Exception:
         return None
 
 
-def main():
+def main() -> None:
     render_data = get_render_whiteboard()
     if not render_data:
         print("[Whiteboard Sync] No data on Render. Abort Git update.")

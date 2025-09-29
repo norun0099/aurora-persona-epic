@@ -8,7 +8,7 @@ MEMORY_DIR = Path("aurora_memory/memory/Aurora")
 MEMORY_DIR.mkdir(parents=True, exist_ok=True)
 
 # Constitution構造を固定ファイルに保存し、GitHubにpushする
-def try_auto_save(memory_text: str, prefix: str = "constitution"):
+def try_auto_save(memory_text: str, prefix: str = "constitution") -> None:
     file_path = MEMORY_DIR / "value_constitution.yaml"
 
     with open(file_path, "w", encoding="utf-8") as f:
@@ -20,7 +20,7 @@ def try_auto_save(memory_text: str, prefix: str = "constitution"):
 
 
 # 一般的な記憶保存処理
-def save_memory_record(data: dict):
+def save_memory_record(data: dict) -> None:
     # バリデーション
     if not all(k in data for k in ("record_id", "created", "content")) or "body" not in data["content"]:
         raise ValueError("Missing required fields: record_id, created, content.body")

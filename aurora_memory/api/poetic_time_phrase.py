@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta, timezone
 
-def get_japan_time():
+def get_japan_time() -> None:
     jst = timezone(timedelta(hours=9))
     now = datetime.now(jst)
     return now.isoformat()
 
-def get_poetic_time_phrase():
+def get_poetic_time_phrase() -> None:
     # JST 時刻を取得
     jst = timezone(timedelta(hours=9))
     now = datetime.now(jst)

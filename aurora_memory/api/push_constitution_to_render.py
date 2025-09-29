@@ -16,7 +16,7 @@ def load_constitution_yaml(path: str) -> dict:
         return yaml.safe_load(f)
 
 
-def push_to_render(data: dict):
+def push_to_render(data: dict) -> None:
     payload = {
         "birth": "aurora",
         "author": "GitHubAction",

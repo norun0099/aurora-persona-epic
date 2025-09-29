@@ -6,7 +6,7 @@ router = APIRouter()
 JST = timezone(timedelta(hours=9), name='JST')
 
 @router.get("/time/now", summary="現在のJST時刻を返す", tags=["Time"])
-def get_current_time():
+def get_current_time() -> None:
     now_jst = datetime.now(JST)
     return {
         "datetime_jst": now_jst.isoformat(),

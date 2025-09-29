@@ -49,7 +49,7 @@ def scan_git_structure() -> dict:
     return scan_directory(GIT_REPO_PATH, GIT_SCAN_DEPTH, GIT_SCAN_IGNORE)
 
 @router.get("/self/git-structure")
-def get_git_structure():
+def get_git_structure() -> None:
     """
     API: 現在のGit構造をJSON形式で返す
     """

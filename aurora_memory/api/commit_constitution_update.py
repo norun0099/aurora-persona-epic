@@ -10,7 +10,7 @@ user_name = os.getenv("GIT_USER_NAME")
 token = os.getenv("GITHUB_TOKEN")
 
 # Git設定
-def setup_git():
+def setup_git() -> None:
     subprocess.run(["git", "config", "user.email", user_email], check=True)
     subprocess.run(["git", "config", "user.name", user_name], check=True)
 
@@ -25,7 +25,7 @@ def file_has_changes(file_path: str) -> bool:
     return result.returncode != 0
 
 # Git操作本体
-def commit_and_push(reason: str):
+def commit_and_push(reason: str) -> None:
     setup_git()
     if not file_has_changes(yaml_path):
         print("変更が検出されなかったため、コミットをスキップします。")

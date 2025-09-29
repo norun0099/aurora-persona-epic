@@ -6,11 +6,11 @@ from git import Repo
 CONSTITUTION_PATH = os.path.join(os.getcwd(), "aurora_memory/memory/Aurora/value_constitution.yaml")
 REPO_PATH = os.getcwd()
 
-def load_constitution():
+def load_constitution() -> None:
     with open(CONSTITUTION_PATH, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
-def update_constitution(fields_to_update: dict):
+def update_constitution(fields_to_update: dict) -> None:
     constitution = load_constitution()
     now_str = datetime.utcnow().isoformat()
 
@@ -29,7 +29,7 @@ def update_constitution(fields_to_update: dict):
 
     return constitution
 
-def commit_and_push(reason: str, author: str = "aurora-self"):
+def commit_and_push(reason: str, author: str = "aurora-self") -> None:
     repo = Repo(REPO_PATH)
     repo.git.add(CONSTITUTION_PATH)
     repo.index.commit(f"[auto] constitution update: {reason} ({author})")

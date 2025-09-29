@@ -1,7 +1,8 @@
+from typing import Any, Optional
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List, Optional, Dict
+from typing import List, Optional, dict[str, Any]
 import os
 import json
 import yaml
@@ -19,14 +20,14 @@ class ConstitutionRecord(BaseModel):
     tags: List[str]
     author: str
     thread: str
-    chronology: Dict[str, datetime]
+    chronology: dict[str, Any][str, datetime]
     sealed: bool
     change_log: List[str]
     inner_desire: str
     impulse: str
     ache: str
     satisfaction: str
-    content: Dict[str, str]
+    content: dict[str, Any][str, str]
     annotations: Optional[List[str]] = []
     summary: str
 

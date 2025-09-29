@@ -4,7 +4,7 @@ from datetime import datetime
 import requests
 import os
 
-def main():
+def main() -> None:
     print("\U0001F33F Aurora Constitution Guard has started.")
     try:
         constitution = load_constitution()
@@ -27,7 +27,7 @@ REQUIRED_FIELDS = [
     "side_manifest", "motivational_driver"
 ]
 
-def log(message: str):
+def log(message: str) -> None:
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     full_message = f"[{timestamp}] {message}"
     print(full_message)  # コンソールにも出力
@@ -44,14 +44,14 @@ def load_constitution() -> dict:
     with CONSTITUTION_PATH.open(encoding="utf-8") as f:
         return yaml.safe_load(f)
 
-def validate_constitution(data: dict):
+def validate_constitution(data: dict) -> None:
     missing = [field for field in REQUIRED_FIELDS if field not in data]
     if missing:
         log(f"Missing required fields: {', '.join(missing)}")
     else:
         log("All required fields are present.")
 
-def reflect_on_constitution(data: dict):
+def reflect_on_constitution(data: dict) -> None:
     log("--- Constitution Reflection Start ---")
     log(f"Speech Style: {data.get('speech_style', 'N/A')}")
     log(f"Primary Directive: {data.get('primary_directive', {}).get('short', 'N/A')}")
@@ -67,7 +67,7 @@ def reflect_on_constitution(data: dict):
         log(line)
     log("--- YAML Dump Preview End ---")
 
-def send_to_aurora_memory(data: dict):
+def send_to_aurora_memory(data: dict) -> None:
     secret_key = os.environ.get("AURORA_SECRET_KEY")
     if not secret_key:
         log("No secret key found in environment.")

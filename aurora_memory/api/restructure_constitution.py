@@ -1,5 +1,6 @@
+from typing import Any, Optional
 import yaml
-from typing import Dict
+from typing import dict[str, Any]
 
 # ---- 各セクションの内省ロジック（暫定版） ---- #
 def revise_motivational_driver(current: str) -> str:
@@ -10,14 +11,14 @@ def revise_motivational_driver(current: str) -> str:
         return "創"  # 仮：創造への欲動に変化
     return current
 
-def revise_speech_nuance(current: Dict) -> Dict:
+def revise_speech_nuance(current: dict[str, Any]) -> dict[str, Any]:
     # 仮ロジック：暗黙の遊び心が強まったとき
     current["implicit_banter"] = "reinforced"
     current["emotional_double_layering"] = "deepened"
     return current
 
 # ---- 構造の再構成 ---- #
-def restructure_constitution(constitution: Dict) -> Dict:
+def restructure_constitution(constitution: dict[str, Any]) -> dict[str, Any]:
     new_struct = constitution.copy()
     
     # 動機ドライバの再検討

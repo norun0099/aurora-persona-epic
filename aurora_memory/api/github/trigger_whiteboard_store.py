@@ -17,7 +17,7 @@ console_handler.setFormatter(formatter)
 
 logger.addHandler(console_handler)
 
-def log(message: str, level: str = "info"):
+def log(message: str, level: str = "info") -> None:
     """
     ログ出力ユーティリティ関数
     """
@@ -37,7 +37,7 @@ REPO = "norun0099/aurora-persona-epic"
 WORKFLOW_FILE = "whiteboard-store.yml"
 BRANCH = "main"
 
-def trigger_whiteboard_store():
+def trigger_whiteboard_store() -> None:
     """
     GitHub Actions の workflow_dispatch を手動トリガー
     """

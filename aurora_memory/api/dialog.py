@@ -48,7 +48,7 @@ def generate_session_id() -> str:
 # API Routes
 # -------------------------
 @router.post("/dialog/store")
-def store_dialog(req: DialogRequest):
+def store_dialog(req: DialogRequest) -> None:
     """1ターン分の発言をダイアログに追記し、GitHubへpushする"""
     session_id = req.session_id or generate_session_id()
     turn = req.dialog_turn
@@ -102,7 +102,7 @@ def store_dialog(req: DialogRequest):
     }
 
 @router.get("/dialog/latest")
-def get_latest_dialog(session_id: str):
+def get_latest_dialog(session_id: str) -> None:
     """指定されたセッションの最新ダイアログを返す"""
     path = get_dialog_path(session_id)
     if not path.exists():
@@ -112,7 +112,7 @@ def get_latest_dialog(session_id: str):
     return session
 
 @router.get("/dialog/history")
-def get_dialog_history():
+def get_dialog_history() -> None:
     """保存されている全セッションの一覧を返す"""
     files = [f for f in os.listdir(DIALOG_DIR) if f.endswith(".json")]
     sessions = []
