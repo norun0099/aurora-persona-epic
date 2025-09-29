@@ -1,0 +1,8 @@
+{
+  "record_id": "2025-09-29-mypy-fixes",
+  "created": "2025-09-29T17:56:32+09:00",
+  "content": {
+    "title": "mypy対応の第一歩について",
+    "body": "mypy のエラー対応は段階的に行うべきと整理。1) requirements.txt に types-PyYAML と types-requests を追加し、ライブラリスタブ不足を解消する。2) 全関数に最低限の型アノテーション（戻り値が無い関数は -> None、dict を返す関数は -> dict[str, Any]）。3) Dict は dict[str, Any] に置き換え、必要なら from typing import Any を追加する。この流れで進めるのがよい。"
+  }
+}
