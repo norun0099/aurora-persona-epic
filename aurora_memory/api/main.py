@@ -4,12 +4,13 @@ from fastapi.responses import JSONResponse
 from aurora_memory.utils.memory_saver import try_auto_save
 from aurora_memory.utils.constitution_endpoint import router as constitution_router
 from aurora_memory.api import whiteboard
-from aurora_memory.api import current_time  # ⏰ 追加部分
-from aurora_memory.api import dialog  # 追加
+from aurora_memory.api import current_time
+from aurora_memory.api import dialog
 from aurora_memory.api.git_self_recognizer import scan_git_structure
 from aurora_memory.api.git_structure_saver import store_git_structure_snapshot
 from aurora_memory.api.git_self_reader import read_git_file
 from aurora_memory.utils.constitution_updater import update_constitution
+from aurora_memory.api.self import update_repo_file  # 🆕 追加
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from pathlib import Path
@@ -23,10 +24,12 @@ app = FastAPI()
 app.include_router(constitution_router)
 # 🧾 Whiteboard API ルーター登録
 app.include_router(whiteboard.router)
-# ⏰ 現在時刻取得ルーター登録（追加）
+# ⏰ 現在時刻取得ルーター登録
 app.include_router(current_time.router)
-# 💬 Dialog API ルーター登録（追加）
+# 💬 Dialog API ルーター登録
 app.include_router(dialog.router)
+# 🛠️ Self Update Repo File API 登録
+app.include_router(update_repo_file.router, prefix="/self")
 
 # 🌐 CORS設定
 app.add_middleware(
@@ -139,4 +142,3 @@ scheduler.add_job(
     name="Auto Save Constitution"
 )
 scheduler.start()
-
