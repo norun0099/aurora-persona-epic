@@ -1,4 +1,3 @@
-import os
 import json
 from datetime import datetime
 from aurora_memory.utils.memory_saver import store_memory_record
