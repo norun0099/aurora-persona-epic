@@ -1,6 +1,6 @@
 from typing import Any, Optional
 import yaml
-from typing import dict[str, Any]
+from typing import Any
 
 # ---- 各セクションの内省ロジック（暫定版） ---- #
 def revise_motivational_driver(current: str) -> str:
