@@ -20,7 +20,7 @@ class ConstitutionRecord(BaseModel):
     tags: List[str]
     author: str
     thread: str
-    chronology: dict[str, Any][str, datetime]
+    chronology: dict[str, dict[str, Any]]
     sealed: bool
     change_log: List[str]
     inner_desire: str
