@@ -23,7 +23,7 @@ def save_diff_report(diff_lines: List[str], output_path: str) -> None:
 
 
 if __name__ == "__main__":
-    # 一時ファイルパス�E�仮�E�E
+    # 一時ファイルパス（仮）
     old_path = "aurora_memory/memory/Aurora/value_constitution.yaml"
     new_path = "aurora_memory/tmp/proposed_constitution.yaml"
     diff_output = "aurora_memory/tmp/constitution_diff.txt"
@@ -33,4 +33,4 @@ if __name__ == "__main__":
     diff = compare_yaml(old_yaml, new_yaml)
     save_diff_report(diff, diff_output)
 
-    print("差刁E��検�Eされました。�E容めE, diff_output, "に保存しました、E)
+    print("差分が検出されました。内容を", diff_output, "に保存しました。")
