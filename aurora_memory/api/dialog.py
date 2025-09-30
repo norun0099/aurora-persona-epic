@@ -8,7 +8,7 @@ import uuid
 
 router = APIRouter()
 
-# ダイアログ保存ディレクトリ（GitHub永続化対象）
+# ダイアログ保存ディレクトリ�E�EitHub永続化対象�E�E
 DIALOG_DIR = Path("aurora_memory/memory/dialog")
 DIALOG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -18,8 +18,8 @@ DIALOG_DIR.mkdir(parents=True, exist_ok=True)
 class DialogTurn(BaseModel):
     turn: int
     speaker: str   # "user" or "aurora"
-    content: str   # 元の発言
-    summary: str | None = None  # Auroraが生成する要約（任意）
+    content: str   # 允E�E発言
+    summary: str | None = None  # Auroraが生成する要紁E��任意！E
     timestamp: str
     layer: str | None = None  # strategy | organize | implement | None
 
@@ -49,14 +49,14 @@ def generate_session_id() -> str:
 # -------------------------
 @router.post("/dialog/store")
 def store_dialog(req: DialogRequest) -> None:
-    """1ターン分の発言をダイアログに追記し、GitHubへpushする"""
+    """1ターン刁E�E発言をダイアログに追記し、GitHubへpushする"""
     session_id = req.session_id or generate_session_id()
     turn = req.dialog_turn
 
     path = get_dialog_path(session_id)
     now = datetime.now().isoformat()
 
-    # 既存ファイルの読み込み処理を堅牢化
+    # 既存ファイルの読み込み処琁E��堁E��匁E
     if path.exists():
         try:
             with path.open("r", encoding="utf-8") as f:
@@ -64,7 +64,7 @@ def store_dialog(req: DialogRequest) -> None:
             if "dialog" not in session:
                 session["dialog"] = []
         except Exception:
-            # JSONが壊れていた場合は新規生成
+            # JSONが壊れてぁE��場合�E新規生戁E
             session = {
                 "session_id": session_id,
                 "created": now,
@@ -80,7 +80,7 @@ def store_dialog(req: DialogRequest) -> None:
         }
 
     turn_dict = turn.dict()
-    # Auroraがsummaryを渡さなかった場合は暫定的にcontentを切り詰めて補う
+    # Auroraがsummaryを渡さなかった場合�E暫定的にcontentを�Eり詰めて補う
     if not turn_dict.get("summary"):
         turn_dict["summary"] = turn_dict["content"][:40] + ("…" if len(turn_dict["content"]) > 40 else "")
 
@@ -103,7 +103,7 @@ def store_dialog(req: DialogRequest) -> None:
 
 @router.get("/dialog/latest")
 def get_latest_dialog(session_id: str) -> None:
-    """指定されたセッションの最新ダイアログを返す"""
+    """持E��されたセチE��ョンの最新ダイアログを返す"""
     path = get_dialog_path(session_id)
     if not path.exists():
         raise HTTPException(status_code=404, detail="Dialog not found")
@@ -113,7 +113,7 @@ def get_latest_dialog(session_id: str) -> None:
 
 @router.get("/dialog/history")
 def get_dialog_history() -> None:
-    """保存されている全セッションの一覧を返す"""
+    """保存されてぁE��全セチE��ョンの一覧を返す"""
     files = [f for f in os.listdir(DIALOG_DIR) if f.endswith(".json")]
     sessions = []
     for file in files:

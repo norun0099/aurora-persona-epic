@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
-# 環境変数から設定を取得
+# 環墁E��数から設定を取征E
 GIT_REPO_PATH = os.getenv("GIT_REPO_PATH", ".")
 GIT_SCAN_ENABLED = os.getenv("GIT_SCAN_ENABLED", "false").lower() == "true"
 GIT_SCAN_IGNORE = os.getenv("GIT_SCAN_IGNORE", ".git,__pycache__").split(",")
@@ -13,7 +13,7 @@ GIT_SCAN_DEPTH = int(os.getenv("GIT_SCAN_DEPTH", "-1"))
 
 def scan_directory(path: str, depth: int = -1, ignore: List[str] = []) -> dict:
     """
-    指定されたディレクトリパスを再帰的にスキャンし、構造を辞書で返す
+    持E��されたチE��レクトリパスを�E帰皁E��スキャンし、構造を辞書で返す
     """
     result = {}
     try:
@@ -42,10 +42,10 @@ def scan_directory(path: str, depth: int = -1, ignore: List[str] = []) -> dict:
 
 def scan_git_structure() -> dict:
     """
-    公開用: 現在のGit構造を取得する
+    公開用: 現在のGit構造を取得すめE
     """
     if not GIT_SCAN_ENABLED:
-        raise HTTPException(status_code=403, detail="Git構造スキャンは無効化されています")
+        raise HTTPException(status_code=403, detail="Git構造スキャンは無効化されてぁE��ぁE)
     return scan_directory(GIT_REPO_PATH, GIT_SCAN_DEPTH, GIT_SCAN_IGNORE)
 
 @router.get("/self/git-structure")

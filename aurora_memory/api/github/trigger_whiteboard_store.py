@@ -5,7 +5,7 @@ import sys
 import logging
 import requests
 
-# --- ロガー統合部分 ---
+# --- ロガー統合部刁E---
 logger = logging.getLogger("WhiteboardLogger")
 logger.setLevel(logging.INFO)
 logger.handlers.clear()
@@ -19,7 +19,7 @@ logger.addHandler(console_handler)
 
 def log(message: str, level: str = "info") -> None:
     """
-    ログ出力ユーティリティ関数
+    ログ出力ユーチE��リチE��関数
     """
     level = level.lower()
     if level == "debug":
@@ -56,8 +56,8 @@ def trigger_whiteboard_store() -> None:
     try:
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code == 204:
-            log("✅ GitHub Action 'whiteboard-store.yml' triggered successfully.")
+            log("✁EGitHub Action 'whiteboard-store.yml' triggered successfully.")
         else:
-            log(f"⚠️ Failed to trigger action: {response.status_code} - {response.text}", level="warning")
+            log(f"⚠�E�EFailed to trigger action: {response.status_code} - {response.text}", level="warning")
     except Exception as e:
         log(f"Exception while triggering GitHub Action: {e}", level="error")

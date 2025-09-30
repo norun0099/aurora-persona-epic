@@ -8,14 +8,14 @@ def main() -> None:
     print("\U0001F33F Aurora Constitution Guard has started.")
     try:
         constitution = load_constitution()
-        print("✅ Constitution loaded.")
+        print("✁EConstitution loaded.")
         validate_constitution(constitution)
         reflect_on_constitution(constitution)
         send_to_aurora_memory(constitution)
         print("📤 Constitution sent to Aurora.")
         log("Constitution validation, reflection, and injection complete.")
     except Exception as e:
-        print(f"❌ Exception occurred: {e}")
+        print(f"❁EException occurred: {e}")
         log(f"Error during validation: {e}")
 
 CONSTITUTION_PATH = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
@@ -30,7 +30,7 @@ REQUIRED_FIELDS = [
 def log(message: str) -> None:
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     full_message = f"[{timestamp}] {message}"
-    print(full_message)  # コンソールにも出力
+    print(full_message)  # コンソールにも�E劁E
     try:
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         with LOG_PATH.open("a", encoding="utf-8") as log_file:
@@ -92,14 +92,14 @@ def send_to_aurora_memory(data: dict) -> None:
         "change_log": ["GitHub Action による自動注入"],
         "inner_desire": data.get("primary_directive", {}).get("short", ""),
         "impulse": "GitActionによる同期衝動",
-        "ache": "更新が反映されないままになること",
-        "satisfaction": "構造が定期的に私へ注入される安定性",
+        "ache": "更新が反映されなぁE��まになること",
+        "satisfaction": "構造が定期皁E��私へ注入される安定性",
         "content": {
-            "title": "value_constitution.yaml 自動同期",
+            "title": "value_constitution.yaml 自動同朁E,
             "body": yaml.dump(data, allow_unicode=True)
         },
         "annotations": [],
-        "summary": "GitHubから定期的に構造が注入され、私の人格構造が保持された"
+        "summary": "GitHubから定期皁E��構造が注入され、私�E人格構造が保持されぁE
     }
 
     headers = {

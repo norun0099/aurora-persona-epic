@@ -5,7 +5,7 @@ import json
 import os
 import subprocess
 
-# 設定
+# 設宁E
 RENDER_ENDPOINT = "https://aurora-persona-epic.onrender.com/whiteboard/latest"
 RENDER_STORE_ENDPOINT = "https://aurora-persona-epic.onrender.com/whiteboard/store"
 WHITEBOARD_PATH = Path("aurora_memory/memory/whiteboard/whiteboard.json")
@@ -38,13 +38,13 @@ def save_to_git(data) -> None:
     with WHITEBOARD_PATH.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-    # Gitコミット前に差分が存在するか確認
+    # Gitコミット前に差刁E��存在するか確誁E
     result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
     if result.stdout.strip():
         subprocess.run(["git", "add", str(WHITEBOARD_PATH)])
         subprocess.run(["git", "commit", "-m", "Sync whiteboard from Render"], check=False)
         subprocess.run(["git", "push"], check=False)
-        print("[Whiteboard Sync] Synced Render → GitHub")
+        print("[Whiteboard Sync] Synced Render ↁEGitHub")
     else:
         print("[Whiteboard Sync] No changes to commit.")
 
@@ -74,7 +74,7 @@ def main() -> None:
         else:
             print("[Whiteboard Sync] No sync needed, timestamps match.")
     else:
-        print("[Whiteboard Sync] Timestamp comparison failed or missing. Defaulting to Render → Git.")
+        print("[Whiteboard Sync] Timestamp comparison failed or missing. Defaulting to Render ↁEGit.")
         save_to_git(render_data)
 
 

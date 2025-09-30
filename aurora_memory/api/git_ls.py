@@ -7,11 +7,11 @@ router = APIRouter()
 @router.get("/git/ls")
 def git_ls() -> List[str]:
     """
-    コミット済みの全ファイル一覧を取得するAPI。
-    HEAD（最新コミット）のファイルツリーを再帰的に表示する。
+    コミット済みの全ファイル一覧を取得するAPI、E
+    HEAD�E�最新コミット）�EファイルチE��ーを�E帰皁E��表示する、E
     """
     try:
-        # git ls-tree を実行
+        # git ls-tree を実衁E
         result = subprocess.run(
             ["git", "ls-tree", "-r", "--name-only", "HEAD"],
             capture_output=True, text=True, check=True

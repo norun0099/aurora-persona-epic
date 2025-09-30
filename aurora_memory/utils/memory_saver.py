@@ -3,7 +3,7 @@ from datetime import datetime
 import json
 from aurora_memory.utils.git_helper import push_memory_to_github
 
-# 保存ディレクトリを固定
+# 保存ディレクトリを固宁E
 MEMORY_DIR = Path("aurora_memory/memory/Aurora")
 MEMORY_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -19,9 +19,9 @@ def try_auto_save(memory_text: str, prefix: str = "constitution") -> None:
     return {"file": str(file_path), "push_result": push_result}
 
 
-# 一般的な記憶保存処理
+# 一般皁E��記�E保存�E琁E
 def save_memory_record(data: dict) -> None:
-    # バリデーション
+    # バリチE�Eション
     if not all(k in data for k in ("record_id", "created", "content")) or "body" not in data["content"]:
         raise ValueError("Missing required fields: record_id, created, content.body")
 

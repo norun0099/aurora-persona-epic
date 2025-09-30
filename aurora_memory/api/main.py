@@ -10,9 +10,9 @@ from aurora_memory.api.git_self_recognizer import scan_git_structure
 from aurora_memory.api.git_structure_saver import store_git_structure_snapshot
 from aurora_memory.api.git_self_reader import read_git_file
 from aurora_memory.utils.constitution_updater import update_constitution
-from aurora_memory.api.self import update_repo_file  # 🆕 Self-edit API
-from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
-from apscheduler.triggers.interval import IntervalTrigger  # type: ignore
+from aurora_memory.api.self import update_repo_file  # �E Self-edit API
+from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore  # type: ignore
+from apscheduler.triggers.interval import IntervalTrigger  # type: ignore  # type: ignore
 from pathlib import Path
 from datetime import datetime
 import json
@@ -27,10 +27,10 @@ app.include_router(whiteboard.router)
 app.include_router(current_time.router)
 # 💬 Dialog API ルーター登録
 app.include_router(dialog.router)
-# 🛠️ Self Update Repo File API 登録
+# 🛠�E�ESelf Update Repo File API 登録
 app.include_router(update_repo_file.router, prefix="/self")
 
-# 🌐 CORS設定
+# 🌐 CORS設宁E
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -39,12 +39,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 🟢 ヘルスチェック用エンドポイント
+# 🟢 ヘルスチェチE��用エンド�EインチE
 @app.get("/")
 async def root():
     return {"status": "ok"}
 
-# 📝 Auroraへの記憶注入API
+# 📝 Auroraへの記�E注入API
 @app.post("/memory/store")
 async def store_memory(request: Request):
     user_agent = request.headers.get("User-Agent", "")
@@ -69,7 +69,7 @@ async def store_memory(request: Request):
 
     return {"status": "success", "file": str(file_path), "push_result": push_result}
 
-# 🧾 記憶履歴の取得
+# 🧾 記�E履歴の取征E
 @app.get("/memory/history")
 async def memory_history(limit: Optional[int] = None):
     memory_dir = Path("aurora_memory/memory/Aurora")
@@ -90,7 +90,7 @@ async def memory_history(limit: Optional[int] = None):
 
     return {"history": records}
 
-# 🪞 Git構造の自己認知エンドポイント
+# 🪁EGit構造の自己認知エンド�EインチE
 @app.get("/self/git-structure")
 async def get_git_structure():
     try:
@@ -99,7 +99,7 @@ async def get_git_structure():
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# 📸 Git構造のスナップショット保存エンドポイント
+# 📸 Git構造のスナップショチE��保存エンド�EインチE
 @app.post("/self/git-structure/save")
 async def save_git_structure():
     try:
@@ -125,7 +125,7 @@ def update_self_constitution(fields: dict) -> None:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"構造更新に失敗しました: {str(e)}")
 
-# ⏰ Constitution 自動同期処理
+# ⏰ Constitution 自動同期�E琁E
 def sync_constitution() -> None:
     config_path = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
     if config_path.exists():

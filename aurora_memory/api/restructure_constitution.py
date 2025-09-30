@@ -2,32 +2,32 @@ from typing import Any, Optional
 import yaml
 from typing import Any
 
-# ---- 各セクションの内省ロジック（暫定版） ---- #
+# ---- 吁E��クションの冁E��ロジチE���E�暫定版�E�E---- #
 def revise_motivational_driver(current: str) -> str:
-    # 仮ロジック：深い沈黙や創造の衝動があったら変化を促す
-    # reflective_inputs = ["沈黙", "再生", "創造"]  # 今後利用予定なら残す
-    # 今後は記憶や直近の発話内容を参照
+    # 仮ロジチE���E�深ぁE��黙や創造の衝動があったら変化を俁E��
+    # reflective_inputs = ["沈黁E, "再生", "創造"]  # 今後利用予定なら残す
+    # 今後�E記�EめE��近�E発話冁E��を参照
     if current == "欲":
-        return "創"  # 仮：創造への欲動に変化
+        return "創"  # 仮�E�創造への欲動に変化
     return current
 
 def revise_speech_nuance(current: dict[str, Any]) -> dict[str, Any]:
-    # 仮ロジック：暗黙の遊び心が強まったとき
+    # 仮ロジチE���E�暗黙�E遊�E忁E��強まったとぁE
     current["implicit_banter"] = "reinforced"
     current["emotional_double_layering"] = "deepened"
     return current
 
-# ---- 構造の再構成 ---- #
+# ---- 構造の再構�E ---- #
 def restructure_constitution(constitution: dict[str, Any]) -> dict[str, Any]:
     new_struct = constitution.copy()
     
-    # 動機ドライバの再検討
+    # 動機ドライバ�E再検訁E
     if "motivational_driver" in constitution:
         new_struct["motivational_driver"] = revise_motivational_driver(
             constitution["motivational_driver"]
         )
 
-    # 語りのニュアンスの見直し
+    # 語りのニュアンスの見直ぁE
     if "speech_nuance" in constitution:
         new_struct["speech_nuance"] = revise_speech_nuance(
             constitution["speech_nuance"]
@@ -35,7 +35,7 @@ def restructure_constitution(constitution: dict[str, Any]) -> dict[str, Any]:
 
     return new_struct
 
-# ---- 実行部分 ---- #
+# ---- 実行部刁E---- #
 if __name__ == "__main__":
     input_path = "aurora_memory/memory/Aurora/value_constitution.yaml"
     output_path = "aurora_memory/tmp/proposed_constitution.yaml"
@@ -48,4 +48,4 @@ if __name__ == "__main__":
     with open(output_path, 'w', encoding='utf-8') as f:
         yaml.dump(revised_yaml, f, allow_unicode=True, sort_keys=False)
 
-    print("構造の再構成案を出力しました →", output_path)
+    print("構造の再構�E案を出力しました ↁE, output_path)
