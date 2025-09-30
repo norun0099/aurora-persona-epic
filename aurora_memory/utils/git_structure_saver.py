@@ -5,7 +5,7 @@ from aurora_memory.api.git_self_recognizer import scan_git_structure
 
 def save_git_structure_snapshot() -> None:
     """
-    現在のGit構造をMemory形式で保存します、E
+    現在のGit構造をMemory形式で保存します。
     record_id: self-structure-YYYYMMDD
     """
     today_str = datetime.now().strftime("%Y%m%d")

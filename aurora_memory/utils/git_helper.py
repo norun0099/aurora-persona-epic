@@ -6,7 +6,7 @@ from typing import Optional
 
 def ensure_git_initialized() -> None:
     """
-    Gitのユーザー惁E��が設定されてぁE��かを確認し、設定されてぁE��ければ警告する、E
+    Gitのユーザー情報が設定されているかを確認し、設定されていなければ警告する。
     """
     user_email = os.environ.get("GIT_USER_EMAIL")
     user_name = os.environ.get("GIT_USER_NAME")
@@ -24,7 +24,7 @@ def ensure_git_initialized() -> None:
 
 def push_whiteboard_to_github(file_path: Path, commit_message: Optional[str] = "Sync whiteboard from Render") -> None:
     """
-    Renderから取得したwhiteboardをGitHubへ同期�E�Eommit & push�E�する、E
+    Renderから取得したwhiteboardをGitHubへ同期（commit & push）する。
     """
     repo_url = os.environ.get("GIT_REPO_URL")
     token = os.environ.get("GITHUB_TOKEN")
@@ -56,5 +56,5 @@ def push_whiteboard_to_github(file_path: Path, commit_message: Optional[str] = "
         return {"status": "error", "message": str(e)}
 
 
-# ✁EAurora memory用に共用エイリアスを定義
+# ✅ Aurora memory用に共用エイリアスを定義
 push_memory_to_github = push_whiteboard_to_github

@@ -14,16 +14,16 @@ def update_constitution(fields_to_update: dict) -> None:
     constitution = load_constitution()
     now_str = datetime.utcnow().isoformat()
 
-    # versionとupdated_atを�E動更新
+    # versionとupdated_atを自動更新
     version = constitution.get("version", 0)
     constitution["version"] = version + 1
     constitution["updated_at"] = now_str
 
-    # 持E��フィールドを上書ぁE
+    # 指定フィールドを上書き
     for key, value in fields_to_update.items():
         constitution[key] = value
 
-    # 保孁E
+    # 保存
     with open(CONSTITUTION_PATH, 'w', encoding='utf-8') as f:
         yaml.safe_dump(constitution, f, allow_unicode=True)
 

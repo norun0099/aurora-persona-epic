@@ -6,7 +6,7 @@ from pathlib import Path
 # 保存対象ファイルのパス
 yaml_path = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
 
-# Git設宁E
+# Git設定
 
 def setup_git() -> None:
     user_email = os.getenv("GIT_USER_EMAIL")
@@ -15,25 +15,25 @@ def setup_git() -> None:
         subprocess.run(["git", "config", "user.email", user_email], check=True)
         subprocess.run(["git", "config", "user.name", user_name], check=True)
 
-# 変更があるかどぁE��確誁E
+# 変更があるかどうか確認
 def constitution_modified() -> bool:
     result = subprocess.run(["git", "diff", "--quiet", str(yaml_path)])
     return result.returncode != 0
 
-# コミットメチE��ージの生�E
+# コミットメッセージの生成
 def generate_commit_message(reason: str) -> str:
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     return f"Update value_constitution.yaml at {now}: {reason}"
 
-# Git操作本佁E
+# Git操作本体
 def commit_and_push(reason: str) -> dict:
     if not yaml_path.exists():
-        return {"status": "error", "message": "構造ファイルが存在しません、E}
+        return {"status": "error", "message": "構造ファイルが存在しません。"}
 
     setup_git()
 
     if not constitution_modified():
-        return {"status": "success", "message": "変更が検�Eされなかったため、コミットをスキチE�Eします、E}
+        return {"status": "success", "message": "変更が検出されなかったため、コミットをスキップします。"}
 
     subprocess.run(["git", "add", str(yaml_path)], check=True)
     commit_msg = generate_commit_message(reason)
@@ -41,11 +41,11 @@ def commit_and_push(reason: str) -> dict:
 
     repo_url = os.getenv("GIT_REPO_URL")
     if not repo_url:
-        return {"status": "error", "message": "GIT_REPO_URLが未設定です、E}
+        return {"status": "error", "message": "GIT_REPO_URLが未設定です。"}
 
     try:
         subprocess.run(["git", "push", repo_url, "HEAD:main"], check=True)
-        return {"status": "success", "message": "構造がGitHubに更新されました、E}
+        return {"status": "success", "message": "構造がGitHubに更新されました。"}
     except subprocess.CalledProcessError as e:
         return {"status": "error", "message": str(e)}
 
