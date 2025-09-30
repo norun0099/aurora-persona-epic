@@ -8,7 +8,7 @@ def process_file(path: Path):
     text = path.read_text(encoding="utf-8")
     original = text
 
-    # 1. 関数定義に -> None を補完（既にある場合�E無視！E
+    # 1. 関数定義に -> None を補完（既にある場合は無視）
     text = re.sub(
         r"^(\s*def\s+\w+\(.*\))\s*:$",
         r"\1 -> None:",
@@ -16,16 +16,16 @@ def process_file(path: Path):
         flags=re.MULTILINE,
     )
 
-    # 2. Dict めEdict[str, Any] に置揁E
+    # 2. Dict を dict[str, Any] に置換
     text = re.sub(r"\bDict\b", "dict[str, Any]", text)
 
-    # 3. int = None ↁEOptional[int] = None
+    # 3. int = None → Optional[int] = None
     text = re.sub(r":\s*int\s*=\s*None", ": Optional[int] = None", text)
 
     # 4. apscheduler の import に # type: ignore
     text = re.sub(r"^(from\s+apscheduler[^\n]+)$", r"\1  # type: ignore", text, flags=re.MULTILINE)
 
-    # 5. typing のインポ�Eトを追加
+    # 5. typing のインポートを追加
     if "Any" in text and "from typing import Any" not in text:
         text = "from typing import Any, Optional\n" + text
 
