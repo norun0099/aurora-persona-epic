@@ -27,7 +27,7 @@ class ConstitutionRecord(BaseModel):
     impulse: str
     ache: str
     satisfaction: str
-    content: dict[str, Any][str, str]
+    content: dict[str, Any]
     annotations: Optional[List[str]] = []
     summary: str
 
