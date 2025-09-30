@@ -37,7 +37,7 @@ def load_memory_files() -> None:
                             'type': 'knowledge',
                             'author': 'Aurora',
                             'id': file_name.replace('.', '_'),
-                            'summary': f"{file_name} (markdown)",,
+                            'summary': f"{file_name} (markdown)",
                             'body': body,
                             'tags': [profile],
                             'visible_to': ['aurora']
