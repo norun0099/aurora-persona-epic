@@ -28,6 +28,6 @@ async def constitution_commit(request: Request):
         response = requests.post(GITHUB_API_URL, json=payload, headers=HEADERS)
         response.raise_for_status()
 
-        return JSONResponse(content={"status": "success", "message": "構造更新リクエストをGitHubへ送信しました、E})
+        return JSONResponse(content={"status": "success", "message": "構造更新リクエストをGitHubへ送信しました"})
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
