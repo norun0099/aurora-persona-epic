@@ -1,5 +1,4 @@
 import re
-import os
 from pathlib import Path
 
 BASE_DIR = Path("aurora_memory")
