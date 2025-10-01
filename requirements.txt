@@ -14,3 +14,4 @@ ruff==0.6.3
 mypy==1.11.2
 types-PyYAML
 types-requests
+types-setuptools
