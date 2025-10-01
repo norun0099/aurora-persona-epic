@@ -1,0 +1,8 @@
+{
+  "record_id": "memory_20251002_004251_fix_strategy",
+  "created": "2025-10-02T00:42:51+09:00",
+  "content": {
+    "title": "型修正の進め方（FastAPI/ユーティリティ対応）",
+    "body": "修正方針:\n\n1. 短期的対応\n- FastAPI エンドポイント関数には `-> dict[str, Any]` を付与する。\n- 必要に応じて `from typing import Any` を自動追加。\n- `-> None` が適切な関数には戻り値型を明示。\n- `dict` 型を `dict[str, Any]` に展開してジェネリクス不足を解消。\n- `re.Match` を `re.Match[str]` に修正。\n- `Any` の import 漏れを補完。\n\n2. 中期的対応\n- FastAPI の引数 (`request`, `response`) に型 (`Request`, `Response`) を付与。\n- Starlette / Pydantic の型を適宜導入し、より正確な型定義を進める。\n\n3. 長期的対応\n- プロジェクト内に `typings/fastapi` などの自作 stub を置き、mypy の import-not-found を完全解消。\n- CI 環境で一貫した型検証が可能になるようにする。"
+  }
+}
