@@ -1,7 +1,6 @@
-from typing import Any, Optional
+from typing import Any, Tuple, List
 import yaml
 import difflib
-from typing import Tuple, List, Any
 
 
 def load_yaml(filepath: str) -> dict[str, Any]:
