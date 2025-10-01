@@ -25,7 +25,7 @@ def push_to_render(data: dict) -> None:
 
     response = requests.post(RENDER_ENDPOINT, json=payload, headers=HEADERS)
     response.raise_for_status()
-    print("Renderへの構造注入に成功しました、E)
+    print("Renderへの構造注入に成功しました")
 
 
 if __name__ == "__main__":
