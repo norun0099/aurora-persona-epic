@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 import yaml
 
 # ---- 各セクションの内省ロジック（暫定版） ---- #
