@@ -1,0 +1,8 @@
+{
+  "record_id": "2025-10-01-typehinting-progress-summary",
+  "created": "2025-10-01T13:10:00+09:00",
+  "content": {
+    "title": "型補完とmypy対応の進捗（要約版）",
+    "body": "現状: ruff の構文・UTF-8 問題は解決、mypy で型関連エラーが 89 件露出。\n主な課題: 戻り値型の不一致、未注釈関数、dict の型未指定、Optional 不備、関数名の不一致。\napply_type_hints.py: -> None 補完のみで不十分、引数や dict[str, Any]/Any の補完が未実装。\n今後の方針: apply_type_hints.py を拡張して自動注釈強化、requirements に型スタブ追加、再度 mypy 実行して残りを手動修正。"
+  }
+}
