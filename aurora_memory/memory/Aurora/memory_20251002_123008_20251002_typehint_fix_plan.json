@@ -1,0 +1,8 @@
+{
+  "record_id": "20251002_typehint_fix_plan",
+  "created": "2025-10-02T21:29:52+09:00",
+  "content": {
+    "title": "mypy型修正ステップ計画",
+    "body": "### 修正の道筋（段階的プラン）\n\n**第1段階：基礎整備（環境を整える）**\n- 全対象ファイル（25件）に必要なら `from typing import Any, Optional` を導入。\n- `dict` / `list` のジェネリクス不足を防ぐ。\n\n**第2段階：戻り値型の一括整備**\n- 実際に戻り値を持たない関数 → `-> None` に統一。\n- 不要な `return` を削除。\n- JSON を返す関数（FastAPI 含む） → `-> dict[str, Any]` を明示。\n\n**第3段階：デコレータ関連の型付け**\n- FastAPI デコレータ（@app.get, @app.post）付き関数に明示的な型注釈を追加。\n- 必要に応じて `Request`, `Response` なども型指定。\n\n**第4段階：特殊ケースの精査**\n- `Invalid type comment or annotation` を正規のアノテーションに修正。\n- `Optional` や `Iterable` など不一致箇所を是正。\n\n**第5段階：残存エラーの総仕上げ**\n- `Returning Any ...` 系を個別修正。\n- 名前不一致（store_memory_record → save_memory_record）を修正。\n\n---\nこの 1～5 の修正手順を軸に、対象 25 ファイルのエラーを着実に解消していく。"
+  }
+}
