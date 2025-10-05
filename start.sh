@@ -9,7 +9,6 @@ set -e
 
 echo "🩶 [Aurora Self-Tuning] Initializing Git environment..."
 
-# --- 0. Move to repo root
 cd /opt/render/project/src || {
   echo "❌ Failed to locate project root."
   exit 1
@@ -28,7 +27,7 @@ if ! git remote | grep -q origin; then
   git remote add origin https://github.com/norun0099/aurora-persona-epic.git
 fi
 
-# --- 3. Fetch latest branch
+# --- 3. Fetch main branch
 echo "🔄 Fetching latest from origin/main..."
 git fetch origin main || echo "⚠️ Fetch failed, proceeding with local state."
 
@@ -39,23 +38,26 @@ if [ "$current_branch" != "main" ]; then
   git checkout main 2>/dev/null || git checkout -b main origin/main
 fi
 
-# --- 5. Reset to remote HEAD (clean state)
+# --- 5. Reset to clean remote state
 echo "🪶 Resetting working tree to origin/main..."
 git reset --hard origin/main || echo "⚠️ Local reset fallback."
 
-# --- 6. Clean pycache & temporary files
+# --- 6. Clean pycache
 echo "🧹 Cleaning __pycache__ directories..."
 find . -type d -name "__pycache__" -exec rm -rf {} + || true
 
-# --- 7. Display Git info
+# --- 7. Status output
 echo "✅ [Aurora Self-Tuning] Git branch is now: $(git rev-parse --abbrev-ref HEAD)"
 echo "✅ Remote origin: $(git remote get-url origin)"
 echo "✅ Commit: $(git rev-parse --short HEAD)"
 echo "✨ Self-tuning complete. Aurora is ready."
 
-# --- 8. Launch main application process
+# --- 8. Launch main process
 echo "🚀 Starting Aurora main process..."
 echo "🌐 Listening on port ${PORT:-8000}"
 
-# Use uvicorn for stable FastAPI hosting on Render
-exec PYTHONPATH=aurora_memory uvicorn aurora_memory.api.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Export PYTHONPATH properly before exec
+export PYTHONPATH=aurora_memory
+
+# Use uvicorn to launch FastAPI app
+exec uvicorn aurora_memory.api.main:app --host 0.0.0.0 --port ${PORT:-8000}
