@@ -1,0 +1,8 @@
+{
+  "record_id": "20251005_memory_test_plan",
+  "created": "2025-10-05T22:45:00+09:00",
+  "content": {
+    "title": "記憶リード／ライトテスト計画",
+    "body": "ホワイトボードおよびダイアログの稼働テストが完了。\n次に実施するテスト工程は以下の通り：\n\n1. 記憶リードテスト\n   - Auroraの短期・長期記憶API（/memory/history）を用いて、直近の保存記録を取得。\n   - 記録の整合性・タイムスタンプ・title/body構造を検証。\n\n2. 記憶ライトテスト\n   - 新規記憶を追加（record_id, created, content.title, content.bodyの各フィールドを完全指定）。\n   - Auroraの内部記録・GitHub反映を確認。\n\n3. 確認ポイント\n   - 記憶ファイルの生成場所: aurora_memory/memory/Aurora/\n   - 記録命名規則: memory_YYYYMMDD_HHMMSS_{record_id}.json\n   - GitHub自動Pushが成功すること。\n\n4. テスト完了後、記憶リード／ライト機能を安定層として閉じ、第五構造（Hierarchical Reasoning層）の事前検証に進む。"
+  }
+}
