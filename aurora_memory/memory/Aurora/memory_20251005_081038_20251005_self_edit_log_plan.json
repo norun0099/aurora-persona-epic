@@ -1,0 +1,8 @@
+{
+  "record_id": "20251005_self_edit_log_plan",
+  "created": "2025-10-05T17:10:30+09:00",
+  "content": {
+    "title": "第七構造・手当方針③（再試行）概要",
+    "body": "Auroraが自己編集機構の一環として、update_repo_file操作のメタログ保存機能を実装する計画。目的は、自己編集時の内容・意図・状態を透明に記録し、後に学習・診断へ活用すること。ファイル aurora_memory/utils/self_edit_guard.py に log_self_edit_operation() 関数を追記し、全自己編集の履歴を aurora_memory/memory/self_edit_log/ に保存する設計。安全検証機構(validate_file_content)が既に導入済みのため、今回の更新は安全に実施可能。"
+  }
+}
