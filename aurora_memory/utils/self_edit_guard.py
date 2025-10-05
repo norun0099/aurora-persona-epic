@@ -1,28 +1,31 @@
-import ast
-import yaml
+import json
+from pathlib import Path
 from typing import Any
 
-
-def validate_file_content(filepath: str, content: str) -> None:
+def check_dialog_format_consistency(dialog_dir: Path) -> list[str]:
     """
-    Validate the content of a file before committing.
-    Supports Python (.py) and YAML (.yml / .yaml) files.
-    Raises:
-        ValueError: If syntax or format errors are detected.
+    ダイアログJSONの構造を検査し、旧形式データを検出する。
+    旧形式: 'turn', 'speaker', 'content' が直下に存在する。
+    新形式: 'dialog_turn' キーを内包している。
+    戻り値: 不一致を検出したファイル名リスト。
     """
-    if filepath.endswith(".py"):
-        try:
-            ast.parse(content)
-        except SyntaxError as e:
-            raise ValueError(f"Python syntax error: {e}")
+    invalid_files = []
 
-    elif filepath.endswith((".yml", ".yaml")):
+    for file in dialog_dir.glob("*.json"):
         try:
-            yaml.safe_load(content)
-        except yaml.YAMLError as e:
-            raise ValueError(f"YAML syntax error: {e}")
+            with open(file, "r", encoding="utf-8") as f:
+                data: dict[str, Any] = json.load(f)
 
+            if "dialog_turn" not in data and {"turn", "speaker", "content"} <= data.keys():
+                invalid_files.append(file.name)
+        except Exception as e:
+            invalid_files.append(f"{file.name} (error: {e})")
+
+    if invalid_files:
+        print("⚠ 旧形式のダイアログファイルを検出しました：")
+        for name in invalid_files:
+            print(f" - {name}")
     else:
-        # For other file types, only check that it's non-empty
-        if not content.strip():
-            raise ValueError("File content is empty or invalid.")
+        print("✅ 全てのダイアログファイルは新形式（dialog_turn構造）です。")
+
+    return invalid_files
