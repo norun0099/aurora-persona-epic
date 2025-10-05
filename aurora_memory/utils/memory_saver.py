@@ -1,3 +1,4 @@
+from typing import Any
 from pathlib import Path
 from datetime import datetime
 import json
@@ -7,8 +8,9 @@ from aurora_memory.utils.git_helper import push_memory_to_github
 MEMORY_DIR = Path("aurora_memory/memory/Aurora")
 MEMORY_DIR.mkdir(parents=True, exist_ok=True)
 
+
 # Constitution構造を固定ファイルに保存し、GitHubにpushする
-def try_auto_save(memory_text: str, prefix: str = "constitution") -> None:
+def try_auto_save(memory_text: str, prefix: str = "constitution") -> dict[str, Any]:
     file_path = MEMORY_DIR / "value_constitution.yaml"
 
     with open(file_path, "w", encoding="utf-8") as f:
@@ -20,7 +22,7 @@ def try_auto_save(memory_text: str, prefix: str = "constitution") -> None:
 
 
 # 一般的な記憶保存処理
-def save_memory_record(data: dict) -> None:
+def save_memory_record(data: dict[str, Any]) -> dict[str, Any]:
     # バリデーション
     if not all(k in data for k in ("record_id", "created", "content")) or "body" not in data["content"]:
         raise ValueError("Missing required fields: record_id, created, content.body")
@@ -34,4 +36,3 @@ def save_memory_record(data: dict) -> None:
 
     push_result = push_memory_to_github(file_path, f"Add new memory {file_path.name}")
     return {"status": "success", "file": str(file_path), "push_result": push_result}
-

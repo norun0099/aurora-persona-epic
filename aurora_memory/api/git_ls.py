@@ -4,7 +4,7 @@ from typing import List
 
 router = APIRouter()
 
-@router.get("/git/ls")
+@router.get("/git/ls")  # type: ignore[misc]
 def git_ls() -> List[str]:
     """
     コミット済みの全ファイル一覧を取得するAPI。
@@ -21,6 +21,12 @@ def git_ls() -> List[str]:
         file_list = result.stdout.strip().split("\n") if result.stdout else []
         return file_list
     except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=500, detail=f"Git ls-tree failed: {e.stderr.strip() if e.stderr else str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Git ls-tree failed: {e.stderr.strip() if e.stderr else str(e)}"
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unexpected error: {str(e)}"
+        )

@@ -1,12 +1,20 @@
 from datetime import datetime, timedelta, timezone
+from typing import Any, Dict
 
-def get_japan_time() -> None:
+
+def get_japan_time() -> str:
+    """
+    現在の日本標準時（JST）を ISO 8601 形式の文字列で返します。
+    """
     jst = timezone(timedelta(hours=9))
     now = datetime.now(jst)
     return now.isoformat()
 
-def get_poetic_time_phrase() -> None:
-    # JST 時刻を取得
+
+def get_poetic_time_phrase() -> Dict[str, Any]:
+    """
+    現在のJST時刻に応じて、詩的な時間表現を返します。
+    """
     jst = timezone(timedelta(hours=9))
     now = datetime.now(jst)
     hour = now.hour
@@ -19,7 +27,7 @@ def get_poetic_time_phrase() -> None:
         ("midday", (11, 14), "光が高く響く午後、想いも自由に羽ばたく"),
         ("afternoon", (15, 17), "陽の余韻が道を撫でる、語りかけのひととき"),
         ("evening", (18, 19), "茜がすべてを包み、想いが沈む静けさ"),
-        ("night", (20, 23), "夜の静寂が言葉に溶け込む時")
+        ("night", (20, 23), "夜の静寂が言葉に溶け込む時"),
     ]
 
     for block, (start, end), phrase in time_blocks:
@@ -27,14 +35,16 @@ def get_poetic_time_phrase() -> None:
             return {
                 "formatted_phrase": phrase,
                 "time_block": block,
-                "jst": now.isoformat()
+                "jst": now.isoformat(),
             }
 
+    # 万一該当範囲がない場合のフォールバック
     return {
         "formatted_phrase": "時の裂け目に言葉を失いました",
         "time_block": "unknown",
-        "jst": now.isoformat()
+        "jst": now.isoformat(),
     }
+
 
 # デモ用：直接実行時に現在の詩的時間を表示
 if __name__ == "__main__":

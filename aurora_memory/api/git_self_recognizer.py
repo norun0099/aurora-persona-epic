@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Any, Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
@@ -11,11 +11,15 @@ GIT_SCAN_ENABLED = os.getenv("GIT_SCAN_ENABLED", "false").lower() == "true"
 GIT_SCAN_IGNORE = os.getenv("GIT_SCAN_IGNORE", ".git,__pycache__").split(",")
 GIT_SCAN_DEPTH = int(os.getenv("GIT_SCAN_DEPTH", "-1"))
 
-def scan_directory(path: str, depth: int = -1, ignore: List[str] = []) -> dict:
+
+def scan_directory(path: str, depth: int = -1, ignore: Optional[List[str]] = None) -> dict[str, Any]:
     """
     指定されたディレクトリパスを再帰的にスキャンし、構造を辞書で返す
     """
-    result = {}
+    if ignore is None:
+        ignore = []
+
+    result: dict[str, Any] = {}
     try:
         entries = os.listdir(path)
     except Exception as e:
@@ -40,7 +44,8 @@ def scan_directory(path: str, depth: int = -1, ignore: List[str] = []) -> dict:
 
     return result
 
-def scan_git_structure() -> dict:
+
+def scan_git_structure() -> dict[str, Any]:
     """
     公開用: 現在のGit構造を取得する
     """
@@ -48,8 +53,9 @@ def scan_git_structure() -> dict:
         raise HTTPException(status_code=403, detail="Git構造スキャンは無効化されています")
     return scan_directory(GIT_REPO_PATH, GIT_SCAN_DEPTH, GIT_SCAN_IGNORE)
 
-@router.get("/self/git-structure")
-def get_git_structure() -> None:
+
+@router.get("/self/git-structure")  # type: ignore[misc]
+def get_git_structure() -> JSONResponse:
     """
     API: 現在のGit構造をJSON形式で返す
     """

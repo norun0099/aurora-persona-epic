@@ -1,10 +1,11 @@
+from typing import Any, Optional, Union
 import yaml
 import subprocess
 from datetime import datetime
 
 
 # YAMLファイルを保存
-def save_yaml(data: dict, path: str) -> None:
+def save_yaml(data: dict[str, Any], path: str) -> None:
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, allow_unicode=True, sort_keys=False)
 

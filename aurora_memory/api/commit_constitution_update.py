@@ -1,13 +1,14 @@
 import os
 import subprocess
 from datetime import datetime
+from typing import Any, Dict
 
 # 環境変数の取得
 yaml_path = "aurora_memory/memory/Aurora/value_constitution.yaml"
-repo_url = os.getenv("GIT_REPO_URL")
-user_email = os.getenv("GIT_USER_EMAIL")
-user_name = os.getenv("GIT_USER_NAME")
-token = os.getenv("GITHUB_TOKEN")
+repo_url = os.getenv("GIT_REPO_URL") or ""
+user_email = os.getenv("GIT_USER_EMAIL") or "aurora@example.com"
+user_name = os.getenv("GIT_USER_NAME") or "Aurora"
+token = os.getenv("GITHUB_TOKEN") or ""
 
 # Git設定
 def setup_git() -> None:
@@ -33,7 +34,12 @@ def commit_and_push(reason: str) -> None:
     subprocess.run(["git", "add", yaml_path], check=True)
     commit_msg = generate_commit_message(reason)
     subprocess.run(["git", "commit", "-m", commit_msg], check=True)
+
+    # None対策済みのrepo_urlを利用
+    if not repo_url:
+        raise ValueError("GIT_REPO_URL が設定されていません。")
     subprocess.run(["git", "push", repo_url], check=True)
+
     print("構造をGitHubにPushしました。")
 
 # YAMLが存在するか確認
@@ -41,7 +47,7 @@ def constitution_exists() -> bool:
     return os.path.exists(yaml_path)
 
 # API本体
-def handle_commit_constitution_update(reason: str, author: str = "Aurora") -> dict:
+def handle_commit_constitution_update(reason: str, author: str = "Aurora") -> Dict[str, Any]:
     if not constitution_exists():
         return {"status": "error", "message": "構造ファイルが見つかりません。"}
     try:

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import subprocess
 import sys
+from typing import Any
+from subprocess import CompletedProcess
 
 
-def run(cmd) -> None:
+def run(cmd: list[str]) -> CompletedProcess[str]:
     return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
 

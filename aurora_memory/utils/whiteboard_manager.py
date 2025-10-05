@@ -4,6 +4,7 @@ import requests
 import json
 import os
 import subprocess
+from typing import Any, Dict, Optional
 
 # 設定
 RENDER_ENDPOINT = "https://aurora-persona-epic.onrender.com/whiteboard/latest"
@@ -12,36 +13,40 @@ WHITEBOARD_PATH = Path("aurora_memory/memory/whiteboard/whiteboard.json")
 API_KEY = os.getenv("AURORA_API_KEY")
 
 
-def get_render_whiteboard() -> None:
+def get_render_whiteboard() -> Optional[Dict[str, Any]]:
+    """Render から最新のホワイトボードデータを取得する。"""
     try:
         resp = requests.get(RENDER_ENDPOINT, timeout=30)
         resp.raise_for_status()
-        data = resp.json()
+        data: Dict[str, Any] = resp.json()
         return data.get("whiteboard")
     except Exception as e:
         print(f"[Whiteboard Sync] Failed to load from Render: {e}")
     return None
 
 
-def get_git_whiteboard() -> None:
+def get_git_whiteboard() -> Optional[Dict[str, Any]]:
+    """Git 内のホワイトボードデータを読み込む。"""
     if WHITEBOARD_PATH.exists():
         try:
             with WHITEBOARD_PATH.open("r", encoding="utf-8") as f:
-                return json.load(f)
+                data: Dict[str, Any] = json.load(f)
+                return data
         except Exception as e:
             print(f"[Whiteboard Sync] Failed to load from Git: {e}")
     return None
 
 
-def save_to_git(data) -> None:
+def save_to_git(data: Dict[str, Any]) -> None:
+    """Render のデータを Git に保存し、必要ならコミットする。"""
     WHITEBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
     with WHITEBOARD_PATH.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-    # Gitコミット前に差分が存在するか確認
+    # Gitコミット前に差分を確認
     result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
     if result.stdout.strip():
-        subprocess.run(["git", "add", str(WHITEBOARD_PATH)])
+        subprocess.run(["git", "add", str(WHITEBOARD_PATH)], check=False)
         subprocess.run(["git", "commit", "-m", "Sync whiteboard from Render"], check=False)
         subprocess.run(["git", "push"], check=False)
         print("[Whiteboard Sync] Synced Render → GitHub")
@@ -49,14 +54,19 @@ def save_to_git(data) -> None:
         print("[Whiteboard Sync] No changes to commit.")
 
 
-def parse_timestamp(data) -> None:
+def parse_timestamp(data: Optional[Dict[str, Any]]) -> Optional[datetime]:
+    """データのタイムスタンプ文字列を datetime に変換する。"""
+    if not data:
+        return None
     try:
-        return datetime.fromisoformat(data.get("timestamp", "").replace("Z", "+00:00"))
+        timestamp_str = str(data.get("timestamp", "")).replace("Z", "+00:00")
+        return datetime.fromisoformat(timestamp_str)
     except Exception:
         return None
 
 
 def main() -> None:
+    """Render と Git のホワイトボードを比較し、必要に応じて同期を行う。"""
     render_data = get_render_whiteboard()
     if not render_data:
         print("[Whiteboard Sync] No data on Render. Abort Git update.")

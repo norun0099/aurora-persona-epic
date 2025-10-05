@@ -2,12 +2,12 @@ import os
 import subprocess
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict
 
 # 保存対象ファイルのパス
 yaml_path = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
 
 # Git設定
-
 def setup_git() -> None:
     user_email = os.getenv("GIT_USER_EMAIL")
     user_name = os.getenv("GIT_USER_NAME")
@@ -26,7 +26,7 @@ def generate_commit_message(reason: str) -> str:
     return f"Update value_constitution.yaml at {now}: {reason}"
 
 # Git操作本体
-def commit_and_push(reason: str) -> dict:
+def commit_and_push(reason: str) -> Dict[str, str]:
     if not yaml_path.exists():
         return {"status": "error", "message": "構造ファイルが存在しません。"}
 
@@ -50,7 +50,7 @@ def commit_and_push(reason: str) -> dict:
         return {"status": "error", "message": str(e)}
 
 # CLI用
-def handle_commit_constitution_update(reason: str) -> dict:
+def handle_commit_constitution_update(reason: str) -> Dict[str, str]:
     try:
         return commit_and_push(reason)
     except Exception as e:

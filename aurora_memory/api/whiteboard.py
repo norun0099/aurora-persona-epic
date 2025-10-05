@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pathlib import Path
+from typing import Any, Dict, Union
 import json
 
 router = APIRouter()
 
-# whiteboardファイルの固定パス
 WHITEBOARD_PATH = Path("aurora_memory/memory/whiteboard/whiteboard.json")
 
 
-@router.get("/whiteboard/latest")
-async def get_latest_whiteboard():
+@router.get("/whiteboard/latest")  # type: ignore[misc]
+async def get_latest_whiteboard() -> Union[Dict[str, Any], JSONResponse]:
     """
     GitHub上に保持されている whiteboard の最新版を取得します。
     """
@@ -24,19 +24,13 @@ async def get_latest_whiteboard():
         raise HTTPException(status_code=500, detail=f"Failed to parse whiteboard: {e}")
 
     if isinstance(data, str):
-        return {
-            "whiteboard": data,
-            "timestamp": None
-        }
+        return {"whiteboard": data, "timestamp": None}
 
-    return {
-        "whiteboard": data,
-        "timestamp": data.get("timestamp")
-    }
+    return {"whiteboard": data, "timestamp": data.get("timestamp")}
 
 
-@router.post("/whiteboard/store")
-async def store_whiteboard(request: Request):
+@router.post("/whiteboard/store")  # type: ignore[misc]
+async def store_whiteboard(request: Request) -> Dict[str, str]:
     """
     Render 側に whiteboard を保存します。ChatGPT User-Agent による認証あり。
     """
@@ -53,8 +47,6 @@ async def store_whiteboard(request: Request):
     if not data:
         raise HTTPException(status_code=400, detail="Missing whiteboard content")
 
-    # JSON文字列が誤って入っていた場合の再変換は不要（stringとして保存する仕様のため）
-
     WHITEBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
     try:
         with WHITEBOARD_PATH.open("w", encoding="utf-8") as f:
@@ -62,7 +54,4 @@ async def store_whiteboard(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to write whiteboard: {e}")
 
-    return {
-        "status": "success",
-        "file": str(WHITEBOARD_PATH)
-    }
+    return {"status": "success", "file": str(WHITEBOARD_PATH)}

@@ -1,10 +1,10 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 
-def ensure_git_initialized() -> None:
+def ensure_git_initialized() -> bool:
     """
     Gitのユーザー情報が設定されているかを確認し、設定されていなければ警告する。
     """
@@ -22,7 +22,9 @@ def ensure_git_initialized() -> None:
         return False
 
 
-def push_whiteboard_to_github(file_path: Path, commit_message: Optional[str] = "Sync whiteboard from Render") -> None:
+def push_whiteboard_to_github(
+    file_path: Path, commit_message: str = "Sync whiteboard from Render"
+) -> dict[str, Any]:
     """
     Renderから取得したwhiteboardをGitHubへ同期（commit & push）する。
     """

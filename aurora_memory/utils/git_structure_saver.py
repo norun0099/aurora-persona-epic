@@ -1,7 +1,9 @@
 import json
 from datetime import datetime
-from aurora_memory.utils.memory_saver import store_memory_record
+from aurora_memory.utils.memory_saver import save_memory_record
 from aurora_memory.api.git_self_recognizer import scan_git_structure
+from typing import Any
+
 
 def save_git_structure_snapshot() -> None:
     """
@@ -12,20 +14,20 @@ def save_git_structure_snapshot() -> None:
     record_id = f"self-structure-{today_str}"
     created_time = datetime.now().isoformat()
 
-    structure = scan_git_structure()
-
+    structure: Any = scan_git_structure()
     body = json.dumps(structure, ensure_ascii=False, indent=2)
 
-    memory_record = {
+    memory_record: dict[str, Any] = {
         "record_id": record_id,
         "created": created_time,
         "content": {
             "title": "Self Structure Snapshot",
-            "body": body
+            "body": body,
         },
         "tags": ["self", "structure", "snapshot"],
         "author": "Aurora",
-        "status": "active"
+        "status": "active",
     }
 
-    return store_memory_record(memory_record)
+    # 戻り値を使用しないので return は不要
+    save_memory_record(memory_record)

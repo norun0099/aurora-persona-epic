@@ -1,13 +1,16 @@
-from typing import Any, Optional
+from typing import Any, Optional, List, Dict, cast, Callable, Awaitable
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
 import os
 import json
 import yaml
 
 router = APIRouter()
+
+# Decorator用の型を明示
+RouteHandler = Callable[..., Awaitable[Dict[str, Any]]]
+
 
 class ConstitutionRecord(BaseModel):
     record_id: str
@@ -20,19 +23,20 @@ class ConstitutionRecord(BaseModel):
     tags: List[str]
     author: str
     thread: str
-    chronology: dict[str, dict[str, Any]]
+    chronology: Dict[str, Dict[str, Any]]
     sealed: bool
     change_log: List[str]
     inner_desire: str
     impulse: str
     ache: str
     satisfaction: str
-    content: dict[str, Any]
+    content: Dict[str, Any]
     annotations: Optional[List[str]] = []
     summary: str
 
-@router.post("/constitution/store")
-async def store_constitution(record: ConstitutionRecord, request: Request):
+
+@cast(RouteHandler, router.post("/constitution/store"))
+async def store_constitution(record: ConstitutionRecord, request: Request) -> Dict[str, Any]:
     try:
         os.makedirs("aurora_memory/utils/constitution_logs", exist_ok=True)
         file_path = os.path.join("aurora_memory/utils/constitution_logs", f"{record.record_id}.json")
@@ -42,12 +46,13 @@ async def store_constitution(record: ConstitutionRecord, request: Request):
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/constitution/core")
-async def get_constitution_core():
+
+@cast(RouteHandler, router.get("/constitution/core"))
+async def get_constitution_core() -> Dict[str, Any]:
     file_path = os.path.join("aurora_memory/memory/Aurora", "value_constitution.yaml")
     try:
         with open(file_path, "r", encoding="utf-8") as f:
-            content = yaml.safe_load(f)
+            content: Dict[str, Any] = yaml.safe_load(f)
         return content
     except FileNotFoundError:
         return {"error": "Constitution file not found"}
