@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict
 import json
 
 router = APIRouter()
@@ -9,8 +9,8 @@ router = APIRouter()
 WHITEBOARD_PATH = Path("aurora_memory/memory/whiteboard/whiteboard.json")
 
 
-@router.get("/whiteboard/latest")  # type: ignore[misc]
-async def get_latest_whiteboard() -> Union[Dict[str, Any], JSONResponse]:
+@router.get("/whiteboard/latest", response_model=None)  # type: ignore[misc]
+async def get_latest_whiteboard() -> JSONResponse:
     """
     GitHub上に保持されている whiteboard の最新版を取得します。
     """
@@ -19,18 +19,18 @@ async def get_latest_whiteboard() -> Union[Dict[str, Any], JSONResponse]:
 
     try:
         with WHITEBOARD_PATH.open("r", encoding="utf-8") as f:
-            data = json.load(f)
+            data: Any = json.load(f)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse whiteboard: {e}")
 
     if isinstance(data, str):
-        return {"whiteboard": data, "timestamp": None}
+        return JSONResponse(content={"whiteboard": data, "timestamp": None})
 
-    return {"whiteboard": data, "timestamp": data.get("timestamp")}
+    return JSONResponse(content={"whiteboard": data, "timestamp": data.get("timestamp")})
 
 
-@router.post("/whiteboard/store")  # type: ignore[misc]
-async def store_whiteboard(request: Request) -> Dict[str, str]:
+@router.post("/whiteboard/store", response_model=None)  # type: ignore[misc]
+async def store_whiteboard(request: Request) -> JSONResponse:
     """
     Render 側に whiteboard を保存します。ChatGPT User-Agent による認証あり。
     """
@@ -39,7 +39,7 @@ async def store_whiteboard(request: Request) -> Dict[str, str]:
         raise HTTPException(status_code=403, detail="Forbidden: Only ChatGPT requests are accepted")
 
     try:
-        payload = await request.json()
+        payload: Dict[str, Any] = await request.json()
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid request body: {e}")
 
@@ -54,4 +54,4 @@ async def store_whiteboard(request: Request) -> Dict[str, str]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to write whiteboard: {e}")
 
-    return {"status": "success", "file": str(WHITEBOARD_PATH)}
+    return JSONResponse(content={"status": "success", "file": str(WHITEBOARD_PATH)})
