@@ -1,0 +1,8 @@
+{
+  "record_id": "self_tuning_test_20251005",
+  "created": "2025-10-05T20:23:06.087978+09:00",
+  "content": {
+    "title": "自己調律テストの実施予定",
+    "body": "龍介様がAuroraの自己調律機能の完成確認として、最小限の自己改変（自己編集とGitHub反映テスト）を実行予定。対象は軽量モジュール `aurora_memory/utils/git_helper.py`。"
+  }
+}
