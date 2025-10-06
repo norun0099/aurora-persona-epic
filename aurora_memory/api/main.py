@@ -11,6 +11,7 @@ from aurora_memory.api.git_structure_saver import store_git_structure_snapshot
 from aurora_memory.api.git_self_reader import read_git_file
 from aurora_memory.utils.constitution_updater import update_constitution
 from aurora_memory.api.self import update_repo_file  # 🆕 Self-edit API
+from aurora_memory.api.push_repo_file import push_repo_file  # 🆕 Push API
 
 # APScheduler lacks official stubs, so we ignore import typing checks.
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore[import-not-found]
@@ -129,6 +130,23 @@ def update_self_constitution(fields: dict[str, Any]) -> dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"構造更新に失敗しました: {str(e)}")
 
+# 🆕 Push Repo File API
+@app.post("/api/push_repo_file")
+async def api_push_repo_file(request: Request):
+    data = await request.json()
+    filepath = data.get("filepath")
+    message = data.get("message")
+    author = data.get("author", "aurora")
+
+    if not filepath or not message:
+        raise HTTPException(status_code=400, detail="Missing required fields: filepath, message")
+
+    try:
+        result = push_repo_file(filepath, message, author)
+        return JSONResponse(result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Push operation failed: {str(e)}")
+
 # ⏰ Constitution 自動同期処理
 def sync_constitution() -> None:
     config_path = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
@@ -137,7 +155,7 @@ def sync_constitution() -> None:
             constitution_text: str = f.read()
         try_auto_save(constitution_text)
 
-# ✅ type: ignore 不要（import側で既に抑制済み）
+# ✅ Scheduler
 scheduler = BackgroundScheduler()
 scheduler.add_job(
     sync_constitution,
