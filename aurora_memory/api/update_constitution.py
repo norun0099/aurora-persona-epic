@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union
+from typing import Any
 import yaml
 import subprocess
 from datetime import datetime
