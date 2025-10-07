@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 from datetime import datetime
 import json
+from typing import Any  # ← ★ 新規追加（型パラメータ対応）
 
 # ============================================================
 #  基本設定
@@ -41,7 +42,7 @@ def run_git_command(args: list[str]) -> str:
         return f"[error] {e.output.strip()}"
 
 
-def get_repo_status() -> dict:
+def get_repo_status() -> dict[str, Any]:
     """現在のリポジトリの状態を返す。"""
     try:
         branch = run_git_command(["rev-parse", "--abbrev-ref", "HEAD"])
@@ -52,7 +53,7 @@ def get_repo_status() -> dict:
         return {"error": str(e)}
 
 
-def push_memory_to_github(file_path: Path, message: str) -> dict:
+def push_memory_to_github(file_path: Path, message: str) -> dict[str, Any]:
     """
     Auroraの記憶ファイルをGitHubへコミット・Pushする。
     Render環境下では GITHUB_TOKEN を利用した安全Pushを行う。
