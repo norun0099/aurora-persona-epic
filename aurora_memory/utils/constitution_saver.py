@@ -2,7 +2,7 @@ import os
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
 
 # 保存対象ファイルのパス
 yaml_path = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
