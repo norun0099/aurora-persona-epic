@@ -45,7 +45,7 @@ HEADERS = {
 #  補助関数群
 # ============================================================
 
-def prepare_commit_metadata(filepath: str, message: str, author: str = None) -> dict:
+def prepare_commit_metadata(filepath: str, message: str, Optional[str] = None) -> dict[str, Any]:
     """
     commit操作に必要なメタ情報を生成する。
     """
@@ -62,7 +62,7 @@ def prepare_commit_metadata(filepath: str, message: str, author: str = None) -> 
     }
 
 
-def simulate_push_operation(metadata: dict) -> dict:
+def simulate_push_operation(metadata: dict) -> dict[str, Any]:
     """
     実Pushの代替として Render API へ update_repo_file を委譲。
     """
@@ -98,7 +98,7 @@ def simulate_push_operation(metadata: dict) -> dict:
 #  メイン関数
 # ============================================================
 
-def push_repo_file(filepath: str, message: str, author: str = None) -> dict:
+def push_repo_file(filepath: str, message: str, author: str = None) -> dict[str, Any]:
     """
     Auroraが指定ファイルをRender経由で更新（Push模擬）するAPI。
     1. ファイル内容の検証
