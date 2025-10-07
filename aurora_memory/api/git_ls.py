@@ -1,11 +1,14 @@
-from fastapi import APIRouter, HTTPException
+from __future__ import annotations
+
 import subprocess
-from typing import List
+from fastapi import APIRouter, HTTPException
+from typing import Any
 
 router = APIRouter()
 
-@router.get("/git/ls")  # type: ignore[misc]
-def git_ls() -> List[str]:
+
+@router.get("/git/ls")
+async def git_ls() -> list[str]:
     """
     コミット済みの全ファイル一覧を取得するAPI。
     HEAD（最新コミット）のファイルツリーを再帰的に表示する。
@@ -14,19 +17,18 @@ def git_ls() -> List[str]:
         # git ls-tree を実行
         result = subprocess.run(
             ["git", "ls-tree", "-r", "--name-only", "HEAD"],
-            capture_output=True, text=True, check=True
+            capture_output=True,
+            text=True,
+            check=True,
         )
 
         # 出力を1行ごとのリストに整形
-        file_list = result.stdout.strip().split("\n") if result.stdout else []
+        file_list: list[str] = result.stdout.strip().split("\n") if result.stdout else []
         return file_list
+
     except subprocess.CalledProcessError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Git ls-tree failed: {e.stderr.strip() if e.stderr else str(e)}"
-        )
+        error_msg: str = e.stderr.strip() if e.stderr else str(e)
+        raise HTTPException(status_code=500, detail=f"Git ls-tree failed: {error_msg}")
+
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Unexpected error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
