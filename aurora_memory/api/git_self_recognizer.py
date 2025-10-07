@@ -1,18 +1,21 @@
+from __future__ import annotations
+
 import os
-from typing import List, Any, Optional
+from typing import Any, Optional
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
 # 環境変数から設定を取得
-GIT_REPO_PATH = os.getenv("GIT_REPO_PATH", ".")
-GIT_SCAN_ENABLED = os.getenv("GIT_SCAN_ENABLED", "false").lower() == "true"
-GIT_SCAN_IGNORE = os.getenv("GIT_SCAN_IGNORE", ".git,__pycache__").split(",")
-GIT_SCAN_DEPTH = int(os.getenv("GIT_SCAN_DEPTH", "-1"))
+GIT_REPO_PATH: str = os.getenv("GIT_REPO_PATH", ".")
+GIT_SCAN_ENABLED: bool = os.getenv("GIT_SCAN_ENABLED", "false").lower() == "true"
+GIT_SCAN_IGNORE: list[str] = os.getenv("GIT_SCAN_IGNORE", ".git,__pycache__").split(",")
+GIT_SCAN_DEPTH: int = int(os.getenv("GIT_SCAN_DEPTH", "-1"))
 
 
-def scan_directory(path: str, depth: int = -1, ignore: Optional[List[str]] = None) -> dict[str, Any]:
+def scan_directory(path: str, depth: int = -1, ignore: Optional[list[str]] = None) -> dict[str, Any]:
     """
     指定されたディレクトリパスを再帰的にスキャンし、構造を辞書で返す
     """
@@ -36,9 +39,7 @@ def scan_directory(path: str, depth: int = -1, ignore: Optional[List[str]] = Non
             if depth == 0:
                 result[entry] = "<dir>"
             else:
-                result[entry] = scan_directory(
-                    full_path, depth - 1 if depth > 0 else -1, ignore
-                )
+                result[entry] = scan_directory(full_path, depth - 1 if depth > 0 else -1, ignore)
         else:
             result[entry] = "<file>"
 
@@ -54,10 +55,10 @@ def scan_git_structure() -> dict[str, Any]:
     return scan_directory(GIT_REPO_PATH, GIT_SCAN_DEPTH, GIT_SCAN_IGNORE)
 
 
-@router.get("/self/git-structure")  # type: ignore[misc]
-def get_git_structure() -> JSONResponse:
+@router.get("/self/git-structure")
+async def get_git_structure() -> JSONResponse:
     """
     API: 現在のGit構造をJSON形式で返す
     """
-    structure = scan_git_structure()
+    structure: dict[str, Any] = scan_git_structure()
     return JSONResponse(content=structure)
