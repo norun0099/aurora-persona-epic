@@ -1,11 +1,14 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from datetime import datetime
-from pathlib import Path
-from typing import Any, Callable, Awaitable, TypeVar, cast
+from __future__ import annotations
+
 import os
 import json
 import uuid
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable, Awaitable, TypeVar
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -16,14 +19,14 @@ RouteHandler = TypeVar("RouteHandler", bound=Callable[..., Awaitable[Any]])
 def typed_post(path: str) -> Callable[[RouteHandler], RouteHandler]:
     """FastAPIの@router.post用に型安全なデコレータを返す"""
     def decorator(func: RouteHandler) -> RouteHandler:
-        return cast(RouteHandler, router.post(path)(func))
+        return router.post(path)(func)  # castは不要
     return decorator
 
 
 def typed_get(path: str) -> Callable[[RouteHandler], RouteHandler]:
     """FastAPIの@router.get用に型安全なデコレータを返す"""
     def decorator(func: RouteHandler) -> RouteHandler:
-        return cast(RouteHandler, router.get(path)(func))
+        return router.get(path)(func)  # castは不要
     return decorator
 
 
@@ -59,7 +62,6 @@ def generate_session_id() -> str:
 async def store_dialog(req: DialogRequest) -> dict[str, Any]:
     session_id = req.session_id or generate_session_id()
     turn = req.dialog_turn
-
     path = get_dialog_path(session_id)
     now = datetime.now().isoformat()
 
@@ -110,13 +112,17 @@ async def get_latest_dialog(session_id: str) -> dict[str, Any]:
 async def get_dialog_history() -> dict[str, Any]:
     files = [f for f in os.listdir(DIALOG_DIR) if f.endswith(".json")]
     sessions: list[dict[str, Any]] = []
+
     for file in files:
         with open(DIALOG_DIR / file, "r", encoding="utf-8") as f:
             data: dict[str, Any] = json.load(f)
-            sessions.append({
-                "session_id": data["session_id"],
-                "created": data["created"],
-                "updated": data["updated"],
-                "turns": len(data["dialog"]),
-            })
+            sessions.append(
+                {
+                    "session_id": data["session_id"],
+                    "created": data["created"],
+                    "updated": data["updated"],
+                    "turns": len(data["dialog"]),
+                }
+            )
+
     return {"sessions": sessions}
