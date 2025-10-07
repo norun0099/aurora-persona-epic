@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import subprocess
 from fastapi import APIRouter, HTTPException
-from typing import Any
 
 router = APIRouter()
 
