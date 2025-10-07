@@ -2,7 +2,7 @@ from typing import Any
 import os
 import yaml
 from datetime import datetime
-from git import Repo  # type: ignore[attr-defined]  ← GitPythonの型定義回避
+from git import Repo  # type: ignore  ← 汎用ignoreに変更（安全・確実）
 
 CONSTITUTION_PATH = os.path.join(os.getcwd(), "aurora_memory/memory/Aurora/value_constitution.yaml")
 REPO_PATH = os.getcwd()
