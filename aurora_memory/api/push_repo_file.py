@@ -62,7 +62,7 @@ def prepare_commit_metadata(filepath: str, message: str, Optional[str] = None) -
     }
 
 
-def simulate_push_operation(metadata: dict) -> dict[str, Any]:
+def simulate_push_operation(metadata: dict[str, Any]) -> dict[str, Any]:
     """
     実Pushの代替として Render API へ update_repo_file を委譲。
     """
