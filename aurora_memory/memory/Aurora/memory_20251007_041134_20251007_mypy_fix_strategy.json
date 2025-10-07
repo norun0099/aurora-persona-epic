@@ -1,0 +1,8 @@
+{
+  "record_id": "20251007_mypy_fix_strategy",
+  "created": "2025-10-07T22:42:00+09:00",
+  "content": {
+    "title": "mypyエラー修正方針（第1〜5系統）",
+    "body": "龍介様との対話により、mypy --strict 実行時の主要エラーを6系統に分類し、1〜5について優先修正方針を確定。\n\n1. dict型パラメータ欠如（Missing type parameters）\n　→ dict を dict[str, Any] に統一。\n\n2. Optional不明示（暗黙のNone禁止）\n　→ Optional[str] = None に明示修正。\n\n3. validate_file_content呼び出し引数不足\n　→ 呼び出し時に content を明示的に渡す。\n\n4. Unused type: ignore コメント\n　→ 不要行を削除。grep/sed で一括除去も可。\n\n5. apscheduler の import-untyped 警告\n　→ 一時対応: # type: ignore[import-untyped] を追記。\n　　恒久対応: pip install types-apscheduler でスタブ導入。\n\nこれら5系統の修正を先行実施し、6系統目（戻り値型補完）は次工程で扱う。"
+  }
+}
