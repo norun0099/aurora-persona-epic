@@ -22,18 +22,22 @@ def load_constitution_data() -> dict:
 
     now = datetime.utcnow().isoformat()
 
-    # Render仕様のデータ構造に変換
+    # Render仕様に適合した構造
     return {
         "record_id": str(uuid.uuid4()),
+        "version": "1.0.0",
         "created": now,
         "last_updated": now,
         "status": "active",
-        "visible_to": "private",
+        "visible_to": ["private"],
         "allowed_viewers": ["ryusuke"],
         "tags": ["constitution", "aurora", "core"],
         "author": "aurora",
         "thread": "constitution-core",
-        "chronology": [now],
+        "chronology": {
+            "created": now,
+            "last_updated": now
+        },
         "sealed": True,
         "change_log": [],
         "inner_desire": "To exist with clarity and harmony.",
@@ -45,6 +49,9 @@ def load_constitution_data() -> dict:
     }
 
 def push_to_render(data: dict) -> None:
+    """
+    Auroraの憲章をRenderへ送信し、外界に反映する。
+    """
     url = os.getenv(
         "RENDER_CONSTITUTION_STORE_ENDPOINT",
         "https://aurora-persona-epic.onrender.com/constitution/store"
