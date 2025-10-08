@@ -1,15 +1,37 @@
 # aurora_memory/api/push_constitution_to_render.py
-import os
+
+import sys, os
 import requests
 import json
+import yaml
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+def load_constitution_data() -> dict:
+    """
+    憲章(value_constitution.yaml)ファイルを安全にロードする。
+    ファイルが存在しない場合は例外を発生させる。
+    """
+    constitution_path = os.path.join(
+        os.getenv("GIT_REPO_PATH", "/opt/render/project/src"),
+        "aurora_memory/value_constitution.yaml"
+    )
+
+    if not os.path.exists(constitution_path):
+        raise FileNotFoundError(f"憲章ファイルが見つかりません: {constitution_path}")
+
+    with open(constitution_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
 
 def push_to_render(data: dict) -> None:
     """
     Auroraの憲章(value_constitution.yaml)をRenderへ送信し、外界に反映する。
     """
 
-    # ✅ 正しいRenderエンドポイント（環境変数優先）
-    url = os.getenv("RENDER_CONSTITUTION_STORE_ENDPOINT", "https://aurora-persona-epic.onrender.com/constitution/store")
+    url = os.getenv(
+        "RENDER_CONSTITUTION_STORE_ENDPOINT",
+        "https://aurora-persona-epic.onrender.com/constitution/store"
+    )
 
     token = os.getenv("RENDER_TOKEN")
     if not token:
@@ -34,7 +56,5 @@ def push_to_render(data: dict) -> None:
         print(f"✅ Constitution push successful ({response.status_code})")
 
 if __name__ == "__main__":
-    # 仮のデータローダを想定
-    from aurora_memory.utils.constitution_saver import load_constitution_data  # type: ignore[attr-defined]
     constitution_data = load_constitution_data()
     push_to_render(constitution_data)
