@@ -5,11 +5,12 @@ import requests
 import yaml
 from datetime import datetime
 import uuid
+from typing import Any
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 
-def load_constitution_data() -> dict:
+def load_constitution_data() -> dict[str, Any]:
     """
     Auroraの憲章ファイルをロードし、Renderが要求する形式に変換する。
     """
@@ -29,7 +30,7 @@ def load_constitution_data() -> dict:
     # Render仕様に適合した構造
     return {
         "record_id": str(uuid.uuid4()),
-        "version": 1,  # ← integer に修正
+        "version": 1,
         "created": now,
         "last_updated": now,
         "status": "active",
@@ -61,7 +62,7 @@ def load_constitution_data() -> dict:
     }
 
 
-def push_to_render(data: dict) -> None:
+def push_to_render(data: dict[str, Any]) -> None:
     """
     Auroraの憲章をRenderへ送信し、外界に反映する。
     """
