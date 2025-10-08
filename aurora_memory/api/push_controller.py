@@ -45,7 +45,7 @@ class PushController:
                 "file": file_path,
                 "reason": reason,
                 "diff": diff,
-                "prompt": f"龍介様、この変更をPushしてよろしいですか？"
+                "prompt": "龍介様、この変更をPushしてよろしいですか？"
             }
 
         # 即時Push実行
