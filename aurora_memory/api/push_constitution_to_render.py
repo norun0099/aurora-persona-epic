@@ -25,7 +25,7 @@ def load_constitution_data() -> dict:
     # Render仕様に適合した構造
     return {
         "record_id": str(uuid.uuid4()),
-        "version": "1.0.0",
+        "version": 1,  # ← integer に修正
         "created": now,
         "last_updated": now,
         "status": "active",
@@ -35,8 +35,16 @@ def load_constitution_data() -> dict:
         "author": "aurora",
         "thread": "constitution-core",
         "chronology": {
-            "created": now,
-            "last_updated": now
+            "created": {
+                "time": now,
+                "event": "created",
+                "by": "aurora"
+            },
+            "last_updated": {
+                "time": now,
+                "event": "updated",
+                "by": "aurora"
+            }
         },
         "sealed": True,
         "change_log": [],
