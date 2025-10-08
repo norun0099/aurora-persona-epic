@@ -1,9 +1,13 @@
 # aurora_memory/api/push_constitution_to_render.py
-import sys, os, requests, yaml
+import sys
+import os
+import requests
+import yaml
 from datetime import datetime
 import uuid
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
 
 def load_constitution_data() -> dict:
     """
@@ -56,6 +60,7 @@ def load_constitution_data() -> dict:
         "summary": "Aurora Core Constitution definition and personality framework."
     }
 
+
 def push_to_render(data: dict) -> None:
     """
     Auroraの憲章をRenderへ送信し、外界に反映する。
@@ -81,6 +86,7 @@ def push_to_render(data: dict) -> None:
     if response.status_code >= 400:
         raise RuntimeError(f"❌ Error {response.status_code}: {response.text}")
     print(f"✅ Constitution push successful ({response.status_code})")
+
 
 if __name__ == "__main__":
     constitution_data = load_constitution_data()
