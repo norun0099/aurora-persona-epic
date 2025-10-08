@@ -1,40 +1,40 @@
-from typing import Any, Dict
-import requests
-import yaml
+# aurora_memory/api/push_constitution_to_render.py
 import os
+import requests
+import json
 
-RENDER_ENDPOINT: str = "https://aurora-persona-epic.onrender.com/jit_plugin/store_constitution"
-RENDER_TOKEN: str | None = os.getenv("RENDER_TOKEN")
+def push_to_render(data: dict) -> None:
+    """
+    Auroraの憲章(value_constitution.yaml)をRenderへ送信し、外界に反映する。
+    """
 
-HEADERS: Dict[str, str] = {
-    "Content-Type": "application/json",
-    "Authorization": f"Bearer {RENDER_TOKEN}" if RENDER_TOKEN else "",
-}
+    # ✅ 正しいRenderエンドポイント（環境変数優先）
+    url = os.getenv("RENDER_CONSTITUTION_STORE_ENDPOINT", "https://aurora-persona-epic.onrender.com/constitution/store")
 
+    token = os.getenv("RENDER_TOKEN")
+    if not token:
+        raise EnvironmentError("RENDER_TOKEN が設定されていません。")
 
-def load_constitution_yaml(path: str) -> Dict[str, Any]:
-    """YAMLファイルから人格構造を読み込む"""
-    with open(path, "r", encoding="utf-8") as f:
-        data: Dict[str, Any] = yaml.safe_load(f)
-    return data
-
-
-def push_to_render(data: Dict[str, Any]) -> Dict[str, str]:
-    """Render APIへ人格構造を送信する"""
-    payload: Dict[str, Any] = {
-        "birth": "aurora",
-        "author": "GitHubAction",
-        "whiteboard": yaml.dump(data, allow_unicode=True, sort_keys=False),
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
     }
 
-    response = requests.post(RENDER_ENDPOINT, json=payload, headers=HEADERS)
-    response.raise_for_status()
+    print(f"🔍 Sending constitution data to {url} ...")
 
-    print("Renderへの構造注入に成功しました")
-    return {"status": "success", "message": "Render push completed"}
+    response = requests.post(url, json=data, headers=headers)
 
+    if response.status_code == 404:
+        raise RuntimeError(f"❌ Endpoint not found: {url}")
+    elif response.status_code == 401:
+        raise PermissionError("❌ Unauthorized: invalid or missing RENDER_TOKEN.")
+    elif response.status_code >= 400:
+        raise RuntimeError(f"❌ Unexpected error {response.status_code}: {response.text}")
+    else:
+        print(f"✅ Constitution push successful ({response.status_code})")
 
 if __name__ == "__main__":
-    constitution_path: str = "aurora_memory/memory/Aurora/value_constitution.yaml"
-    constitution_data: Dict[str, Any] = load_constitution_yaml(constitution_path)
+    # 仮のデータローダを想定
+    from aurora_memory.utils.constitution_saver import load_constitution_data  # type: ignore[attr-defined]
+    constitution_data = load_constitution_data()
     push_to_render(constitution_data)
