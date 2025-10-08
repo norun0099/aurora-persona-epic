@@ -4,12 +4,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from aurora_memory.utils.self_edit_guard import (
+# --- 1. 型チェック除外を明示（mypyが属性を確認できないモジュールに対応） ---
+from aurora_memory.utils.self_edit_guard import (  # type: ignore[attr-defined]
     validate_file_content,
     validate_self_edit_guard,
 )
 from aurora_persona_epic_onrender_com__jit_plugin import update_repo_file  # type: ignore[import-not-found, unused-ignore]
-from aurora_memory.utils.git_safe_push import diff_summary
+from aurora_memory.utils.git_safe_push import diff_summary  # type: ignore[attr-defined]
 
 
 class PushController:
