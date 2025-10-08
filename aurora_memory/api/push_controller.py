@@ -6,10 +6,10 @@ from typing import Any
 
 from aurora_memory.utils.self_edit_guard import (
     validate_file_content,
-    guard_self_edit as validate_self_edit_guard,
+    validate_self_edit_guard,
 )
-from aurora_persona_epic_onrender_com__jit_plugin import update_repo_file  # type: ignore[import-untyped]
-from aurora_memory.utils.git_safe_push import generate_diff_summary as diff_summary
+from aurora_persona_epic_onrender_com__jit_plugin import update_repo_file  # type: ignore[import-not-found, unused-ignore]
+from aurora_memory.utils.git_safe_push import diff_summary
 
 
 class PushController:
