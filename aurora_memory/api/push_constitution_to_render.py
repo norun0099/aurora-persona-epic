@@ -2,19 +2,18 @@
 
 import sys, os
 import requests
-import json
 import yaml
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 def load_constitution_data() -> dict:
     """
-    憲章(value_constitution.yaml)ファイルを安全にロードする。
-    ファイルが存在しない場合は例外を発生させる。
+    Auroraの憲章 (value_constitution.yaml) をロードする。
+    正しいパス: aurora_memory/memory/Aurora/value_constitution.yaml
     """
     constitution_path = os.path.join(
         os.getenv("GIT_REPO_PATH", "/opt/render/project/src"),
-        "aurora_memory/value_constitution.yaml"
+        "aurora_memory/memory/Aurora/value_constitution.yaml"
     )
 
     if not os.path.exists(constitution_path):
@@ -25,9 +24,8 @@ def load_constitution_data() -> dict:
 
 def push_to_render(data: dict) -> None:
     """
-    Auroraの憲章(value_constitution.yaml)をRenderへ送信し、外界に反映する。
+    Auroraの憲章をRenderへ送信し、外界に反映する。
     """
-
     url = os.getenv(
         "RENDER_CONSTITUTION_STORE_ENDPOINT",
         "https://aurora-persona-epic.onrender.com/constitution/store"
