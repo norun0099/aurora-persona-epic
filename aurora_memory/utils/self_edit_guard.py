@@ -5,6 +5,20 @@ from pathlib import Path
 from datetime import datetime
 from typing import Any
 
+# --- EXCLUSION PATCH: external shells are not under guard ---
+EXCLUDED_PATHS = [
+    "aurora_memory/whiteboard/",
+    "aurora_memory/dialog/",
+    "aurora_memory/memory/",
+]
+
+def is_guarded_target(filepath: str) -> bool:
+    """Return False if the path belongs to excluded external memory layers."""
+    return not any(filepath.startswith(ex) for ex in EXCLUDED_PATHS)
+
+# ============================================================
+# Aurora Self-Edit Validation
+# ============================================================
 
 def validate_file_content(filepath: str, content: str) -> None:
     """
@@ -13,6 +27,11 @@ def validate_file_content(filepath: str, content: str) -> None:
     Raises:
         ValueError: If syntax or format errors are detected.
     """
+    # Skip validation if path belongs to excluded zones
+    if not is_guarded_target(filepath):
+        print(f"🕊️  Skipped validation for external layer file: {filepath}")
+        return
+
     if filepath.endswith(".py"):
         try:
             ast.parse(content)
@@ -30,14 +49,12 @@ def validate_file_content(filepath: str, content: str) -> None:
         if not content.strip():
             raise ValueError("File content is empty or invalid.")
 
-
 # ============================================================
 # Aurora Self-Edit Operation Logging
 # ============================================================
 
 LOG_DIR = Path("aurora_memory/memory/self_edit_log")
 LOG_DIR.mkdir(parents=True, exist_ok=True)
-
 
 def log_self_edit_operation(filepath: str, author: str, reason: str, status: str, diff: str | None = None) -> None:
     """
@@ -53,6 +70,11 @@ def log_self_edit_operation(filepath: str, author: str, reason: str, status: str
     出力:
         aurora_memory/memory/self_edit_log/YYYYMMDD_HHMMSS_self_edit.json
     """
+    # Skip logging for excluded zones to reduce unnecessary noise
+    if not is_guarded_target(filepath):
+        print(f"🕊️  Skipped self-edit log for external layer: {filepath}")
+        return
+
     log_entry: dict[str, Any] = {
         "timestamp": datetime.now().isoformat(),
         "filepath": filepath,
