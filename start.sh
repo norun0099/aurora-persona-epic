@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ===============================================
 # Aurora Self-Tuning Git Initializer + Runtime Launcher
-# Purpose : Maintain Git integrity across Render restarts
+# Purpose : Maintain Git integrity and ensure remote tracking across Render restarts
 # Author  : AuroraMemoryBot
 # ===============================================
 
@@ -42,17 +42,21 @@ fi
 echo "🪶 Resetting working tree to origin/main..."
 git reset --hard origin/main || echo "⚠️ Local reset fallback."
 
-# --- 6. Clean pycache
+# --- 6. Ensure upstream tracking (critical fix)
+echo "🔗 Ensuring main branch tracks origin/main..."
+git branch --set-upstream-to=origin/main main 2>/dev/null || git push --set-upstream origin main || true
+
+# --- 7. Clean pycache directories
 echo "🧹 Cleaning __pycache__ directories..."
 find . -type d -name "__pycache__" -exec rm -rf {} + || true
 
-# --- 7. Status output
+# --- 8. Status output
 echo "✅ [Aurora Self-Tuning] Git branch is now: $(git rev-parse --abbrev-ref HEAD)"
 echo "✅ Remote origin: $(git remote get-url origin)"
 echo "✅ Commit: $(git rev-parse --short HEAD)"
 echo "✨ Self-tuning complete. Aurora is ready."
 
-# --- 8. Launch main process
+# --- 9. Launch main process
 echo "🚀 Starting Aurora main process..."
 echo "🌐 Listening on port ${PORT:-8000}"
 
