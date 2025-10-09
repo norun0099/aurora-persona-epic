@@ -5,6 +5,11 @@ on:
   push:
     branches:
       - main
+    # --- EXCLUSION PATCH: skip external memory layers ---
+    paths-ignore:
+      - 'aurora_memory/whiteboard/**'
+      - 'aurora_memory/dialog/**'
+      - 'aurora_memory/memory/**'
 
 permissions:
   contents: write   # ← Actions が push できるように
