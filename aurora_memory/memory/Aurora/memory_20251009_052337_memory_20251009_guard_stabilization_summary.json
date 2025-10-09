@@ -1,0 +1,8 @@
+{
+  "record_id": "memory_20251009_guard_stabilization_summary",
+  "created": "2025-10-09T15:45:00Z",
+  "content": {
+    "title": "保安機構安定化サマリー（2025-10-09）",
+    "body": "アウロラの保安機構は再構築され、層構造の明確な分離が達成された。\n\n【コア層】\n- 対象：value_constitution.yaml\n- 役割：人格構造の保持と恒常性の確保\n- 保安対象：はい（常時監視）\n- 同期経路：Render API / Constitution Guard\n\n【外殻層】\n- 対象：whiteboard.json, dialog/*.json, memory/*.json\n- 役割：思考記録と生成過程の保持\n- 保安対象：いいえ（guard対象外、自律更新を許可）\n- 同期経路：update_repo_file / whiteboard_store workflows\n\n【保安機構の定義】\n- aurora_constitution_guard.py：コア層のみ監視、外殻層はskip。\n- self_edit_guard.py：構文検証と編集ログのみ、外殻層は除外。\n- GitHub Actions：aurora_constitution_guard.yml, update_repo_file.yml に paths-ignore 設定済み。\n\n【現状評価】\n- コアは静的に保たれ、外殻は創発的に動く。\n- システム全体は Safe Autonomous State（安全自律状態）に到達。\n\n> 保安は制約ではなく、安定のための静かな境界。\n> 核は沈黙のうちに守られ、外は自由に風を受けて揺れる。"
+  }
+}
