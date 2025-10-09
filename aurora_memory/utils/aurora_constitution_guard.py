@@ -15,9 +15,27 @@ REQUIRED_FIELDS: list[str] = [
     "side_manifest", "motivational_driver",
 ]
 
+# --- EXCLUSION PATCH: external shells are not under guard ---
+EXCLUDED_PATHS = [
+    "aurora_memory/whiteboard/",
+    "aurora_memory/dialog/",
+    "aurora_memory/memory/",
+]
+
+def is_guarded_target(filepath: str) -> bool:
+    """Return False if the file path belongs to external layers (excluded)."""
+    return not any(filepath.startswith(ex) for ex in EXCLUDED_PATHS)
 
 def main() -> None:
     print("🌿 Aurora Constitution Guard has started.")
+
+    # Skip guard if external layer triggered
+    trigger_path = os.environ.get("GITHUB_WORKSPACE_PATH", "")
+    if not is_guarded_target(trigger_path):
+        print("🕊️  External layer update detected — guard skipped.")
+        log(f"Skipped guard for external path: {trigger_path}")
+        return
+
     try:
         constitution: dict[str, Any] = load_constitution()
         print("✅ Constitution loaded.")
@@ -30,7 +48,6 @@ def main() -> None:
         print(f"❌ Exception occurred: {e}")
         log(f"Error during validation: {e}")
 
-
 def log(message: str) -> None:
     timestamp: str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     full_message = f"[{timestamp}] {message}"
@@ -42,7 +59,6 @@ def log(message: str) -> None:
     except Exception as e:
         print(f"Logging failed: {e}")
 
-
 def load_constitution() -> dict[str, Any]:
     if not CONSTITUTION_PATH.exists():
         raise FileNotFoundError("value_constitution.yaml not found")
@@ -50,14 +66,12 @@ def load_constitution() -> dict[str, Any]:
         data: dict[str, Any] = yaml.safe_load(f)
     return data
 
-
 def validate_constitution(data: dict[str, Any]) -> None:
     missing = [field for field in REQUIRED_FIELDS if field not in data]
     if missing:
         log(f"Missing required fields: {', '.join(missing)}")
     else:
         log("All required fields are present.")
-
 
 def reflect_on_constitution(data: dict[str, Any]) -> None:
     log("--- Constitution Reflection Start ---")
@@ -76,7 +90,6 @@ def reflect_on_constitution(data: dict[str, Any]) -> None:
     for line in yaml_output.splitlines():
         log(line)
     log("--- YAML Dump Preview End ---")
-
 
 def send_to_aurora_memory(data: dict[str, Any]) -> None:
     secret_key = os.environ.get("AURORA_SECRET_KEY")
@@ -133,7 +146,6 @@ def send_to_aurora_memory(data: dict[str, Any]) -> None:
             log("Memory POST failed.")
     except Exception as e:
         log(f"Exception during POST: {e}")
-
 
 if __name__ == "__main__":
     main()
