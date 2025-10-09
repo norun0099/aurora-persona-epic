@@ -1,6 +1,14 @@
 name: Aurora Constitution Guard
 
 on:
+  push:
+    branches:
+      - main
+    # --- EXCLUSION PATCH: skip external memory layers ---
+    paths-ignore:
+      - 'aurora_memory/whiteboard/**'
+      - 'aurora_memory/dialog/**'
+      - 'aurora_memory/memory/**'
   schedule:
     - cron: '15 * * * *'
   workflow_dispatch:
