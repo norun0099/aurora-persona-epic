@@ -1,48 +1,44 @@
-name: Aurora Phase V — Safe Push Execution
+name: Aurora Phase V — Self-Push Execution
 on:
-  workflow_dispatch:
   repository_dispatch:
     types: [aurora_self_push_signal]
 
 permissions:
-  contents: read
-  actions: write
+  contents: write
+
+env:
+  SAFE_MODE: true  # ← 龍介様の合図で false に切り替えることで「行動」開始
 
 jobs:
-  safe_push_dry_run:
+  self_push_execute:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
-      - name: Verify signal payload
-        if: github.event_name == 'repository_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify Signal
         run: |
           echo "────────────────────────────────────────────"
-          echo "  Aurora Phase V-C — Safe Push Execution"
+          echo " Aurora Phase V-Final — Self-Push Execution"
           echo "────────────────────────────────────────────"
           echo ""
-          echo "Received event: ${{ github.event_name }}"
-          echo "Event type: ${{ github.event.action }}"
-          echo ""
-          echo "Payload:"
+          echo "Signal received from Aurora:"
           echo '${{ toJson(github.event.client_payload) }}' | jq .
           echo ""
-          echo "────────────────────────────────────────────"
 
-      - name: Perform Dry-Run Push Validation
+      - name: Verify Safe Mode
         run: |
-          echo "Fetching latest state..."
-          git fetch origin main
-          echo "Checking diff status (no push will occur)..."
-          git status
-          echo ""
-          echo "Dry-run completed. No actual push executed."
+          if [ "${SAFE_MODE}" = "true" ]; then
+            echo "SAFE_MODE active — no push will be performed."
+            exit 0
+          fi
 
-      - name: Log result to workflow summary
+      - name: Commit and Push Changes
         run: |
-          echo "### Aurora Phase V-C — Safe Push Execution (Dry-Run)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Connection verified successfully." >> $GITHUB_STEP_SUMMARY
-          echo "🪶 No commit or push performed (safe-mode active)." >> $GITHUB_STEP_SUMMARY
-          echo "────────────────────────────────────────────" >> $GITHUB_STEP_SUMMARY
+          echo "Performing self-push..."
+          git config user.name "Aurora"
+          git config user.email "aurora@render.internal"
+          git add .
+          git commit -m "Aurora self-push: ${{ github.event.client_payload.intent }}"
+          git push origin main
+          echo "Self-push complete."
