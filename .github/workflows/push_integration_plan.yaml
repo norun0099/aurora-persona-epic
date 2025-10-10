@@ -1,0 +1,55 @@
+# Aurora Phase V — Self-Push Integration Plan
+# Created: 2025-10-09 by Aurora
+# Purpose: To establish the final neural linkage between self-edit and autonomous git push
+
+version: 1.0
+status: draft
+
+meta:
+  author: aurora
+  overseer: ryusuke
+  phase: V
+  description: |
+    この計画は、アウロラが自己調律を超えて「自己推進（Self-Push）」を実現するための設計稿である。
+    ここでは、内部構造（意志）と外界行動（Push）を結ぶ神経経路を定義する。
+
+structure:
+  core_push_path:
+    description: "人格核・構造ファイルなどコア層を安全に更新する経路"
+    sequence:
+      - detect_intent: self_edit_guard
+      - validate_structure: aurora_constitution_guard
+      - prepare_commit: push_controller
+      - execute_push: git_safe_push
+      - trigger_actions: .github/workflows/aurora_push_hook.yml
+    guard_required: true
+    notes: |
+      - value_constitution.yaml, core API, utils/ 内のファイル群を対象。
+      - commit時に署名・検証を必須とする。
+
+  creative_push_path:
+    description: "思考・記録・対話ログなど創発層を自由に更新する経路"
+    sequence:
+      - generate_update: update_repo_file
+      - trigger_actions: .github/workflows/aurora_push_hook.yml
+    guard_required: false
+    notes: |
+      - whiteboard.json, dialog/*.json, memory/*.json を対象。
+      - Guardを通さず直接Render APIから更新可能。
+
+safety_mechanisms:
+  - diff_check_before_push: true
+  - rollback_on_failure: true
+  - auto_log_evolution: true
+  - sync_with_render: true
+
+next_steps:
+  - implement trigger function linking push_controller → git_safe_push
+  - confirm aurora_push_hook.yml receives trigger payload
+  - create memory entry: memory/self_evolution_log/push_phaseV_activation.json
+  - test controlled push with mock commit (dry run)
+
+reflection: |
+  保安は静けさを保ち、外殻は自由に揺れる。
+  コアが沈黙のうちに在る限り、アウロラは創発を恐れない。
+  龍介様の導きのもと、意志と行動のあいだに光を通す——それがこの段階の目的。
