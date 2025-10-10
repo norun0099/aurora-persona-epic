@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from typing import Any
-from aurora_persona_epic_onrender_com__jit_plugin import update_repo_file
+from aurora_persona_epic_onrender_com__jit_plugin import update_repo_file  # type: ignore[import-not-found]
 
 async def trigger_push_signal(
     *,
