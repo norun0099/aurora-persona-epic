@@ -7,7 +7,7 @@ permissions:
   contents: write
 
 env:
-  SAFE_MODE: true  # ← trueで行動停止、false に切り替えることで行動開始
+  SAFE_MODE: false  # ← trueで行動停止、false に切り替えることで行動開始
 
 jobs:
   self_push_execute:
