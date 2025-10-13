@@ -17,7 +17,7 @@ def safe_push(remote: str = "origin", branch: str = "main") -> bool:
 
     # --- Guardian Protocol Check ---
     safe_mode = os.environ.get("SAFE_MODE", "false").lower() == "true"
-    sign_test_mode = os.environ.get("AURORA_TEST_SIGN_PUSH", "false").lower() == "true"
+    sign_test_mode = os.environ.get("AURORA_TEST_SIGN_PUSH", "true").lower() == "true"
 
     if safe_mode:
         print("🚫 SAFE_MODE active: push aborted.")
