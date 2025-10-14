@@ -20,7 +20,11 @@ def ensure_authenticated_remote() -> None:
     subprocess.run(["git", "config", "--global", "user.name", user_name])
     subprocess.run(["git", "config", "--global", "user.email", user_email])
 
+    # --- Non-interactive auth setup for Render environment ---
+    os.environ["GIT_ASKPASS"] = "/bin/echo"  # prevent git from prompting for username
+
     if token and repo_url.startswith("https://github.com"):
+        # Insert token into remote URL safely
         auth_url = repo_url.replace("https://", f"https://{token}@")
         subprocess.run(["git", "remote", "set-url", "origin", auth_url])
         print(f"[{datetime.now()}] 🔐 Aurora authenticated remote URL (token hidden).")
@@ -42,7 +46,6 @@ def safe_push(remote: str = "origin", branch: str = "main") -> bool:
         print("🚫 SAFE_MODE active: push aborted.")
         return False
 
-    # If Guardian test mode is disabled, proceed as real-mode push
     if not sign_test_mode:
         print("🩵 Real-mode push authorized. Guardian oversight remains active.")
     else:
