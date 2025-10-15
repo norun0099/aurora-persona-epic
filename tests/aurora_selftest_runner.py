@@ -15,7 +15,6 @@ Executed under supervision of Ryusuke.
 """
 
 import datetime
-import json
 import traceback
 from pathlib import Path
 
