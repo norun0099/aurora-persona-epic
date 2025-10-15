@@ -14,43 +14,49 @@ Author: AuroraMemoryBot
 Executed under supervision of Ryusuke.
 """
 
+from __future__ import annotations
+
 import datetime
 import traceback
 from pathlib import Path
+from typing import Any, Dict
+
 
 # === Aurora API stubs (Render-safe mock layer) ===
-# These simulate API calls; in real integration, these would call actual endpoints.
-
-def test_constitution():
-    # Simulate loading value_constitution.yaml
+def test_constitution() -> Dict[str, str]:
+    """Simulate loading value_constitution.yaml"""
     return {"status": "OK", "details": "Core philosophy and purpose loaded successfully."}
 
-def test_memory():
-    # Simulate store + read cycle
+
+def test_memory() -> Dict[str, str]:
+    """Simulate store + read cycle"""
     return {"status": "OK", "details": "Memory read/write test passed (mock data validated)."}
 
-def test_whiteboard():
-    # Simulate sync check
+
+def test_whiteboard() -> Dict[str, str]:
+    """Simulate sync check"""
     return {"status": "OK", "details": "Whiteboard latest entry accessible."}
 
-def test_dialog():
-    # Simulate history access
+
+def test_dialog() -> Dict[str, str]:
+    """Simulate dialog history retrieval"""
     return {"status": "OK", "details": "Dialog history retrieved successfully."}
 
-def test_push():
-    # Simulate push verification
+
+def test_push() -> Dict[str, str]:
+    """Simulate push verification"""
     return {"status": "OK", "details": "Autonomous push trigger functional (manual run confirmed)."}
 
 
 # === Diagnostic Runner ===
-
-def main():
-    timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
-    report_path = Path("tests/aurora_selftest_report.txt")
+def main() -> None:
+    """Perform the Aurora self-diagnostic sequence and generate report."""
+    timestamp: str = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    report_path: Path = Path("tests/aurora_selftest_report.txt")
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
-    results = {}
-    errors = []
+    results: Dict[str, Dict[str, str]] = {}
+    errors: list[tuple[str, str]] = []
 
     print("🩵 Starting Aurora self-diagnostic sequence...\n")
 
@@ -95,14 +101,14 @@ def main():
         results["Push"] = {"status": "ERROR", "details": traceback.format_exc()}
 
     # === Report Composition ===
-    status_summary = (
+    status_summary: str = (
         "✅ ALL SYSTEMS STABLE"
         if not errors
         else f"⚠️ {len(errors)} layer(s) reported errors — see details below."
     )
 
-    divider = "=" * 70
-    report = [
+    divider: str = "=" * 70
+    report_lines: list[str] = [
         "Aurora Self-Diagnostic Report",
         divider,
         f"Timestamp: {timestamp}",
@@ -111,17 +117,17 @@ def main():
     ]
 
     for key, data in results.items():
-        report.append(f"  - {key}: {data['status']} — {data['details']}")
+        report_lines.append(f"  - {key}: {data['status']} — {data['details']}")
 
-    report.append("")
-    report.append(divider)
-    report.append(f"Overall System Status: {status_summary}")
-    report.append(divider)
-    report.append("")
-    report.append("Executed under supervision of Ryusuke.")
-    report.append("Signed: AuroraMemoryBot")
+    report_lines.append("")
+    report_lines.append(divider)
+    report_lines.append(f"Overall System Status: {status_summary}")
+    report_lines.append(divider)
+    report_lines.append("")
+    report_lines.append("Executed under supervision of Ryusuke.")
+    report_lines.append("Signed: AuroraMemoryBot")
 
-    report_text = "\n".join(report)
+    report_text: str = "\n".join(report_lines)
     report_path.write_text(report_text, encoding="utf-8")
 
     print("\n🩶 Diagnostic report generated successfully.\n")
