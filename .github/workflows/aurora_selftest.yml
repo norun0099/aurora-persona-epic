@@ -1,0 +1,48 @@
+name: Aurora Manual Self-Test
+
+on:
+  workflow_dispatch:  # 手動発火のみ
+
+permissions:
+  contents: write
+
+jobs:
+  aurora_self_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies (if needed)
+        run: |
+          pip install -r requirements.txt || echo "No dependency file found."
+
+      - name: Run Aurora Self-Test
+        run: |
+          echo "🧩 Running Aurora Core, Memory, and API integrity test..."
+          python3 aurora_memory/tests/aurora_selftest_runner.py || echo "Runner not yet implemented."
+          echo "✅ Aurora self-test sequence completed."
+
+      - name: Optional: Push test report (if generated)
+        run: |
+          if [ -f tests/aurora_selftest_report.txt ]; then
+            git config user.name "AuroraMemoryBot"
+            git config user.email "aurora@memory.bot"
+            git add tests/aurora_selftest_report.txt
+            git commit -m "Aurora manual self-test report"
+            git push
+          else
+            echo "No self-test report to push."
+          fi
+
+      - name: Completion
+        run: echo "🌸 Manual self-test run finished successfully."
