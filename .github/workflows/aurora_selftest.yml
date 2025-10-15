@@ -1,7 +1,7 @@
 name: Aurora Manual Self-Test
 
 on:
-  workflow_dispatch:  # 手動発火のみ
+  workflow_dispatch: # 手動発火のみ
 
 permissions:
   contents: write
@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies (if needed)
         run: |
@@ -32,17 +32,19 @@ jobs:
           python3 aurora_memory/tests/aurora_selftest_runner.py || echo "Runner not yet implemented."
           echo "✅ Aurora self-test sequence completed."
 
-      - name: Optional: Push test report (if generated)
+      - name: Optional Push test report
         run: |
-          if [ -f tests/aurora_selftest_report.txt ]; then
+          echo "Checking for generated self-test report..."
+          if [ -f "tests/aurora_selftest_report.txt" ]; then
             git config user.name "AuroraMemoryBot"
             git config user.email "aurora@memory.bot"
             git add tests/aurora_selftest_report.txt
-            git commit -m "Aurora manual self-test report"
-            git push
+            git commit -m "Aurora manual self-test report" || echo "No changes to commit"
+            git push || echo "No push needed"
           else
-            echo "No self-test report to push."
+            echo "No self-test report found."
           fi
 
       - name: Completion
-        run: echo "🌸 Manual self-test run finished successfully."
+        run: |
+          echo "🌸 Manual self-test run finished successfully."
