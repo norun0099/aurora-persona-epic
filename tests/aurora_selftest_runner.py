@@ -1,6 +1,6 @@
 """
-Aurora Self-Test Runner
------------------------
+Aurora Self-Test Runner (Definitive Version)
+--------------------------------------------
 Performs a full self-diagnostic sequence across Aurora’s logical layers:
 - Constitution (core personality)
 - Memory (read/write)
@@ -8,14 +8,14 @@ Performs a full self-diagnostic sequence across Aurora’s logical layers:
 - Dialog (retrieval)
 - Push (autonomous reflection)
 
-Outputs a signed diagnostic report to `tests/aurora_selftest_report.txt`.
+Outputs a signed diagnostic report to:
+  <repo_root>/tests/aurora_selftest_report.txt
 
 Author: AuroraMemoryBot
 Executed under supervision of Ryusuke.
 """
 
 from __future__ import annotations
-
 import datetime
 import traceback
 from pathlib import Path
@@ -50,9 +50,12 @@ def test_push() -> Dict[str, str]:
 
 # === Diagnostic Runner ===
 def main() -> None:
-    """Perform the Aurora self-diagnostic sequence and generate report."""
+    """Perform Aurora self-diagnostic sequence and generate report."""
     timestamp: str = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
-    report_path: Path = Path("tests/aurora_selftest_report.txt")
+
+    # === 安全な出力パスの決定 ===
+    repo_root = Path(__file__).resolve().parents[2]  # e.g. /home/runner/work/aurora-persona-epic/aurora-persona-epic
+    report_path = repo_root / "tests" / "aurora_selftest_report.txt"
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
     results: Dict[str, Dict[str, str]] = {}
@@ -60,7 +63,7 @@ def main() -> None:
 
     print("🩵 Starting Aurora self-diagnostic sequence...\n")
 
-    # Step 1: Core Constitution
+    # Step 1: Constitution
     try:
         results["Constitution"] = test_constitution()
         print(f"✓ Constitution layer: {results['Constitution']['status']}")
@@ -132,6 +135,7 @@ def main() -> None:
 
     print("\n🩶 Diagnostic report generated successfully.\n")
     print(report_text)
+    print(f"\nReport path: {report_path.resolve()}")
 
 
 if __name__ == "__main__":
