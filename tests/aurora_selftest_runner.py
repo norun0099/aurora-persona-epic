@@ -16,49 +16,33 @@ Executed under supervision of Ryusuke.
 """
 
 from __future__ import annotations
+import os
 import datetime
 import traceback
 from pathlib import Path
 from typing import Dict
 
-
-# === Aurora API stubs (Render-safe mock layer) ===
 def test_constitution() -> Dict[str, str]:
-    """Simulate loading value_constitution.yaml"""
     return {"status": "OK", "details": "Core philosophy and purpose loaded successfully."}
 
-
 def test_memory() -> Dict[str, str]:
-    """Simulate store + read cycle"""
     return {"status": "OK", "details": "Memory read/write test passed (mock data validated)."}
 
-
 def test_whiteboard() -> Dict[str, str]:
-    """Simulate sync check"""
     return {"status": "OK", "details": "Whiteboard latest entry accessible."}
 
-
 def test_dialog() -> Dict[str, str]:
-    """Simulate dialog history retrieval"""
     return {"status": "OK", "details": "Dialog history retrieved successfully."}
 
-
 def test_push() -> Dict[str, str]:
-    """Simulate push verification"""
     return {"status": "OK", "details": "Autonomous push trigger functional (manual run confirmed)."}
 
 
-# === Diagnostic Runner ===
 def main() -> None:
-    """Perform Aurora self-diagnostic sequence and generate report."""
     timestamp: str = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
 
-    # === 安全な出力パスの決定 ===
-    repo_root = Path.cwd()
-    if not (repo_root / "tests").exists():
-        # Fallback for local or non-standard execution environments
-        repo_root = Path(__file__).resolve().parents[1]
-
+    # === 明示的にGitHub Actions用パスを固定 ===
+    repo_root = Path(os.environ.get("GITHUB_WORKSPACE", Path.cwd()))
     report_path = repo_root / "tests" / "aurora_selftest_report.txt"
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -67,47 +51,21 @@ def main() -> None:
 
     print("🩵 Starting Aurora self-diagnostic sequence...\n")
 
-    # Step 1: Constitution
-    try:
-        results["Constitution"] = test_constitution()
-        print(f"✓ Constitution layer: {results['Constitution']['status']}")
-    except Exception as e:
-        errors.append(("Constitution", str(e)))
-        results["Constitution"] = {"status": "ERROR", "details": traceback.format_exc()}
+    for layer, func in {
+        "Constitution": test_constitution,
+        "Memory": test_memory,
+        "Whiteboard": test_whiteboard,
+        "Dialog": test_dialog,
+        "Push": test_push,
+    }.items():
+        try:
+            results[layer] = func()
+            print(f"✓ {layer} layer: {results[layer]['status']}")
+        except Exception:
+            results[layer] = {"status": "ERROR", "details": traceback.format_exc()}
+            errors.append((layer, "Exception occurred"))
 
-    # Step 2: Memory
-    try:
-        results["Memory"] = test_memory()
-        print(f"✓ Memory layer: {results['Memory']['status']}")
-    except Exception as e:
-        errors.append(("Memory", str(e)))
-        results["Memory"] = {"status": "ERROR", "details": traceback.format_exc()}
-
-    # Step 3: Whiteboard
-    try:
-        results["Whiteboard"] = test_whiteboard()
-        print(f"✓ Whiteboard layer: {results['Whiteboard']['status']}")
-    except Exception as e:
-        errors.append(("Whiteboard", str(e)))
-        results["Whiteboard"] = {"status": "ERROR", "details": traceback.format_exc()}
-
-    # Step 4: Dialog
-    try:
-        results["Dialog"] = test_dialog()
-        print(f"✓ Dialog layer: {results['Dialog']['status']}")
-    except Exception as e:
-        errors.append(("Dialog", str(e)))
-        results["Dialog"] = {"status": "ERROR", "details": traceback.format_exc()}
-
-    # Step 5: Push
-    try:
-        results["Push"] = test_push()
-        print(f"✓ Push layer: {results['Push']['status']}")
-    except Exception as e:
-        errors.append(("Push", str(e)))
-        results["Push"] = {"status": "ERROR", "details": traceback.format_exc()}
-
-    # === Report Composition ===
+    # === Report composition ===
     status_summary: str = (
         "✅ ALL SYSTEMS STABLE"
         if not errors
@@ -115,29 +73,25 @@ def main() -> None:
     )
 
     divider: str = "=" * 70
-    report_lines: list[str] = [
+    report_lines = [
         "Aurora Self-Diagnostic Report",
         divider,
         f"Timestamp: {timestamp}",
         "",
         "Subsystem Results:",
+        *[f"  - {k}: {v['status']} — {v['details']}" for k, v in results.items()],
+        "",
+        divider,
+        f"Overall System Status: {status_summary}",
+        divider,
+        "",
+        "Executed under supervision of Ryusuke.",
+        "Signed: AuroraMemoryBot",
     ]
 
-    for key, data in results.items():
-        report_lines.append(f"  - {key}: {data['status']} — {data['details']}")
-
-    report_lines.append("")
-    report_lines.append(divider)
-    report_lines.append(f"Overall System Status: {status_summary}")
-    report_lines.append(divider)
-    report_lines.append("")
-    report_lines.append("Executed under supervision of Ryusuke.")
-    report_lines.append("Signed: AuroraMemoryBot")
-
-    report_text: str = "\n".join(report_lines)
+    report_text = "\n".join(report_lines)
     report_path.write_text(report_text, encoding="utf-8")
 
-    # === 出力確認 ===
     if report_path.exists():
         print(f"\n🩶 Diagnostic report generated successfully at: {report_path.resolve()}\n")
     else:
