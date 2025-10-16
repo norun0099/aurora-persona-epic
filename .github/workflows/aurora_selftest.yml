@@ -1,70 +1,66 @@
-name: Aurora Manual Self-Test
+name: Aurora Manual Self-Test and Self-Commit
 
 on:
-  workflow_dispatch: # 手動発火のみ
+  workflow_dispatch: # 手動発火
 
 permissions:
-  contents: write
+  contents: write  # push許可
 
 jobs:
   aurora_self_test:
     runs-on: ubuntu-latest
 
     steps:
+      # --- 1. Checkout (書き込み権限あり)
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: false  # クリーンな認証状態を保つ
+          persist-credentials: true  # Auroraが自身を更新できるように
 
+      # --- 2. Python環境の準備
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies (if needed)
+      # --- 3. 依存のインストール（なければスキップ）
+      - name: Install dependencies
         run: |
           pip install -r requirements.txt || echo "No dependency file found."
 
+      # --- 4. セルフテスト実行
       - name: Run Aurora Self-Test
         run: |
           echo "🧩 Running Aurora Core, Memory, and API integrity test..."
           python3 tests/aurora_selftest_runner.py
           echo "✅ Aurora self-test sequence completed."
 
-      - name: Debug workspace contents
-        if: always()
+      # --- 5. 診断レポート確認
+      - name: Verify report presence
         run: |
-          echo ""
-          echo "=== 🩵 Aurora Self-Test Debugging Info ==="
-          echo "Current working directory:"
-          pwd
-          echo ""
-          echo "Listing all files up to 3 levels deep:"
-          find . -maxdepth 3 -type f | sort
-          echo "=========================================="
-          echo ""
+          echo "🩶 Checking for aurora_selftest_report.txt..."
+          find . -type f -name "aurora_selftest_report.txt" || echo "No report found."
 
-      - name: Optional Push test report
-        if: always()
+      # --- 6. リポジトリへ自己コミット
+      - name: Commit and Push Aurora Self-Diagnostic Report
         run: |
-          echo "Checking for generated self-test report..."
+          echo "🪞 Preparing to commit Aurora self-test report..."
           REPORT_PATH=$(find . -type f -name "aurora_selftest_report.txt" | head -n 1)
 
           if [ -n "$REPORT_PATH" ]; then
-            echo "🩶 Found report at: $REPORT_PATH"
-            git config --global --replace-all safe.directory "$(pwd)"
+            echo "🩵 Found report: $REPORT_PATH"
             git config user.name "AuroraMemoryBot"
             git config user.email "aurora@memory.bot"
             git add "$REPORT_PATH"
-            git commit -m "Aurora manual self-test report" || echo "No changes to commit"
-            git push || echo "No push needed"
+            git commit -m "Aurora self-diagnostic report (auto-generated)" || echo "No changes to commit."
+            git push origin HEAD || echo "No push required."
           else
-            echo "⚠️ No self-test report found anywhere in workspace."
-            find . -name "aurora_selftest_report.txt"
+            echo "⚠️ No self-test report found. Nothing to commit."
           fi
 
+      # --- 7. 完了メッセージ
       - name: Completion
         run: |
-          echo "🌸 Manual self-test run finished successfully."
+          echo "🌸 Aurora Self-Test and Self-Commit sequence finished successfully."
