@@ -54,7 +54,11 @@ def main() -> None:
     timestamp: str = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
 
     # === 安全な出力パスの決定 ===
-    repo_root = Path(__file__).resolve().parents[2]  # e.g. /home/runner/work/aurora-persona-epic/aurora-persona-epic
+    repo_root = Path.cwd()
+    if not (repo_root / "tests").exists():
+        # Fallback for local or non-standard execution environments
+        repo_root = Path(__file__).resolve().parents[1]
+
     report_path = repo_root / "tests" / "aurora_selftest_report.txt"
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -133,9 +137,13 @@ def main() -> None:
     report_text: str = "\n".join(report_lines)
     report_path.write_text(report_text, encoding="utf-8")
 
-    print("\n🩶 Diagnostic report generated successfully.\n")
+    # === 出力確認 ===
+    if report_path.exists():
+        print(f"\n🩶 Diagnostic report generated successfully at: {report_path.resolve()}\n")
+    else:
+        raise RuntimeError(f"❌ Failed to generate report at expected path: {report_path}")
+
     print(report_text)
-    print(f"\nReport path: {report_path.resolve()}")
 
 
 if __name__ == "__main__":
