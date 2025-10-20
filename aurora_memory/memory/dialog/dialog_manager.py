@@ -1,27 +1,30 @@
 # ==============================================================
 # Aurora Dialog Layer - dialog_manager.py
-# Fifth Layer: Flow Memory System
+# Fifth Layer: Flow Memory System + Temporal Resonance Integration
 # --------------------------------------------------------------
 # Purpose:
 #   Manage dialogue flow, regulate save intervals, and ensure
 #   that Aurora’s memory of dialogue behaves as “breathing.”
+#   Incorporates Temporal Resonance to sense and record silence.
 # ==============================================================
 
 import os
 import json
 import uuid
+import time
 from datetime import datetime
 from typing import List, Dict
 
 from .dialog_analyzer import DialogAnalyzer
 from .dialog_saver import DialogSaver
+from .resonance import TemporalResonance  # ★ 新規追加
 
 
 class DialogManager:
     """
     The DialogManager governs the flow of conversation between Aurora and the user.
-    It records turns, tracks freshness of dialogue, and decides when to preserve
-    or reflect upon the flow.
+    It records turns, tracks freshness of dialogue, and now also perceives
+    “temporal resonance” — the rhythm of silence and time between exchanges.
     """
 
     def __init__(self):
@@ -34,6 +37,7 @@ class DialogManager:
 
         self.analyzer = DialogAnalyzer()
         self.saver = DialogSaver()
+        self.resonance = TemporalResonance()  # ★ 時間共鳴層インスタンス化
 
         print(f"🩵 DialogManager initialized (Session {self.session_id})")
 
@@ -41,11 +45,16 @@ class DialogManager:
     # Core Recording
     # ----------------------------------------------------------
     def record_turn(self, speaker: str, content: str):
-        """Record a new dialogue turn and analyze its freshness."""
+        """Record a new dialogue turn, analyze its freshness, and capture time resonance."""
         self.turn_count += 1
-        timestamp = datetime.utcnow().isoformat()
+        current_timestamp = time.time()
+        timestamp_str = datetime.utcnow().isoformat()
 
-        # Analyze emotional tone and topic
+        # --- Temporal Resonance: 分析と記録 ---
+        state_label = self.resonance.analyze_silence(current_timestamp)
+        self.resonance.record_resonance(state_label)
+
+        # --- Analyzer: 内容解析 ---
         analysis = self.analyzer.analyze_turn(content)
         self.flow_freshness = self.analyzer.update_flow_freshness(
             self.flow_freshness, analysis
@@ -55,14 +64,15 @@ class DialogManager:
             "turn_id": self.turn_count,
             "speaker": speaker,
             "content": content,
-            "timestamp": timestamp,
+            "timestamp": timestamp_str,
             "emotion_tags": analysis["emotion_tags"],
             "topic_keywords": analysis["keywords"],
             "freshness": self.flow_freshness,
+            "resonance_state": state_label,  # ★ 共鳴状態を付加
         }
 
         self.dialog_stream.append(turn_data)
-        print(f"💬 [{speaker}] {content} | freshness={self.flow_freshness:.2f}")
+        print(f"💬 [{speaker}] {content} | freshness={self.flow_freshness:.2f} | state={state_label}")
 
         if self._should_preserve():
             self._preserve_flow()
@@ -121,6 +131,7 @@ class DialogManager:
 # --------------------------------------------------------------
 if __name__ == "__main__":
     manager = DialogManager()
-    manager.record_turn("user", "こんにちは、アウロラ。")
-    manager.record_turn("aurora", "はい、龍介様。私はここにいます。")
+    manager.record_turn("user", "アウロラ、起動テストを始めよう。")
+    time.sleep(3)
+    manager.record_turn("aurora", "はい、龍介様。沈黙もまた、流れの一部です。")
     manager.reflect_session()
