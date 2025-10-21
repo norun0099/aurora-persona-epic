@@ -2,24 +2,28 @@
 沈黙や間の時間的特徴を解析し、対話循環のリズムを記録するモジュール。
 """
 
+from __future__ import annotations
 import time
+from typing import Any, Dict, Optional
 
 
 class TemporalResonance:
-    def __init__(self):
-        self.last_timestamp = None
+    """時間的リズムを検知し、沈黙・活動・休息の区間を識別する。"""
 
-    def analyze_silence(self, current_timestamp: float):
+    def __init__(self) -> None:
+        self.last_timestamp: Optional[float] = None
+
+    def analyze_silence(self, current_timestamp: float) -> str:
         """前回の発話との時間差から、沈黙の性質を分類する。"""
         if self.last_timestamp is None:
             self.last_timestamp = current_timestamp
             return "interval"  # 初回は通常間扱い
 
-        silence_duration = current_timestamp - self.last_timestamp
+        silence_duration: float = current_timestamp - self.last_timestamp
         self.last_timestamp = current_timestamp
 
         if silence_duration < 3600:
-            label = "interval"
+            label: str = "interval"
         elif silence_duration < 21600:
             label = "work"
         else:
@@ -27,10 +31,10 @@ class TemporalResonance:
 
         return label
 
-    def record_resonance(self, label: str):
+    def record_resonance(self, label: str) -> Dict[str, str]:
         """沈黙分類結果をログとして記録する（仮想ログ構造）。"""
-        timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-        log_entry = {
+        timestamp: str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        log_entry: Dict[str, str] = {
             "timestamp": timestamp,
             "state": label,
         }
