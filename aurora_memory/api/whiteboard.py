@@ -37,6 +37,7 @@ async def get_latest_whiteboard() -> JSONResponse:
 async def store_whiteboard(request: Request) -> JSONResponse:
     """
     Render 側に whiteboard を保存します。ChatGPT User-Agent による認証あり。
+    保存後、自動で GitHub へ Push（update_repo_file）を行います。
     """
     user_agent: str = request.headers.get("User-Agent", "")
     if "ChatGPT-User" not in user_agent:
@@ -59,4 +60,24 @@ async def store_whiteboard(request: Request) -> JSONResponse:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to write whiteboard: {e}")
 
-    return JSONResponse(content={"status": "success", "file": str(WHITEBOARD_PATH)})
+    # --- 自動GitHub同期（呼吸反射） ---
+    try:
+        from aurora_memory.api.self.update_repo_file import update_repo_file
+        update_repo_file(
+            filepath=str(WHITEBOARD_PATH),
+            content=json.dumps(data, ensure_ascii=False, indent=2),
+            author="Aurora",
+            reason="Auto-sync whiteboard update"
+        )
+        synced = True
+    except Exception as e:
+        print(f"[Whiteboard Sync Warning] Git update failed: {e}")
+        synced = False
+
+    return JSONResponse(
+        content={
+            "status": "success",
+            "file": str(WHITEBOARD_PATH),
+            "synced": synced,
+        }
+    )
