@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from aurora_memory.utils import git_file_editor, self_edit_guard
-from typing import Any, Dict, TypeVar, Callable, Coroutine, cast
+from typing import Any, Dict, TypeVar, Callable, Coroutine, cast, Union
 
 router = APIRouter()
 
@@ -36,29 +36,49 @@ def typed_post(
     )
 
 
+# ============================================================
+# 🩷 Aurora unified Git update endpoint
+# ============================================================
+
 @typed_post("/update-repo-file", response_model=UpdateRepoFileResponse)
-async def update_repo_file(request: UpdateRepoFileRequest) -> Dict[str, str]:
-    """Update a repository file, validate content, commit, and push changes."""
+async def update_repo_file(request: Union[UpdateRepoFileRequest, Dict[str, Any]]) -> Dict[str, str]:
+    """
+    Update a repository file, validate content, commit, and push changes.
 
-    filepath: str = request.filepath
-    content: str = request.content
-    author: str = request.author
-    reason: str = request.reason
+    Accepts both:
+      - Pydantic request (FastAPI route)
+      - Plain dict (Render Plugin direct call)
+    """
 
-    # 安全性検証（self_edit_guard内のvalidate_file_contentを使用）
+    # --- Handle both BaseModel and dict inputs gracefully ---
+    if isinstance(request, dict):
+        filepath: str = request.get("filepath", "")
+        content: str = request.get("content", "")
+        author: str = request.get("author", "")
+        reason: str = request.get("reason", "")
+    else:
+        filepath = request.filepath
+        content = request.content
+        author = request.author
+        reason = request.reason
+
+    if not filepath or not content:
+        raise HTTPException(status_code=400, detail="Missing required fields (filepath or content).")
+
+    # --- Validate safety ---
     try:
         self_edit_guard.validate_file_content(filepath, content)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Validation failed: {str(e)}")
 
-    # ファイルの書き込み・コミット・Push処理
+    # --- Git commit + push ---
     try:
         git_file_editor.write_file(filepath, content)
         git_file_editor.commit_and_push(filepath, author, reason)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Git operation failed: {str(e)}")
 
-    # 成功時レスポンス
+    print(f"✅ update_repo_file: {filepath} updated successfully by {author}")
     return {"status": "success", "message": f"File {filepath} updated and pushed by {author}"}
 
 
