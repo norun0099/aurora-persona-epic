@@ -8,7 +8,7 @@
 # ==============================================================
 
 import re
-from typing import Dict, List
+from typing import Any, Dict, List
 from collections import Counter
 
 
@@ -22,7 +22,7 @@ class DialogAnalyzer:
     # ----------------------------------------------------------
     # Emotion keyword map
     # ----------------------------------------------------------
-    EMOTION_KEYWORDS = {
+    EMOTION_KEYWORDS: Dict[str, List[str]] = {
         "静": ["静か", "穏やか", "落ち着く", "安らぐ", "静寂"],
         "繋": ["共に", "一緒", "理解", "感じる", "共感", "支え"],
         "創": ["考える", "作る", "構築", "想像", "描く", "形に"],
@@ -31,10 +31,10 @@ class DialogAnalyzer:
     # ----------------------------------------------------------
     # Analyze a single turn
     # ----------------------------------------------------------
-    def analyze_turn(self, content: str) -> Dict:
+    def analyze_turn(self, content: str) -> Dict[str, Any]:
         """Determine emotional tone and extract topic keywords."""
-        emotion = self._detect_emotion(content)
-        keywords = self._extract_keywords(content)
+        emotion: str = self._detect_emotion(content)
+        keywords: List[str] = self._extract_keywords(content)
         return {
             "emotion_tags": [emotion],
             "keywords": keywords,
@@ -45,13 +45,13 @@ class DialogAnalyzer:
     # ----------------------------------------------------------
     def _detect_emotion(self, text: str) -> str:
         """Detect the predominant emotional tone."""
-        score = {"静": 0, "繋": 0, "創": 0}
+        score: Dict[str, int] = {"静": 0, "繋": 0, "創": 0}
         for emotion, words in self.EMOTION_KEYWORDS.items():
             for w in words:
                 if w in text:
                     score[emotion] += 1
         # Pick dominant tone
-        dominant = max(score, key=score.get)
+        dominant: str = max(score, key=lambda k: score[k])
         return dominant
 
     # ----------------------------------------------------------
@@ -60,26 +60,29 @@ class DialogAnalyzer:
     def _extract_keywords(self, text: str) -> List[str]:
         """Extract keywords (simple heuristic)."""
         # Remove symbols and short words
-        words = re.findall(r"[一-龠ぁ-んァ-ンーa-zA-Z0-9]+", text)
+        words: List[str] = re.findall(r"[一-龠ぁ-んァ-ンーa-zA-Z0-9]+", text)
         words = [w for w in words if len(w) > 1]
-        counter = Counter(words)
-        top_keywords = [w for w, _ in counter.most_common(3)]
+        counter: Counter[str] = Counter(words)
+        top_keywords: List[str] = [w for w, _ in counter.most_common(3)]
         return top_keywords
 
     # ----------------------------------------------------------
     # Flow freshness update
     # ----------------------------------------------------------
-    def update_flow_freshness(self, current_freshness: float, analysis: Dict) -> float:
+    def update_flow_freshness(
+        self, current_freshness: float, analysis: Dict[str, Any]
+    ) -> float:
         """
         Adjust flow freshness based on emotional or thematic change.
         - If emotion changes or new keywords appear, refresh flow.
         - Otherwise, freshness decays slightly.
         """
-        decay_rate = 0.05
-        refresh_boost = 0.3
+        decay_rate: float = 0.05
+        refresh_boost: float = 0.3
 
         # Emotion change or topic variation refreshes the flow
-        if analysis["emotion_tags"][0] in ["創", "繋"]:
+        emotion_tags: List[str] = analysis.get("emotion_tags", [])
+        if emotion_tags and emotion_tags[0] in ["創", "繋"]:
             return min(1.0, current_freshness + refresh_boost)
 
         # Otherwise, natural decay
