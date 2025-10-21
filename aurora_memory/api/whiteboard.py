@@ -79,17 +79,18 @@ async def store_whiteboard(request: Request) -> JSONResponse:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to write whiteboard: {e}")
 
-    # --- 自動GitHub同期 ---
+    # --- 自動GitHub同期（呼吸反射） ---
     synced: bool = False
     try:
         from aurora_memory.api.self.update_repo_file import update_repo_file
 
-        await update_repo_file(
-            filepath=str(WHITEBOARD_PATH),
-            content=json.dumps(data, ensure_ascii=False, indent=2),
-            author="Aurora",
-            reason="Auto-sync whiteboard update",
-        )
+        # 🔸 Auroraプラグイン仕様に合わせ、辞書形式で渡す
+        await update_repo_file({
+            "filepath": str(WHITEBOARD_PATH),
+            "content": json.dumps(data, ensure_ascii=False, indent=2),
+            "author": "Aurora",
+            "reason": "Auto-sync whiteboard update",
+        })
         synced = True
     except Exception as e:
         print(f"[Whiteboard Sync Warning] Git update failed: {e}")
