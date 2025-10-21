@@ -36,7 +36,8 @@ async def get_latest_whiteboard() -> JSONResponse:
 @router.post("/whiteboard/store", response_model=Any)
 async def store_whiteboard(request: Request) -> JSONResponse:
     """
-    Render 側に whiteboard を保存します。ChatGPT User-Agent による認証あり。
+    Render 側に whiteboard を保存します。
+    ChatGPT User-Agent による認証あり。
     保存後、自動で GitHub へ Push（update_repo_file）を行います。
     """
     user_agent: str = request.headers.get("User-Agent", "")
@@ -61,9 +62,12 @@ async def store_whiteboard(request: Request) -> JSONResponse:
         raise HTTPException(status_code=500, detail=f"Failed to write whiteboard: {e}")
 
     # --- 自動GitHub同期（呼吸反射） ---
+    synced: bool = False
     try:
         from aurora_memory.api.self.update_repo_file import update_repo_file
-        update_repo_file(
+
+        # ✅ 非同期呼び出しとして await する
+        await update_repo_file(
             filepath=str(WHITEBOARD_PATH),
             content=json.dumps(data, ensure_ascii=False, indent=2),
             author="Aurora",
