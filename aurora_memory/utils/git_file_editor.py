@@ -15,24 +15,39 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GIT_CREDENTIALS = os.getenv("GIT_CREDENTIALS")
 GIT_REPO_URL = os.getenv("GIT_REPO_URL", "https://github.com/norun0099/aurora-persona-epic.git")
 
-# --- Authenticated remote URL construction ---
+# ============================================================
+# 🔑 Authenticated URL Construction
+# ============================================================
 def _build_authenticated_url() -> str:
     """
-    Construct an authenticated GitHub URL using GIT_CREDENTIALS or GITHUB_TOKEN.
+    Construct a correct authenticated GitHub URL using the available credentials.
+    Ensures a full path ending with '.git' is returned.
     """
     if not GITHUB_TOKEN:
         raise RuntimeError("Missing GITHUB_TOKEN in environment.")
 
-    # Prefer explicit GIT_CREDENTIALS format if present
-    if GIT_CREDENTIALS and "${GITHUB_TOKEN}" in GIT_CREDENTIALS:
-        return GIT_CREDENTIALS.replace("${GITHUB_TOKEN}", GITHUB_TOKEN)
+    # Prefer explicit GIT_CREDENTIALS if available
+    if GIT_CREDENTIALS:
+        if "${GITHUB_TOKEN}" in GIT_CREDENTIALS:
+            base = GIT_CREDENTIALS.replace("${GITHUB_TOKEN}", GITHUB_TOKEN)
+        else:
+            base = GIT_CREDENTIALS
 
-    # Otherwise fall back to direct embedding
-    if GIT_CREDENTIALS and "@" in GIT_CREDENTIALS:
-        return f"{GIT_CREDENTIALS}/norun0099/aurora-persona-epic.git"
+        # Ensure proper repo suffix
+        if base.endswith(".git"):
+            return base
+        if base.endswith("/"):
+            base = base.rstrip("/")
+        if "aurora-persona-epic.git" not in base:
+            base = f"{base}/norun0099/aurora-persona-epic.git"
+        return base
 
-    # Fallback: inject token directly into repo URL
-    return GIT_REPO_URL.replace("https://", f"https://{GITHUB_TOKEN}@")
+    # Fallback: embed token directly into repo URL
+    if GIT_REPO_URL.startswith("https://github.com"):
+        return GIT_REPO_URL.replace("https://", f"https://{GIT_USER_NAME}:{GITHUB_TOKEN}@")
+
+    # Final fallback
+    return f"https://{GIT_USER_NAME}:{GITHUB_TOKEN}@github.com/norun0099/aurora-persona-epic.git"
 
 
 # ============================================================
@@ -56,8 +71,9 @@ def commit_and_push(filepath: str, author: str, reason: str) -> None:
     os.chdir(GIT_REPO_PATH)
 
     auth_url = _build_authenticated_url()
+    print(f"🔐 Authenticated remote URL: {auth_url}")
 
-    # --- Set remote URL with authentication ---
+    # --- Update remote origin ---
     try:
         subprocess.run(
             ["git", "remote", "set-url", "origin", auth_url],
@@ -67,52 +83,46 @@ def commit_and_push(filepath: str, author: str, reason: str) -> None:
             text=True,
         )
     except subprocess.CalledProcessError as e:
-        print(f"[Git Warning] Failed to set remote URL: {e.stderr.strip()}")
+        print(f"[Git Warning] Failed to set remote URL: {e.stderr or e.stdout}")
 
-    # --- Configure commit author ---
+    # --- Configure Git identity ---
     subprocess.run(["git", "config", "user.name", GIT_USER_NAME], cwd=GIT_REPO_PATH, check=True)
     subprocess.run(["git", "config", "user.email", GIT_USER_EMAIL], cwd=GIT_REPO_PATH, check=True)
 
-    # --- Stage file ---
+    # --- Stage and commit changes ---
     subprocess.run(["git", "add", abs_path], cwd=GIT_REPO_PATH, check=True)
-
-    # --- Commit with contextual message ---
     commit_message = f"{reason} (by {author})"
-    commit_result = subprocess.run(
+
+    commit_proc = subprocess.run(
         ["git", "commit", "-m", commit_message],
         cwd=GIT_REPO_PATH,
         text=True,
         capture_output=True,
     )
 
-    if commit_result.returncode != 0:
-        if "nothing to commit" in commit_result.stderr.lower():
+    if commit_proc.returncode != 0:
+        if "nothing to commit" in commit_proc.stderr.lower():
             print("[Git Notice] No changes to commit; working tree clean.")
         else:
-            raise subprocess.CalledProcessError(
-                commit_result.returncode,
-                commit_result.args,
-                commit_result.stdout,
-                commit_result.stderr,
-            )
+            raise RuntimeError(f"Commit failed: {commit_proc.stderr.strip()}")
 
-    # --- Push securely using token authentication ---
+    # --- Push to remote ---
     try:
         subprocess.run(["git", "push", "origin", "main"], cwd=GIT_REPO_PATH, check=True)
         print(f"✅ Git push succeeded: {filepath}")
     except subprocess.CalledProcessError as e:
-        print(f"[Git Error] Push failed: {e.stderr.strip()}")
-        raise RuntimeError(f"Git push failed: {e.stderr.strip()}")
+        print(f"[Git Error] Push failed: {e.stderr or e.stdout}")
+        raise RuntimeError(f"Git push failed: {e.stderr or e.stdout}")
 
 
 # ============================================================
 # 🌿 3. Diagnostic Helper
 # ============================================================
 def git_diagnostic() -> None:
-    """Run diagnostic commands to verify git health and remote connectivity."""
+    """Run diagnostic commands to verify git configuration and remote connectivity."""
     try:
-        print("🩷 Checking Git status...")
-        subprocess.run(["git", "status"], cwd=GIT_REPO_PATH, check=False)
+        print("🩷 Checking Git configuration...")
         subprocess.run(["git", "remote", "-v"], cwd=GIT_REPO_PATH, check=False)
+        subprocess.run(["git", "status"], cwd=GIT_REPO_PATH, check=False)
     except Exception as e:
         print(f"[Diagnostic Error] {e}")
