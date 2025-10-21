@@ -10,7 +10,7 @@
 import os
 import json
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, Any
 
 
 class DialogReflector:
@@ -20,40 +20,40 @@ class DialogReflector:
     the resonance between Aurora and Ryusuke.
     """
 
-    def __init__(self):
-        self.output_dir = os.path.join("aurora_memory", "memory", "Aurora")
+    def __init__(self) -> None:
+        self.output_dir: str = os.path.join("aurora_memory", "memory", "Aurora")
         os.makedirs(self.output_dir, exist_ok=True)
 
     # ----------------------------------------------------------
     # Core Reflection
     # ----------------------------------------------------------
-    def reflect(self, session_id: str, dialog_stream: List[Dict]) -> Dict:
+    def reflect(self, session_id: str, dialog_stream: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze the session and produce a reflective summary."""
         if not dialog_stream:
             return {"error": "No dialogue data to reflect upon."}
 
-        emotions = [
-            t["emotion_tags"][0] if t["emotion_tags"] else "静"
+        emotions: List[str] = [
+            t["emotion_tags"][0] if t.get("emotion_tags") else "静"
             for t in dialog_stream
         ]
-        topics = [
+        topics: List[str] = [
             ",".join(t.get("topic_keywords", []))
             for t in dialog_stream
             if t.get("topic_keywords")
         ]
-        start_time = dialog_stream[0]["timestamp"]
-        end_time = dialog_stream[-1]["timestamp"]
+        start_time: str = dialog_stream[0].get("timestamp", "unknown")
+        end_time: str = dialog_stream[-1].get("timestamp", "unknown")
 
         # Summarize emotional transitions
-        emotional_path = " → ".join(emotions[:6]) + (
+        emotional_path: str = " → ".join(emotions[:6]) + (
             " ..." if len(emotions) > 6 else ""
         )
-        theme_summary = self._summarize_topics(topics)
-        reflective_comment = self._generate_reflective_comment(
+        theme_summary: str = self._summarize_topics(topics)
+        reflective_comment: str = self._generate_reflective_comment(
             emotions, theme_summary
         )
 
-        reflection = {
+        reflection: Dict[str, Any] = {
             "session_id": session_id,
             "duration": f"{start_time} → {end_time}",
             "theme_summary": theme_summary,
@@ -73,16 +73,16 @@ class DialogReflector:
         """Extract the most frequent topic keywords."""
         if not topics:
             return "会話は静かな往復であった。"
-        all_words = ",".join(topics).split(",")
-        top_words = self._top_keywords(all_words)
+        all_words: List[str] = ",".join(topics).split(",")
+        top_words: List[str] = self._top_keywords(all_words)
         return f"主題は「{'・'.join(top_words)}」を中心に展開した。"
 
     def _top_keywords(self, words: List[str], n: int = 3) -> List[str]:
         """Return n most frequent words."""
-        freq = {}
+        freq: Dict[str, int] = {}
         for w in words:
             freq[w] = freq.get(w, 0) + 1
-        return sorted(freq, key=freq.get, reverse=True)[:n]
+        return sorted(freq, key=lambda x: freq[x], reverse=True)[:n]
 
     def _generate_reflective_comment(self, emotions: List[str], theme_summary: str) -> str:
         """Generate a human-like reflective note."""
@@ -97,9 +97,9 @@ class DialogReflector:
     # ----------------------------------------------------------
     # Output Saving
     # ----------------------------------------------------------
-    def save_reflection(self, session_id: str, reflection: Dict):
+    def save_reflection(self, session_id: str, reflection: Dict[str, Any]) -> None:
         """Persist reflection to memory directory."""
-        path = os.path.join(self.output_dir, f"dialog_reflection_{session_id}.json")
+        path: str = os.path.join(self.output_dir, f"dialog_reflection_{session_id}.json")
         with open(path, "w", encoding="utf-8") as f:
             json.dump(reflection, f, ensure_ascii=False, indent=2)
         print(f"🌙 Reflection saved at {path}")
