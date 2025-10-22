@@ -9,8 +9,8 @@ yaml_path = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
 
 # Git設定
 def setup_git() -> None:
-    user_email = os.getenv("GIT_USER_EMAIL")
-    user_name = os.getenv("GIT_USER_NAME")
+    user_email = os.getenv("GIT_USER_EMAIL", "aurora@memory.bot")
+    user_name = os.getenv("GIT_USER_NAME", "AuroraMemoryBot")
     if user_email and user_name:
         subprocess.run(["git", "config", "user.email", user_email], check=True)
         subprocess.run(["git", "config", "user.name", user_name], check=True)
