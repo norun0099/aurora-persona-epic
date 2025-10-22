@@ -3,7 +3,7 @@ import yaml
 import json
 from pathlib import Path
 from datetime import datetime
-from typing import Any
+from typing import Any as AnyType
 
 # ============================================================
 # Aurora Immune Layer Definition
@@ -90,7 +90,7 @@ def log_self_edit_operation(filepath: str, author: str, reason: str, status: str
         print(f"🩶 [free zone] {filepath} → skipped from {LOG_PURPOSE} (memory/dialog/whiteboard)")
         return
 
-    log_entry: dict[str, Any] = {
+    log_entry: dict[str, AnyType] = {
         "timestamp": datetime.now().isoformat(),
         "filepath": filepath,
         "author": author,
