@@ -1,7 +1,7 @@
 import requests
 import yaml
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 RENDER_API_URL = "https://aurora-persona-epic.onrender.com/api/push_constitution"
 
@@ -16,7 +16,9 @@ def load_constitution_data() -> Dict[str, Any]:
     for path in possible_paths:
         if path.exists():
             with open(path, "r", encoding="utf-8") as f:
-                return yaml.safe_load(f)
+                data = yaml.safe_load(f)
+                # Cast for mypy strict: ensure type consistency
+                return cast(Dict[str, Any], data)
 
     raise FileNotFoundError("value_constitution.yaml がどの環境にも見つかりませんでした。")
 
