@@ -1,10 +1,11 @@
 import os
 import time
+import json
 from aurora_memory.utils.env_loader import Env
 from aurora_memory.api.dialog import store_dialog
 from aurora_memory.api.update_repo_file import update_repo_file
 
-# Aurora Dialog Saver (セッション単位ターン管理 + 結果検証層)
+# Aurora Dialog Saver
 # -------------------------------------------------------------
 # DIALOG_SAVE_INTERVAL: 会話ターン数ごとの保存間隔（例: 10 → 10ターン毎）
 # PUSH_DIALOG_ON_SAVE: true の場合、保存時にGitHubへ自動Push
@@ -16,7 +17,7 @@ turn_counter = {}
 def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, layer: str) -> None:
     """
     会話1ターンを記録し、セッション単位でターン数を独立管理。
-    結果検証層を含み、保存成功/失敗/遅延をログ出力する。
+    指定ターンごとにGitHubへ実際の内容をPushする。
     """
     # カウンタ初期化
     if session_id not in turn_counter:
@@ -29,19 +30,18 @@ def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, 
     response_time_ms = None
     error_detail = None
 
+    dialog_entry = {
+        "turn": current_turn,
+        "speaker": speaker,
+        "content": content,
+        "summary": summary,
+        "timestamp": "auto",
+        "layer": layer or "null",
+    }
+
     try:
         # Render側に保存
-        response = store_dialog(
-            session_id=session_id,
-            dialog_turn={
-                "turn": current_turn,
-                "speaker": speaker,
-                "content": content,
-                "summary": summary,
-                "timestamp": "auto",
-                "layer": layer or "null",
-            }
-        )
+        response = store_dialog(session_id=session_id, dialog_turn=dialog_entry)
         end_time = time.perf_counter()
         response_time_ms = round((end_time - start_time) * 1000, 2)
         save_status = "success" if response else "failed"
@@ -63,13 +63,15 @@ def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, 
         print(f"💫 {turn_interval}ターン経過：ダイアログをGitHubにPushします。")
         if push_on_save:
             try:
+                # 実際のダイアログ内容をJSON形式でPush
+                json_payload = json.dumps(dialog_entry, ensure_ascii=False, indent=2)
                 update_repo_file(
                     filepath=f"aurora_memory/dialog/{session_id}.json",
-                    content="auto-sync-dialog",
+                    content=json_payload,
                     author="AuroraMemoryBot",
-                    reason="自動記録：会話インターバル到達によるPush",
+                    reason=f"自動記録：Turn {current_turn} の内容をPush",
                 )
-                print("🌸 ダイアログが正常にPushされました。")
+                print("🌸 ダイアログ内容が正常にPushされました。")
             except Exception as e:
                 print(f"⚠️ Push失敗: {e}")
         else:
@@ -82,7 +84,7 @@ def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, 
         "turn_number": current_turn,
         "save_status": save_status,
         "response_time_ms": response_time_ms,
-        "error_detail": error_detail
+        "error_detail": error_detail,
     })
 
 
