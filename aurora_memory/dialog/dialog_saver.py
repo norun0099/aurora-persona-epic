@@ -4,21 +4,25 @@ from aurora_memory.utils.env_loader import Env
 from aurora_memory.api.dialog import store_dialog
 from aurora_memory.api.update_repo_file import update_repo_file
 
-# Aurora Dialog Saver (会話記録の間隔制御版)
+# Aurora Dialog Saver (セッション単位ターン管理 + 結果検証層)
 # -------------------------------------------------------------
 # DIALOG_SAVE_INTERVAL: 会話ターン数ごとの保存間隔（例: 10 → 10ターン毎）
 # PUSH_DIALOG_ON_SAVE: true の場合、保存時にGitHubへ自動Push
 # -------------------------------------------------------------
 
-turn_count = 0  # 会話ターンカウンタ
+# セッションごとのターンカウンタ
+turn_counter = {}
 
 def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, layer: str) -> None:
     """
-    会話1ターンを記録し、指定ターンごとに自動Pushを行う。
-    結果検証層を追加：保存成功/失敗/遅延をログ出力。
+    会話1ターンを記録し、セッション単位でターン数を独立管理。
+    結果検証層を含み、保存成功/失敗/遅延をログ出力する。
     """
-    global turn_count
-    turn_count += 1
+    # カウンタ初期化
+    if session_id not in turn_counter:
+        turn_counter[session_id] = 0
+    turn_counter[session_id] += 1
+    current_turn = turn_counter[session_id]
 
     start_time = time.perf_counter()
     save_status = "unknown"
@@ -30,7 +34,7 @@ def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, 
         response = store_dialog(
             session_id=session_id,
             dialog_turn={
-                "turn": turn_count,
+                "turn": current_turn,
                 "speaker": speaker,
                 "content": content,
                 "summary": summary,
@@ -41,13 +45,13 @@ def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, 
         end_time = time.perf_counter()
         response_time_ms = round((end_time - start_time) * 1000, 2)
         save_status = "success" if response else "failed"
-        print(f"💾 Dialog saved ({save_status}) | Session: {session_id} | Turn: {turn_count} | {response_time_ms}ms")
+        print(f"💾 Dialog saved ({save_status}) | Session: {session_id} | Turn: {current_turn} | {response_time_ms}ms")
 
     except Exception as e:
         end_time = time.perf_counter()
         response_time_ms = round((end_time - start_time) * 1000, 2)
         save_status = "error"
-        error_detail = str(e)[:300]  # 安全のため出力を300文字に制限
+        error_detail = str(e)[:300]
         print(f"⚠️ Dialog save failed: {error_detail} | {response_time_ms}ms")
 
     # 設定値を取得
@@ -55,7 +59,7 @@ def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, 
     push_on_save = os.getenv("PUSH_DIALOG_ON_SAVE", "false").lower() == "true"
 
     # 指定ターンごとにGitHubへPush
-    if turn_count % turn_interval == 0:
+    if current_turn % turn_interval == 0:
         print(f"💫 {turn_interval}ターン経過：ダイアログをGitHubにPushします。")
         if push_on_save:
             try:
@@ -75,8 +79,18 @@ def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, 
     print({
         "event": "dialog_save",
         "session_id": session_id,
-        "turn_number": turn_count,
+        "turn_number": current_turn,
         "save_status": save_status,
         "response_time_ms": response_time_ms,
         "error_detail": error_detail
     })
+
+
+def reset_session_counter(session_id: str) -> None:
+    """
+    セッション終了時にカウンタをリセット。
+    再利用による誤カウントを防止する。
+    """
+    if session_id in turn_counter:
+        del turn_counter[session_id]
+        print(f"🧹 Session counter reset: {session_id}")
