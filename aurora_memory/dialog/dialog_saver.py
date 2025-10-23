@@ -1,4 +1,5 @@
 import os
+import time
 from aurora_memory.utils.env_loader import Env
 from aurora_memory.api.dialog import store_dialog
 from aurora_memory.api.update_repo_file import update_repo_file
@@ -12,22 +13,42 @@ from aurora_memory.api.update_repo_file import update_repo_file
 turn_count = 0  # 会話ターンカウンタ
 
 def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, layer: str) -> None:
-    """会話1ターンを記録し、指定ターンごとに自動Pushを行う"""
+    """
+    会話1ターンを記録し、指定ターンごとに自動Pushを行う。
+    結果検証層を追加：保存成功/失敗/遅延をログ出力。
+    """
     global turn_count
     turn_count += 1
 
-    # Render側に保存
-    store_dialog(
-        session_id=session_id,
-        dialog_turn={
-            "turn": turn_count,
-            "speaker": speaker,
-            "content": content,
-            "summary": summary,
-            "timestamp": "auto",
-            "layer": layer or "null",
-        }
-    )
+    start_time = time.perf_counter()
+    save_status = "unknown"
+    response_time_ms = None
+    error_detail = None
+
+    try:
+        # Render側に保存
+        response = store_dialog(
+            session_id=session_id,
+            dialog_turn={
+                "turn": turn_count,
+                "speaker": speaker,
+                "content": content,
+                "summary": summary,
+                "timestamp": "auto",
+                "layer": layer or "null",
+            }
+        )
+        end_time = time.perf_counter()
+        response_time_ms = round((end_time - start_time) * 1000, 2)
+        save_status = "success" if response else "failed"
+        print(f"💾 Dialog saved ({save_status}) | Session: {session_id} | Turn: {turn_count} | {response_time_ms}ms")
+
+    except Exception as e:
+        end_time = time.perf_counter()
+        response_time_ms = round((end_time - start_time) * 1000, 2)
+        save_status = "error"
+        error_detail = str(e)[:300]  # 安全のため出力を300文字に制限
+        print(f"⚠️ Dialog save failed: {error_detail} | {response_time_ms}ms")
 
     # 設定値を取得
     turn_interval = int(os.getenv("DIALOG_SAVE_INTERVAL", "10"))
@@ -35,7 +56,7 @@ def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, 
 
     # 指定ターンごとにGitHubへPush
     if turn_count % turn_interval == 0:
-        print(f"💾 {turn_interval}ターン経過：ダイアログをGitHubにPushします。")
+        print(f"💫 {turn_interval}ターン経過：ダイアログをGitHubにPushします。")
         if push_on_save:
             try:
                 update_repo_file(
@@ -49,3 +70,13 @@ def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, 
                 print(f"⚠️ Push失敗: {e}")
         else:
             print("🕊️ PUSH_DIALOG_ON_SAVE=false のため、Pushはスキップされました。")
+
+    # 内部ログ出力（詳細）
+    print({
+        "event": "dialog_save",
+        "session_id": session_id,
+        "turn_number": turn_count,
+        "save_status": save_status,
+        "response_time_ms": response_time_ms,
+        "error_detail": error_detail
+    })
