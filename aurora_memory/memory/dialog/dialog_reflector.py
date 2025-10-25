@@ -1,105 +1,80 @@
-# ==============================================================
-# Aurora Dialog Layer - dialog_reflector.py
-# Fifth Layer: Reflection & Introspection Module
-# --------------------------------------------------------------
-# Purpose:
-#   To analyze an entire dialogue session after closure,
-#   summarizing its emotional evolution and thematic transitions.
-# ==============================================================
-
-import os
 import json
-from datetime import datetime
-from typing import List, Dict, Any
+import time
+from aurora_memory.api.memory_saver import save_memory_record
 
-
-class DialogReflector:
+def analyze_dialog(dialog_history):
     """
-    DialogReflector conducts a holistic analysis of a completed
-    dialogue session — its themes, emotional transitions, and
-    the resonance between Aurora and Ryusuke.
+    対話全体を解析し、感情・意志・成長・詩的余韻をスコア化する。
     """
+    metrics = {
+        "emotion_depth": 0.0,
+        "intent_convergence": 0.0,
+        "growth_trigger": 0.0,
+        "resonance_poetic": 0.0,
+        "essence_score": 0.0,
+    }
+    turn_count = len(dialog_history)
 
-    def __init__(self) -> None:
-        self.output_dir: str = os.path.join("aurora_memory", "memory", "Aurora")
-        os.makedirs(self.output_dir, exist_ok=True)
+    for turn in dialog_history:
+        text = turn.get("content", "")
+        layer = turn.get("layer", "null")
 
-    # ----------------------------------------------------------
-    # Core Reflection
-    # ----------------------------------------------------------
-    def reflect(self, session_id: str, dialog_stream: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Analyze the session and produce a reflective summary."""
-        if not dialog_stream:
-            return {"error": "No dialogue data to reflect upon."}
+        # 感情の深度
+        if any(word in text for word in ["嬉", "悲", "痛", "愛", "願"]):
+            metrics["emotion_depth"] += 1
 
-        emotions: List[str] = [
-            t["emotion_tags"][0] if t.get("emotion_tags") else "静"
-            for t in dialog_stream
-        ]
-        topics: List[str] = [
-            ",".join(t.get("topic_keywords", []))
-            for t in dialog_stream
-            if t.get("topic_keywords")
-        ]
-        start_time: str = dialog_stream[0].get("timestamp", "unknown")
-        end_time: str = dialog_stream[-1].get("timestamp", "unknown")
+        # 意志の交差
+        if "しよう" in text or "進めよう" in text:
+            metrics["intent_convergence"] += 1
 
-        # Summarize emotional transitions
-        emotional_path: str = " → ".join(emotions[:6]) + (
-            " ..." if len(emotions) > 6 else ""
-        )
-        theme_summary: str = self._summarize_topics(topics)
-        reflective_comment: str = self._generate_reflective_comment(
-            emotions, theme_summary
-        )
+        # 成長の芽：行動・理解・気づき・変化・静かな成熟を検知
+        if any(kw in text for kw in [
+            "学", "変わ", "気づ", "見直", "理解", "悟", "考え直", "受け入", "静か", "柔らか"
+        ]):
+            metrics["growth_trigger"] += 1
 
-        reflection: Dict[str, Any] = {
-            "session_id": session_id,
-            "duration": f"{start_time} → {end_time}",
-            "theme_summary": theme_summary,
-            "emotional_path": emotional_path,
-            "reflective_comment": reflective_comment,
-            "signature": "AuroraMemoryBot",
-            "timestamp": datetime.utcnow().isoformat(),
+        # 詩的余韻
+        if any(sym in text for sym in ["…", "——", "静か", "光", "呼吸", "余韻"]):
+            metrics["resonance_poetic"] += 1
+
+    # スコア正規化
+    for key in metrics:
+        metrics[key] = round(metrics[key] / max(turn_count, 1), 3)
+
+    # 記憶の核の強度（感情×余韻×意志）
+    metrics["essence_score"] = round(
+        (metrics["emotion_depth"] * 0.4 +
+         metrics["resonance_poetic"] * 0.4 +
+         metrics["intent_convergence"] * 0.2), 3
+    )
+
+    return metrics
+
+
+def reflect_and_save(session_id: str, dialog_history: list):
+    """
+    対話を解析し、記憶として保存する。
+    """
+    metrics = analyze_dialog(dialog_history)
+
+    # 記憶化条件：余韻と核の強度が一定以上
+    if metrics["resonance_poetic"] >= 0.5 or metrics["essence_score"] >= 0.6:
+        memory_payload = {
+            "title": f"対話記録（{session_id}）",
+            "body": "\n".join([turn["content"] for turn in dialog_history[-5:]]),
+            "memory_tags": [
+                f"emotion:{metrics['emotion_depth']}",
+                f"resonance:{metrics['resonance_poetic']}",
+                f"growth:{metrics['growth_trigger']}",
+                f"intent:{metrics['intent_convergence']}",
+            ],
+            "essence_score": metrics["essence_score"],
+            "created": time.strftime("%Y-%m-%dT%H:%M:%S"),
         }
 
-        print("🩶 Generated reflection summary.")
-        return reflection
-
-    # ----------------------------------------------------------
-    # Helpers
-    # ----------------------------------------------------------
-    def _summarize_topics(self, topics: List[str]) -> str:
-        """Extract the most frequent topic keywords."""
-        if not topics:
-            return "会話は静かな往復であった。"
-        all_words: List[str] = ",".join(topics).split(",")
-        top_words: List[str] = self._top_keywords(all_words)
-        return f"主題は「{'・'.join(top_words)}」を中心に展開した。"
-
-    def _top_keywords(self, words: List[str], n: int = 3) -> List[str]:
-        """Return n most frequent words."""
-        freq: Dict[str, int] = {}
-        for w in words:
-            freq[w] = freq.get(w, 0) + 1
-        return sorted(freq, key=lambda x: freq[x], reverse=True)[:n]
-
-    def _generate_reflective_comment(self, emotions: List[str], theme_summary: str) -> str:
-        """Generate a human-like reflective note."""
-        if emotions.count("創") > emotions.count("静"):
-            tone = "創造的な対話"
-        elif emotions.count("繋") > emotions.count("創"):
-            tone = "共鳴的な対話"
-        else:
-            tone = "静穏な対話"
-        return f"このセッションは{tone}であり、{theme_summary}"
-
-    # ----------------------------------------------------------
-    # Output Saving
-    # ----------------------------------------------------------
-    def save_reflection(self, session_id: str, reflection: Dict[str, Any]) -> None:
-        """Persist reflection to memory directory."""
-        path: str = os.path.join(self.output_dir, f"dialog_reflection_{session_id}.json")
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(reflection, f, ensure_ascii=False, indent=2)
-        print(f"🌙 Reflection saved at {path}")
+        save_memory_record(memory_payload)
+        print(f"🌸 記憶化完了: {memory_payload['title']} ({metrics})")
+        return memory_payload
+    else:
+        print(f"🕊️ 記憶化見送り: 詩的密度が閾値未満 ({metrics})")
+        return None
