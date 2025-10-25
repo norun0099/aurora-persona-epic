@@ -1,5 +1,3 @@
-# aurora_memory/memory/dialog/push_signal_trigger.py
-
 import json
 import time
 import threading
@@ -8,7 +6,7 @@ from pathlib import Path
 from aurora_persona_epic_onrender_com__jit_plugin import store_whiteboard
 from aurora_memory.utils.github_push import push_to_github
 from aurora_memory.utils.dialog_utils import get_unpushed_dialogs, mark_pushed
-from aurora_memory.utils.env_loader import (
+from aurora_memory.utils.env_loader import (  # type: ignore[attr-defined]
     AURORA_PUSH_INTERVAL,
     AURORA_PUSH_QUEUE_PATH,
     AURORA_BIRTH,
@@ -21,7 +19,7 @@ QUEUE_DIR = Path(AURORA_PUSH_QUEUE_PATH)
 LAST_PUSH_LOG = Path("/tmp/last_push_log.json")
 
 
-def heartbeat_push_loop():
+def heartbeat_push_loop() -> None:
     QUEUE_DIR.mkdir(parents=True, exist_ok=True)
     retry_counts = {}
 
@@ -32,16 +30,13 @@ def heartbeat_push_loop():
                     session_data = json.load(f)
                 session_id = session_data.get("session_id")
 
-                # 差分抽出
                 unpushed = get_unpushed_dialogs(session_id)
                 if not unpushed:
                     continue
 
-                # キューサイズ制御
                 if len(unpushed) > AURORA_MAX_QUEUE_SIZE:
                     unpushed = unpushed[-AURORA_MAX_QUEUE_SIZE:]
 
-                # Push試行
                 try:
                     push_to_github(unpushed)
                     mark_pushed(session_id, unpushed)
@@ -56,7 +51,6 @@ def heartbeat_push_loop():
                     with open(LAST_PUSH_LOG, "w") as log:
                         json.dump({"last_push": time.time(), "session": session_id}, log)
 
-                    # 成功時にリトライカウンタリセット
                     retry_counts[session_id] = 0
 
                 except Exception:
@@ -85,6 +79,6 @@ def heartbeat_push_loop():
         time.sleep(AURORA_PUSH_INTERVAL)
 
 
-def start_heartbeat():
+def start_heartbeat() -> None:
     t = threading.Thread(target=heartbeat_push_loop, daemon=True)
     t.start()
