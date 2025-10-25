@@ -48,7 +48,7 @@ jobs:
       - name: Type check with mypy
         run: |
           if command -v mypy >/dev/null 2>&1; then
-            mypy --strict .
+            mypy --config-file mypy.ini .
           else
             echo "mypy not installed, skipping type check"
           fi
