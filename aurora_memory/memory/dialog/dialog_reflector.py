@@ -1,6 +1,6 @@
-import json
 import time
 from aurora_memory.api.memory_saver import save_memory_record
+
 
 def analyze_dialog(dialog_history):
     """
@@ -17,7 +17,6 @@ def analyze_dialog(dialog_history):
 
     for turn in dialog_history:
         text = turn.get("content", "")
-        layer = turn.get("layer", "null")
 
         # 感情の深度
         if any(word in text for word in ["嬉", "悲", "痛", "愛", "願"]):
