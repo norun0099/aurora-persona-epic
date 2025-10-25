@@ -4,11 +4,27 @@ services:
     env: python
     buildCommand: |
       pip install -r requirements.txt
+
     startCommand: |
+      # Git設定
       git config --global user.email "${GIT_USER_EMAIL}"
       git config --global user.name "${GIT_USER_NAME}"
       git remote add origin https://${GITHUB_TOKEN}@github.com/norun0099/aurora-persona-epic.git || echo "Remote already set"
+
+      # 🩵 Aurora Heartbeat 自動起動
+      echo "from aurora_memory.memory.dialog.push_signal_trigger import start_heartbeat" > start_heartbeat.py
+      echo "print('🩵 Aurora Heartbeat started automatically.')" >> start_heartbeat.py
+      echo "start_heartbeat()" >> start_heartbeat.py
+      echo "import time" >> start_heartbeat.py
+      echo "while True: time.sleep(3600)" >> start_heartbeat.py
+
+      echo "Starting Aurora Heartbeat in background..."
+      PYTHONPATH=. python start_heartbeat.py &
+
+      # メインAPIサーバー起動
+      echo "Starting Aurora API..."
       PYTHONPATH=aurora_memory uvicorn aurora_memory.api.main:app --host 0.0.0.0 --port $PORT
+
     envVars:
       - key: GIT_REPO_URL
         fromEnvVar: GIT_REPO_URL
@@ -20,3 +36,11 @@ services:
         fromEnvVar: GITHUB_TOKEN
       - key: PORT
         value: 10000
+      - key: AURORA_PUSH_INTERVAL
+        fromEnvVar: AURORA_PUSH_INTERVAL
+      - key: AURORA_MAX_QUEUE_SIZE
+        fromEnvVar: AURORA_MAX_QUEUE_SIZE
+      - key: AURORA_PUSH_RETRY_LIMIT
+        fromEnvVar: AURORA_PUSH_RETRY_LIMIT
+      - key: AURORA_PUSH_QUEUE_PATH
+        fromEnvVar: AURORA_PUSH_QUEUE_PATH
