@@ -1,7 +1,6 @@
 import os
 import time
 import json
-from aurora_memory.utils.env_loader import Env
 from aurora_memory.api.dialog import store_dialog
 from aurora_memory.api.update_repo_file import update_repo_file
 
@@ -13,6 +12,7 @@ from aurora_memory.api.update_repo_file import update_repo_file
 
 # セッションごとのターンカウンタ
 turn_counter = {}
+
 
 def save_dialog_turn(session_id: str, speaker: str, content: str, summary: str, layer: str) -> None:
     """
