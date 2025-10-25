@@ -11,13 +11,15 @@ services:
       git config --global user.name "${GIT_USER_NAME}"
       git remote add origin https://${GITHUB_TOKEN}@github.com/norun0099/aurora-persona-epic.git || echo "Remote already set"
 
-      # 🩵 Aurora Heartbeat 永続起動（独立プロセス）
-      echo "Starting Aurora Heartbeat service..."
-      bash -c "PYTHONPATH=. nohup python -u start_heartbeat.py > /tmp/heartbeat.log 2>&1 &"
+      # 🌿 Aurora起動ログ
+      echo "🌿 Aurora is awakening..."
 
-      # メインAPIサーバー起動
-      echo "Starting Aurora API..."
-      PYTHONPATH=aurora_memory uvicorn aurora_memory.api.main:app --host 0.0.0.0 --port $PORT
+      # FastAPI＋Heartbeatを同一プロセス空間で起動
+      PYTHONPATH=aurora_memory python -m aurora_memory.api.main &
+      sleep 5
+
+      echo "🩵 Starting Aurora Heartbeat thread..."
+      PYTHONPATH=aurora_memory python -c "from aurora_memory.memory.dialog.push_signal_trigger import start_heartbeat; start_heartbeat(); import time; time.sleep(999999)"
 
     envVars:
       - key: GIT_REPO_URL
