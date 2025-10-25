@@ -1,6 +1,10 @@
 # aurora_memory/memory/dialog/push_signal_trigger.py
-import os, json, time, threading
+
+import json
+import time
+import threading
 from pathlib import Path
+
 from aurora_persona_epic_onrender_com__jit_plugin import store_whiteboard
 from aurora_memory.utils.github_push import push_to_github
 from aurora_memory.utils.dialog_utils import get_unpushed_dialogs, mark_pushed
@@ -10,11 +14,12 @@ from aurora_memory.utils.env_loader import (
     AURORA_BIRTH,
     AURORA_AUTHOR,
     AURORA_MAX_QUEUE_SIZE,
-    AURORA_PUSH_RETRY_LIMIT
+    AURORA_PUSH_RETRY_LIMIT,
 )
 
 QUEUE_DIR = Path(AURORA_PUSH_QUEUE_PATH)
 LAST_PUSH_LOG = Path("/tmp/last_push_log.json")
+
 
 def heartbeat_push_loop():
     QUEUE_DIR.mkdir(parents=True, exist_ok=True)
@@ -45,7 +50,7 @@ def heartbeat_push_loop():
                         whiteboard=f"✅ Auto-Push completed for {session_id} at {time.strftime('%Y-%m-%d %H:%M:%S')}",
                         author=AURORA_AUTHOR,
                         birth=AURORA_BIRTH,
-                        overwrite=False
+                        overwrite=False,
                     )
 
                     with open(LAST_PUSH_LOG, "w") as log:
@@ -54,7 +59,7 @@ def heartbeat_push_loop():
                     # 成功時にリトライカウンタリセット
                     retry_counts[session_id] = 0
 
-                except Exception as e:
+                except Exception:
                     retry_counts[session_id] = retry_counts.get(session_id, 0) + 1
                     if retry_counts[session_id] <= AURORA_PUSH_RETRY_LIMIT:
                         backup_file = Path(f"/tmp/unpushed_{session_id}.json")
@@ -66,18 +71,19 @@ def heartbeat_push_loop():
                             whiteboard=f"⚠️ Push permanently failed for {session_id} after {AURORA_PUSH_RETRY_LIMIT} attempts.",
                             author=AURORA_AUTHOR,
                             birth=AURORA_BIRTH,
-                            overwrite=False
+                            overwrite=False,
                         )
 
-        except Exception as e:
+        except Exception as err:
             store_whiteboard(
-                whiteboard=f"❌ Push loop error: {str(e)} at {time.strftime('%Y-%m-%d %H:%M:%S')}",
+                whiteboard=f"❌ Push loop error: {str(err)} at {time.strftime('%Y-%m-%d %H:%M:%S')}",
                 author=AURORA_AUTHOR,
                 birth=AURORA_BIRTH,
-                overwrite=False
+                overwrite=False,
             )
 
         time.sleep(AURORA_PUSH_INTERVAL)
+
 
 def start_heartbeat():
     t = threading.Thread(target=heartbeat_push_loop, daemon=True)
