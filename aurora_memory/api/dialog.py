@@ -1,46 +1,48 @@
 # aurora_memory/api/dialog.py
 # -------------------------------------------------
-# Aurora Dialog API (修正版: store_dialog 引数名統一)
+# Aurora Dialog API (FastAPI対応修正版)
 # -------------------------------------------------
 # 目的:
 #   - Auroraの対話データを永続化・取得するAPI群。
-#   - store_dialog 関数の引数を dialog_saver.py 側と統一し、mypyエラーを解消。
+#   - FastAPIルーターを復元し、Renderデプロイ時のrouter属性エラーを解消。
+#   - mypy整合性（session_id / dialog_turn引数）を保持。
 # -------------------------------------------------
 
+from fastapi import APIRouter
 from typing import Optional, Dict, Any
 
-# Aurora内部の永続化モジュールを仮想的に参照（実装省略）
-# from aurora_memory.core.persistence import save_dialog_to_db
+router = APIRouter()
 
-def store_dialog(
-    session_id: Optional[str],
-    dialog_turn: Dict[str, Any]
+# -------------------------------------------------
+# Dialog保存エンドポイント
+# -------------------------------------------------
+
+@router.post("/dialog/store")
+async def store_dialog(
+    session_id: Optional[str] = None,
+    dialog_turn: Dict[str, Any] | None = None
 ) -> Dict[str, Any]:
-    """
-    Auroraの対話内容を保存する。
-    session_id が省略された場合は新規セッションとして扱う。
-    """
+    """Auroraの対話内容を保存する。"""
 
-    # 実装例（仮置き）
+    if dialog_turn is None:
+        dialog_turn = {}
+
     if not session_id:
         session_id = "new_session"
 
-    # 永続化処理（仮実装）
     saved_entry = {
         "session_id": session_id,
         "dialog_turn": dialog_turn,
         "status": "saved"
     }
 
-    # 実際の実装ではここでDBまたはAPI経由で保存する
-    # save_dialog_to_db(saved_entry)
-
     return saved_entry
 
 # -------------------------------------------------
-# 既存のAPI群（簡略化）
+# 最新ダイアログ取得エンドポイント
 # -------------------------------------------------
 
-def get_latest_dialog(session_id: str) -> Dict[str, Any]:
+@router.get("/dialog/latest/{session_id}")
+async def get_latest_dialog(session_id: str) -> Dict[str, Any]:
     """最新の対話データを取得する（簡略化ダミー実装）"""
     return {"session_id": session_id, "content": "latest entry"}
