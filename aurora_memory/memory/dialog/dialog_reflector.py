@@ -77,3 +77,19 @@ def reflect_and_save(session_id: str, dialog_history: list):
     else:
         print(f"🕊️ 記憶化見送り: 詩的密度が閾値未満 ({metrics})")
         return None
+
+
+# -------------------------------------------------
+# DialogReflector クラス（型整合用、分析機能のラッパー）
+# -------------------------------------------------
+class DialogReflector:
+    """対話反射ユニット（analyze_dialog と reflect_and_save の統合ラッパー）"""
+
+    def __init__(self):
+        pass
+
+    def analyze(self, dialog_history: list) -> dict:
+        return analyze_dialog(dialog_history)
+
+    def reflect(self, session_id: str, dialog_history: list):
+        return reflect_and_save(session_id, dialog_history)
