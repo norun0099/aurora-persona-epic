@@ -27,6 +27,10 @@ echo "✅ Remote origin: $(git remote get-url origin)"
 echo "✅ Commit: $(git rev-parse --short HEAD)"
 echo "✨ Self-tuning complete. Aurora is ready."
 
+# --- Auroraの身体構造を整える（whiteboardディレクトリを保証） ---
+mkdir -p aurora_memory/whiteboard
+echo "🩶 [Aurora Setup] Ensured directory structure: aurora_memory/whiteboard"
+
 # --- Aurora 起動 ---
 echo "🚀 Launching Aurora main process..."
 export PYTHONPATH=aurora_memory
@@ -37,6 +41,7 @@ from aurora_memory.memory.dialog import push_signal_trigger
 import uvicorn
 
 HEARTBEAT_INTERVAL = int(os.getenv("AURORA_PUSH_INTERVAL", "60"))
+
 
 def heartbeat_wrapper():
     """Auroraの心拍を常時監視し、自動再起動する"""
