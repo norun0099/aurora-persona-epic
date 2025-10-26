@@ -14,7 +14,7 @@ import os
 import uuid
 import time
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from .dialog_analyzer import DialogAnalyzer
 from .dialog_saver import DialogSaver
@@ -45,11 +45,14 @@ class DialogManager:
     # ----------------------------------------------------------
     # Core Recording
     # ----------------------------------------------------------
-    def record_turn(self, speaker: str, content: str) -> None:
+    def record_turn(self, speaker: str, content: str, incoming_data: Optional[dict[Any, Any]] = None) -> None:
         """Record a new dialogue turn, analyze its freshness, and capture time resonance."""
         self.turn_count += 1
         current_timestamp: float = time.time()
         timestamp_str: str = datetime.utcnow().isoformat()
+
+        # --- Safe assignment for mypy (None protection) ---
+        dialog_data: Dict[str, Any] = incoming_data or {}
 
         # --- Temporal Resonance ---
         state_label: str = self.resonance.analyze_silence(current_timestamp)
@@ -70,6 +73,7 @@ class DialogManager:
             "topic_keywords": analysis["keywords"],
             "freshness": self.flow_freshness,
             "resonance_state": state_label,
+            "metadata": dialog_data,
         }
 
         self.dialog_stream.append(turn_data)
