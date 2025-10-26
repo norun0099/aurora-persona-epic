@@ -1,4 +1,8 @@
-import threading, time, traceback, os, json, datetime
+import os
+import time
+import json
+import datetime
+import traceback
 
 # --- 安全なフォールバックを導入 ---
 try:
