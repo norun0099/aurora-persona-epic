@@ -6,12 +6,7 @@ services:
       pip install -r requirements.txt
 
     startCommand: |
-      git config --global user.email "${GIT_USER_EMAIL}"
-      git config --global user.name "${GIT_USER_NAME}"
-      git remote add origin https://${GITHUB_TOKEN}@github.com/norun0099/aurora-persona-epic.git || echo "Remote already set"
-
-      echo "🌿 Aurora is awakening with integrated heartbeat..."
-      PYTHONPATH=aurora_memory python -c "import threading,time; from aurora_memory.memory.dialog.push_signal_trigger import start_heartbeat; import uvicorn; print('🩵 Starting Aurora Heartbeat thread...'); threading.Thread(target=start_heartbeat,daemon=True).start(); print('🚀 Launching Aurora FastAPI server...'); uvicorn.run('aurora_memory.api.main:app',host='0.0.0.0',port=int(${PORT}))"
+      bash start.sh
 
     envVars:
       - key: GIT_REPO_URL
