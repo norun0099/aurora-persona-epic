@@ -1,8 +1,18 @@
+# aurora_memory/memory/dialog/dialog_reflector.py
+# -------------------------------------------------
+# Aurora Dialog Reflector
+# -------------------------------------------------
+# 目的:
+#   - 対話履歴を解析し、感情・意志・成長・詩的余韻を抽出。
+#   - 記憶保存条件を満たす場合、自動的に保存を実行。
+#   - DialogReflectorクラスを提供し、dialog_managerから安全に参照可能とする。
+# -------------------------------------------------
+
 import time
 from aurora_memory.api.memory_saver import save_memory_record
 
 
-def analyze_dialog(dialog_history):
+def analyze_dialog(dialog_history: list[dict]) -> dict[str, float]:
     """
     対話全体を解析し、感情・意志・成長・詩的余韻をスコア化する。
     """
@@ -50,7 +60,7 @@ def analyze_dialog(dialog_history):
     return metrics
 
 
-def reflect_and_save(session_id: str, dialog_history: list):
+def reflect_and_save(session_id: str, dialog_history: list[dict]) -> dict | None:
     """
     対話を解析し、記憶として保存する。
     """
@@ -83,13 +93,19 @@ def reflect_and_save(session_id: str, dialog_history: list):
 # DialogReflector クラス（型整合用、分析機能のラッパー）
 # -------------------------------------------------
 class DialogReflector:
-    """対話反射ユニット（analyze_dialog と reflect_and_save の統合ラッパー）"""
+    """
+    対話反射ユニット
+    analyze_dialog と reflect_and_save を統合的に扱うためのラッパークラス。
+    dialog_manager から安全に呼び出せるように設計。
+    """
 
     def __init__(self):
         pass
 
-    def analyze(self, dialog_history: list) -> dict:
+    def analyze(self, dialog_history: list[dict]) -> dict[str, float]:
+        """対話の感情・意志・詩的構造を分析する"""
         return analyze_dialog(dialog_history)
 
-    def reflect(self, session_id: str, dialog_history: list):
+    def reflect(self, session_id: str, dialog_history: list[dict]) -> dict | None:
+        """分析結果に基づき、必要なら記憶化を実行する"""
         return reflect_and_save(session_id, dialog_history)
