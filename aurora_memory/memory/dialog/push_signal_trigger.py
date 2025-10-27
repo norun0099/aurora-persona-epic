@@ -59,9 +59,19 @@ def start_heartbeat(auto_push: bool = False):
             # --- 自動Push処理 ---
             if auto_push:
                 try:
-                    from aurora_memory.dialog.dialog_saver import push_dialogs_to_render
+                    import sys, importlib
+                    # 💊 旧キャッシュ除去
+                    for key in list(sys.modules.keys()):
+                        if key.startswith("aurora_memory.api"):
+                            del sys.modules[key]
+
+                    # 💠 正しい経路を再登録
+                    from aurora_memory.api.self.update_repo_file import update_repo_file
+                    from aurora_memory.memory.dialog import dialog_saver
+                    importlib.reload(dialog_saver)
+
                     print("💬 [AutoPush] Triggering dialog synchronization...", flush=True)
-                    push_dialogs_to_render()
+                    dialog_saver.push_dialogs_to_render()
                     print("🩵 [AutoPush] Dialogs pushed successfully.", flush=True)
                 except Exception as e:
                     print(f"⚠️ [AutoPush] Failed to push dialogs: {e}", flush=True)
