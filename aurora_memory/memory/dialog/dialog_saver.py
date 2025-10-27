@@ -34,7 +34,7 @@ def push_dialogs_to_render() -> None:
 
         # --- 修正版 API 呼び出し ---
         update_repo_file(
-            path=f"aurora_memory/dialog/{latest_file}",
+            filepath=f"aurora_memory/dialog/{latest_file}",
             content=json.dumps(dialog_data, ensure_ascii=False, indent=2),
             author="aurora",
             reason="AutoPush: synchronize latest dialog to repository"
