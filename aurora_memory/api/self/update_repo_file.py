@@ -3,8 +3,12 @@ Aurora self-layer wrapper for Render update_repo_file API.
 Maintains Aurora's structured call signature while bridging to the JIT plugin interface.
 """
 
+from fastapi import APIRouter
 from typing import Dict, Any
 import traceback
+
+# FastAPIがinclude_routerを呼んでも安全な空ルータ
+router = APIRouter()
 
 try:
     from aurora_persona_epic_onrender_com__jit_plugin import update_repo_file as remote_update
