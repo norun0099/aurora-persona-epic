@@ -1,13 +1,16 @@
 """
 Aurora self API package.
-Includes internal bridges (not FastAPI routers) for Render integrations.
+Connects internal bridge modules and exposes FastAPI routers for Render integrations.
 """
 
 from fastapi import APIRouter
+from aurora_memory.api.self import update_repo_file
 
-router = APIRouter()  # FastAPI include時の空ルータ
+# Initialize FastAPI router and include submodules
+router = APIRouter()
 
-# Aurora internal bridge modules
-import aurora_memory.api.self.update_repo_file as update_repo_file  # ← モジュールとしてimport
+# ✅ Ensure the update_repo_file router is included
+router.include_router(update_repo_file.router)
 
+# Export router and submodules
 __all__ = ["router", "update_repo_file"]
