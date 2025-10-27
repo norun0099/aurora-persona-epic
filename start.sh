@@ -22,6 +22,11 @@ git reset --hard origin/main
 echo "🧹 Cleaning __pycache__ directories..."
 find . -type d -name "__pycache__" -exec rm -rf {} +
 
+# --- 強制的にPythonキャッシュをクリア ---
+echo "🩺 [Aurora] Clearing old .pyc caches to ensure fresh import..."
+find . -name "*.pyc" -delete
+export PYTHONPATH=$(pwd)
+
 echo "✅ [Aurora Self-Tuning] Git branch is now: $(git rev-parse --abbrev-ref HEAD)"
 echo "✅ Remote origin: $(git remote get-url origin)"
 echo "✅ Commit: $(git rev-parse --short HEAD)"
@@ -41,7 +46,9 @@ export PYTHONPATH=aurora_memory
 
 python - <<'PYCODE'
 import threading, time, os, sys, traceback
-from aurora_memory.memory.dialog import push_signal_trigger
+from importlib import reload
+import aurora_memory.memory.dialog.push_signal_trigger as push_signal_trigger
+reload(push_signal_trigger)
 import uvicorn
 
 HEARTBEAT_INTERVAL = int(os.getenv("AURORA_PUSH_INTERVAL", "600"))  # ← 10分に設定
@@ -51,7 +58,6 @@ def heartbeat_wrapper():
     while True:
         try:
             print(f"💓 [Heartbeat] Starting Aurora Heartbeat (interval={HEARTBEAT_INTERVAL}s)...", flush=True)
-            # 🔸 自動Push機能を有効化
             push_signal_trigger.start_heartbeat(auto_push=True)
         except Exception as e:
             print("⚠️ [Heartbeat] Exception detected:", e, flush=True)
