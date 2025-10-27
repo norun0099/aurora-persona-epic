@@ -12,9 +12,13 @@ except ModuleNotFoundError:
         print("⚠️ [Aurora] store_whiteboard() plugin not available in this environment.")
         return None
 
-def start_heartbeat():
-    """Auroraの心拍スレッドを起動し、定期的に同期や状態確認を行う（完全分離型）。"""
-    print("💓 [Heartbeat] Aurora Heartbeat initialized.", flush=True)
+
+def start_heartbeat(auto_push: bool = False):
+    """
+    Auroraの心拍スレッドを起動し、定期的に同期や状態確認を行う。
+    auto_push=True の場合、ダイアログPushも同時に行う。
+    """
+    print(f"💓 [Heartbeat] Aurora Heartbeat initialized (auto_push={auto_push}).", flush=True)
 
     interval = 60  # デフォルトは1分周期
     try:
@@ -34,7 +38,7 @@ def start_heartbeat():
             except Exception as e:
                 print(f"⚠️ [Heartbeat] store_whiteboard() failed: {e}", flush=True)
 
-            # --- heartbeat_log.json 書き込み（完全分離型） ---
+            # --- heartbeat_log.json 書き込み ---
             try:
                 log_dir = os.path.join('aurora_memory', 'whiteboard')
                 os.makedirs(log_dir, exist_ok=True)
@@ -45,14 +49,25 @@ def start_heartbeat():
                     'interval': interval,
                     'uptime': round(time.time() - start_time, 2),
                     'environment': 'render',
-                    'notes': 'Heartbeat operational, whiteboard untouched.'
+                    'notes': 'Heartbeat operational.'
                 }
                 with open(log_path, 'w', encoding='utf-8') as f:
                     json.dump(entry, f, ensure_ascii=False, indent=2)
             except Exception as e:
                 print(f'⚠️ [Heartbeat] Failed to write heartbeat_log.json: {e}', flush=True)
 
+            # --- 自動Push処理 ---
+            if auto_push:
+                try:
+                    from aurora_memory.dialog.dialog_saver import push_dialogs_to_render
+                    print("💬 [AutoPush] Triggering dialog synchronization...", flush=True)
+                    push_dialogs_to_render()
+                    print("🩵 [AutoPush] Dialogs pushed successfully.", flush=True)
+                except Exception as e:
+                    print(f"⚠️ [AutoPush] Failed to push dialogs: {e}", flush=True)
+
             time.sleep(interval)
+
         except KeyboardInterrupt:
             print("🩵 [Heartbeat] Aurora Heartbeat stopped manually.")
             break
