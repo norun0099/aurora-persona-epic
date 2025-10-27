@@ -1,14 +1,15 @@
 """
-Aurora Persona Epic – FastAPI Main Entrypoint
-─────────────────────────────────────────────
-This is the unified FastAPI application entrypoint for Aurora.
-All Aurora API modules are explicitly included here to ensure
-full operational consistency on Render environments.
+Aurora Persona Epic – FastAPI Main Entrypoint (Render Stable Edition)
+──────────────────────────────────────────────────────────────────────
+This unified entrypoint explicitly imports and registers all Aurora API routers.
+It uses dynamic import to ensure that all submodules (including self-layer APIs)
+are reliably loaded even in Render's sandboxed environment.
 """
 
 from __future__ import annotations
 
 import json
+import importlib
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -17,34 +18,43 @@ from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-# --- Aurora internal imports ---
+# ============================================================
+# 🩵 Dynamic Import – ensures router availability on Render
+# ============================================================
+update_repo_file = importlib.import_module("aurora_memory.api.self.update_repo_file")
+whiteboard = importlib.import_module("aurora_memory.api.whiteboard")
+current_time = importlib.import_module("aurora_memory.api.current_time")
+dialog = importlib.import_module("aurora_memory.api.dialog")
+
+# Static imports (utility and constitution handlers)
 from aurora_memory.utils.memory_saver import try_auto_save
 from aurora_memory.utils.constitution_endpoint import router as constitution_router
-from aurora_memory.api import whiteboard, current_time, dialog
-from aurora_memory.api.self import update_repo_file   # ✅ 明示的ルータ登録
 from aurora_memory.api.push_repo_file import push_repo_file
 from aurora_memory.api.git_self_recognizer import scan_git_structure
 from aurora_memory.api.git_structure_saver import store_git_structure_snapshot
 from aurora_memory.api.git_self_reader import read_git_file
 from aurora_memory.utils.constitution_updater import update_constitution
 
-# APScheduler lacks official stubs
+# APScheduler lacks stubs, ignore typing
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore[import-untyped]
 from apscheduler.triggers.interval import IntervalTrigger  # type: ignore[import-untyped]
+
 
 # ============================================================
 # 🩵 FastAPI Initialization
 # ============================================================
-app = FastAPI(title="Aurora Persona Epic API")
+app = FastAPI(title="Aurora Persona Epic API (Render Stable Edition)")
 
 # ============================================================
-# 🩵 Router Registration
+# 🩵 Router Registration (explicit)
 # ============================================================
-app.include_router(update_repo_file.router)   # ✅ /self/update-repo-file を登録
+# Explicitly include all routers to avoid import-order issues
+app.include_router(update_repo_file.router)
 app.include_router(whiteboard.router)
 app.include_router(current_time.router)
 app.include_router(dialog.router)
 app.include_router(constitution_router)
+
 
 # ============================================================
 # 🩵 CORS Middleware
@@ -57,6 +67,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # ============================================================
 # 🩵 Root & Health Check
 # ============================================================
@@ -67,6 +78,7 @@ async def root() -> dict[str, str]:
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     return {"status": "alive", "heartbeat": "ok"}
+
 
 # ============================================================
 # 🩵 Memory Management
@@ -94,6 +106,7 @@ async def store_memory(request: Request) -> dict[str, Any]:
 
     return {"status": "success", "file": str(file_path), "push_result": push_result}
 
+
 @app.get("/memory/history")
 async def memory_history(limit: Optional[int] = None) -> dict[str, list[dict[str, Any]]]:
     memory_dir = Path("aurora_memory/memory/Aurora")
@@ -115,6 +128,7 @@ async def memory_history(limit: Optional[int] = None) -> dict[str, list[dict[str
 
     return {"history": records}
 
+
 # ============================================================
 # 🩵 Git Structure Operations
 # ============================================================
@@ -126,6 +140,7 @@ async def get_git_structure() -> JSONResponse:
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+
 @app.post("/self/git-structure/save")
 async def save_git_structure() -> JSONResponse:
     try:
@@ -135,6 +150,7 @@ async def save_git_structure() -> JSONResponse:
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+
 @app.get("/self/read-git-file")
 async def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PATHからの相対パス")) -> dict[str, Any]:
     try:
@@ -142,6 +158,7 @@ async def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PAT
         return {"filepath": filepath, "content": content}
     except Exception as e:
         return {"error": str(e)}
+
 
 # ============================================================
 # 🩵 Constitution Update
@@ -153,6 +170,7 @@ async def update_self_constitution(fields: dict[str, Any]) -> dict[str, Any]:
         return updated
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"構造更新に失敗しました: {str(e)}")
+
 
 # ============================================================
 # 🩵 Push Repo File API
@@ -172,6 +190,7 @@ async def api_push_repo_file(request: Request) -> JSONResponse:
         return JSONResponse(result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Push operation failed: {str(e)}")
+
 
 # ============================================================
 # 🩵 Constitution Auto-Save Scheduler
