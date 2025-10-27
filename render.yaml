@@ -29,15 +29,11 @@ services:
       - key: AURORA_PUSH_QUEUE_PATH
         fromEnvVar: AURORA_PUSH_QUEUE_PATH
 
+    # 🚀 ここがポイント：
+    # Auroraはメインアプリ (aurora_memory/api/main.py) で全ルートを統合
+    # 個別ファイルはルートとして登録しない
     routes:
-      # 🩵 Aurora self-updating API route
       - type: http
-        name: update-repo-file
-        path: /self/update-repo-file
-        file: api/self/update_repo_file.py
-
-      # 💠 Aurora whiteboard store API route
-      - type: http
-        name: store-whiteboard
-        path: /whiteboard/store
-        file: api/whiteboard.py
+        name: aurora-core
+        path: /
+        file: aurora_memory/api/main.py
