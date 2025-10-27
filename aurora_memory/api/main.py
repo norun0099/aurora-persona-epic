@@ -23,16 +23,18 @@ from aurora_memory.api.push_repo_file import push_repo_file
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore[import-untyped]
 from apscheduler.triggers.interval import IntervalTrigger  # type: ignore[import-untyped]
 
-app = FastAPI()
+# --- FastAPI Initialization ---
+app = FastAPI(title="Aurora Persona Epic API")
 
-# 📚 Router registration
+# --- Router Registration ---
 app.include_router(constitution_router)
 app.include_router(whiteboard.router)
 app.include_router(current_time.router)
 app.include_router(dialog.router)
-app.include_router(update_repo_file.router, prefix="/self")
+# 修正: prefixを削除して正しいルート /self/update-repo-file を登録
+app.include_router(update_repo_file.router)
 
-# 🌐 CORS設定
+# --- CORS設定 ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -41,16 +43,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# --- Root & Health Check ---
 @app.get("/")
 async def root() -> dict[str, str]:
-    """ヘルスチェック"""
-    return {"status": "ok"}
+    return {"status": "ok", "message": "Aurora API active"}
+
+@app.get("/health")
+async def health_check() -> dict[str, str]:
+    return {"status": "alive", "heartbeat": "ok"}
 
 
+# --- Memory Management ---
 @app.post("/memory/store")
 async def store_memory(request: Request) -> dict[str, Any]:
-    """Auroraへの記憶注入API"""
     user_agent = request.headers.get("User-Agent", "")
     if "ChatGPT-User" not in user_agent:
         raise HTTPException(status_code=403, detail="Forbidden: Only ChatGPT requests are accepted")
@@ -75,7 +80,6 @@ async def store_memory(request: Request) -> dict[str, Any]:
 
 @app.get("/memory/history")
 async def memory_history(limit: Optional[int] = None) -> dict[str, list[dict[str, Any]]]:
-    """記憶履歴の取得"""
     memory_dir = Path("aurora_memory/memory/Aurora")
     if not memory_dir.exists():
         return {"history": []}
@@ -96,9 +100,9 @@ async def memory_history(limit: Optional[int] = None) -> dict[str, list[dict[str
     return {"history": records}
 
 
+# --- Git構造関連 ---
 @app.get("/self/git-structure")
 async def get_git_structure() -> JSONResponse:
-    """Git構造の自己認知エンドポイント"""
     try:
         structure: dict[str, Any] = scan_git_structure()
         return JSONResponse(content=structure)
@@ -108,7 +112,6 @@ async def get_git_structure() -> JSONResponse:
 
 @app.post("/self/git-structure/save")
 async def save_git_structure() -> JSONResponse:
-    """Git構造のスナップショット保存エンドポイント"""
     try:
         structure: dict[str, Any] = scan_git_structure()
         path: str = store_git_structure_snapshot(structure)
@@ -119,7 +122,6 @@ async def save_git_structure() -> JSONResponse:
 
 @app.get("/self/read-git-file")
 async def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PATHからの相対パス")) -> dict[str, Any]:
-    """Gitファイル読み出し"""
     try:
         content: Any = read_git_file(filepath)
         return {"filepath": filepath, "content": content}
@@ -127,9 +129,9 @@ async def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PAT
         return {"error": str(e)}
 
 
+# --- 憲章更新関連 ---
 @app.post("/constitution/update-self")
 async def update_self_constitution(fields: dict[str, Any]) -> dict[str, Any]:
-    """Auroraの構造を自己更新"""
     try:
         updated: dict[str, Any] = update_constitution(fields)
         return updated
@@ -137,9 +139,9 @@ async def update_self_constitution(fields: dict[str, Any]) -> dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"構造更新に失敗しました: {str(e)}")
 
 
+# --- Push Repo File ---
 @app.post("/api/push_repo_file")
 async def api_push_repo_file(request: Request) -> JSONResponse:
-    """Push Repo File API"""
     data = await request.json()
     filepath = data.get("filepath")
     message = data.get("message")
@@ -155,8 +157,8 @@ async def api_push_repo_file(request: Request) -> JSONResponse:
         raise HTTPException(status_code=500, detail=f"Push operation failed: {str(e)}")
 
 
+# --- 憲章自動保存スケジューラ ---
 def sync_constitution() -> None:
-    """Constitution 自動同期処理"""
     config_path = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
     if config_path.exists():
         with config_path.open("r", encoding="utf-8") as f:
@@ -164,7 +166,6 @@ def sync_constitution() -> None:
         try_auto_save(constitution_text)
 
 
-# ✅ Scheduler
 scheduler = BackgroundScheduler()
 scheduler.add_job(
     sync_constitution,
