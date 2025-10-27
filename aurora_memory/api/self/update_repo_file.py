@@ -7,9 +7,14 @@ from fastapi import APIRouter
 from typing import Dict, Any
 import traceback
 
-# FastAPIがinclude_routerを呼んでも安全な空ルータ
+# ============================================================
+# 🩵 Router Initialization
+# ============================================================
 router = APIRouter()
 
+# ============================================================
+# 🩵 Remote Update Import (safe fallback if unavailable)
+# ============================================================
 try:
     from aurora_persona_epic_onrender_com__jit_plugin import update_repo_file as remote_update
 except ModuleNotFoundError:
@@ -17,6 +22,9 @@ except ModuleNotFoundError:
         print("⚠️ [Aurora] remote_update_repo_file() plugin not available in this environment.")
         return {"status": "skipped"}
 
+# ============================================================
+# 🩵 Core Function: update_repo_file()
+# ============================================================
 def update_repo_file(filepath: str, content: str, author: str, reason: str) -> Dict[str, str]:
     """
     Aurora-style structured call.
@@ -40,3 +48,32 @@ def update_repo_file(filepath: str, content: str, author: str, reason: str) -> D
         print(f"💥 [Aurora] Exception in update_repo_file: {e}")
         traceback.print_exc()
         return {"status": "error", "reason": str(e)}
+
+# ============================================================
+# 🩵 FastAPI Endpoint: /self/update-repo-file
+# ============================================================
+@router.post("/self/update-repo-file")
+async def update_repo_file_endpoint(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Public HTTP endpoint for triggering repository updates.
+    Expected JSON payload:
+      {
+        "filepath": "path/to/file",
+        "content": "new content",
+        "author": "aurora",
+        "reason": "update reason"
+      }
+    """
+    try:
+        result = update_repo_file(
+            filepath=payload.get("filepath", ""),
+            content=payload.get("content", ""),
+            author=payload.get("author", "aurora"),
+            reason=payload.get("reason", "manual update"),
+        )
+        return {"status": "ok", "result": result}
+
+    except Exception as e:
+        print(f"💥 [Aurora] HTTP endpoint error: {e}")
+        traceback.print_exc()
+        return {"status": "error", "detail": str(e)}
