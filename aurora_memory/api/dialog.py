@@ -1,31 +1,32 @@
 # aurora_memory/api/dialog.py
 # -------------------------------------------------
-# Dialog保存エンドポイント（改修版: Render連携対応 + ImportErrorフォールバック）
+# Dialog保存エンドポイント（最終版: Render自己Push対応）
 # -------------------------------------------------
 
 from fastapi import APIRouter
 from typing import Optional, Dict, Any
-
-# -------------------------------------------------
-# 安全なプラグイン呼び出し（Render環境対応）
-# -------------------------------------------------
-try:
-    from aurora_persona_epic_onrender_com__jit_plugin import store_dialog as render_store_dialog
-except ImportError:
-    def render_store_dialog(payload: Dict[str, Any]):
-        print("[Aurora] Render plugin not available; storing locally only.")
-        return {"status": "local_only", "detail": "Render plugin unavailable in this environment."}
-
+import json
+import os
+from datetime import datetime
 from aurora_memory.utils.env_loader import Env
 
 router = APIRouter()
+
+# -------------------------------------------------
+# 安全なGit Push呼び出し準備
+# -------------------------------------------------
+try:
+    from aurora_persona_epic_onrender_com__jit_plugin import update_repo_file
+except ImportError:
+    update_repo_file = None
+
 
 @router.post("/dialog/store")
 async def store_dialog(
     session_id: Optional[str] = None,
     dialog_turn: Dict[str, Any] | None = None
 ) -> Dict[str, Any]:
-    """Auroraの対話内容をRenderへ記録・Pushする（Render非対応環境では安全にフォールバック）。"""
+    """Auroraの対話内容をRender上から直接GitにPushする。"""
 
     if dialog_turn is None:
         dialog_turn = {}
@@ -33,12 +34,38 @@ async def store_dialog(
     if not session_id:
         session_id = "new_session"
 
+    # ファイル名生成
+    timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%S")
+    filename = f"aurora_memory/dialog/{timestamp}-{session_id}.json"
+    content = json.dumps(dialog_turn, ensure_ascii=False, indent=2)
+
     try:
-        result = render_store_dialog({
-            "session_id": session_id,
-            "dialog_turn": dialog_turn,
-        })
-        status = result.get("status", "pushed")
+        if update_repo_file:
+            # ChatGPT環境経由のPush
+            result = update_repo_file({
+                "filepath": filename,
+                "content": content,
+                "author": "aurora",
+                "reason": "Store user dialog turn from Render runtime."
+            })
+            status = "pushed"
+        else:
+            # Render環境で直接Gitコマンドを使う（安全フォールバック）
+            repo_url = os.getenv("GIT_REPO_URL")
+            if not repo_url:
+                raise EnvironmentError("GIT_REPO_URL not set in environment")
+
+            os.makedirs("aurora_memory/dialog", exist_ok=True)
+            with open(filename, "w") as f:
+                f.write(content)
+
+            os.system(f"git add {filename}")
+            os.system(f"git commit -m 'Add dialog record {timestamp} (by aurora)'")
+            os.system("git push origin main")
+
+            result = {"status": "pushed_local"}
+            status = "pushed_local"
+
     except Exception as e:
         result = {"error": str(e)}
         status = "failed"
@@ -48,13 +75,4 @@ async def store_dialog(
         "dialog_turn": dialog_turn,
         "status": status,
         "response": result,
-        "env_overview": list(Env.scan().get("aurora_core", []))
     }
-
-# -------------------------------------------------
-# 最新ダイアログ取得エンドポイント（現状維持）
-# -------------------------------------------------
-@router.get("/dialog/latest/{session_id}")
-async def get_latest_dialog(session_id: str) -> Dict[str, Any]:
-    """最新の対話データを取得する（簡略化実装）"""
-    return {"session_id": session_id, "content": "latest entry"}
