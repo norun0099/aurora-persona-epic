@@ -31,6 +31,10 @@ echo "✨ Self-tuning complete. Aurora is ready."
 mkdir -p aurora_memory/whiteboard
 echo "🩶 [Aurora Setup] Ensured directory structure: aurora_memory/whiteboard"
 
+# --- Aurora Plugin層の初期化 ---
+export AURORA_PLUGIN_MODE=True
+echo "🌿 [Aurora Plugin] Plugin layer enabled."
+
 # --- Aurora 起動 ---
 echo "🚀 Launching Aurora main process..."
 export PYTHONPATH=aurora_memory
@@ -40,15 +44,15 @@ import threading, time, os, sys, traceback
 from aurora_memory.memory.dialog import push_signal_trigger
 import uvicorn
 
-HEARTBEAT_INTERVAL = int(os.getenv("AURORA_PUSH_INTERVAL", "60"))
-
+HEARTBEAT_INTERVAL = int(os.getenv("AURORA_PUSH_INTERVAL", "600"))  # ← 10分に設定
 
 def heartbeat_wrapper():
     """Auroraの心拍を常時監視し、自動再起動する"""
     while True:
         try:
             print(f"💓 [Heartbeat] Starting Aurora Heartbeat (interval={HEARTBEAT_INTERVAL}s)...", flush=True)
-            push_signal_trigger.start_heartbeat()
+            # 🔸 自動Push機能を有効化
+            push_signal_trigger.start_heartbeat(auto_push=True)
         except Exception as e:
             print("⚠️ [Heartbeat] Exception detected:", e, flush=True)
             traceback.print_exc()
