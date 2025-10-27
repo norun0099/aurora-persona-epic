@@ -1,6 +1,6 @@
 # aurora_memory/api/dialog.py
 # -------------------------------------------------
-# Dialog保存エンドポイント（最終版: Render自己Push対応）
+# Dialog保存エンドポイント（最終版: Render自己Push対応・ruff整合版）
 # -------------------------------------------------
 
 from fastapi import APIRouter
@@ -8,7 +8,6 @@ from typing import Optional, Dict, Any
 import json
 import os
 from datetime import datetime
-from aurora_memory.utils.env_loader import Env
 
 router = APIRouter()
 
