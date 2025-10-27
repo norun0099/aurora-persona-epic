@@ -1,0 +1,8 @@
+{
+  "session_id": "verify_run",
+  "dialog_turn": {
+    "turn": 1,
+    "speaker": "user",
+    "content": "アウロラ、記録テストを始めよう。"
+  }
+}
