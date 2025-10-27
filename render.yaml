@@ -2,6 +2,7 @@ services:
   - type: web
     name: aurora-persona-epic
     env: python
+
     buildCommand: |
       pip install -r requirements.txt
 
@@ -27,3 +28,16 @@ services:
         fromEnvVar: AURORA_PUSH_RETRY_LIMIT
       - key: AURORA_PUSH_QUEUE_PATH
         fromEnvVar: AURORA_PUSH_QUEUE_PATH
+
+    routes:
+      # 🩵 Aurora self-updating API route
+      - type: http
+        name: update-repo-file
+        path: /self/update-repo-file
+        file: api/self/update_repo_file.py
+
+      # 💠 Aurora whiteboard store API route
+      - type: http
+        name: store-whiteboard
+        path: /whiteboard/store
+        file: api/whiteboard.py
