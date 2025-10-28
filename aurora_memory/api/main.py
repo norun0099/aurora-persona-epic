@@ -31,7 +31,7 @@ import api.current_time
 import api.constitution_diff
 import api.commit_constitution_update
 import api.push_controller
-from aurora_memory.api import update_repo_file  # ← 追加
+from api.self import update_repo_file  # ✅ 修正版：正しい import
 
 # ---------------------------------------------------------
 # Aurora Core Application Setup
@@ -99,7 +99,7 @@ except Exception as e:
     print(f"[Aurora:warn] commit_constitution_update module not loaded: {e}")
 
 # ---------------------------------------------------------
-# 🩵 Aurora self-update API  ← 新規追加ブロック
+# 🩵 Aurora self-update API  ← 修正版
 # ---------------------------------------------------------
 try:
     app.include_router(update_repo_file.router, prefix="/self", tags=["self"])
