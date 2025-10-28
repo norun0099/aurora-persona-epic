@@ -1,49 +1,33 @@
+# =========================================================
+# Aurora Persona Epic - Render Deploy Configuration
+# =========================================================
+# Render上でのビルドと実行を安定化するための設定。
+# .venv が削除されても PyYAML を含む依存関係を保持し、
+# Aurora の FastAPI サーバーを安全に起動させる。
+# =========================================================
+
 services:
   - type: web
     name: aurora-persona-epic
     env: python
+    region: oregon
 
     buildCommand: |
-      pip install -r requirements.txt
+      echo "🔧 [Build] Installing Python dependencies..."
+      pip install --upgrade pip
+      pip install --no-cache-dir -r requirements.txt
+      echo "📦 [Build] Installing PyYAML into persistent target..."
+      pip install --target /opt/render/project/src/.venv/lib/python3.11/site-packages PyYAML
 
-    startCommand: |
-      bash start.sh
+    startCommand: bash start.sh
+    autoDeploy: true
 
     envVars:
-      - key: GIT_REPO_URL
-        fromEnvVar: GIT_REPO_URL
-      - key: GIT_USER_EMAIL
-        fromEnvVar: GIT_USER_EMAIL
-      - key: GIT_USER_NAME
-        fromEnvVar: GIT_USER_NAME
-      - key: GITHUB_TOKEN
-        fromEnvVar: GITHUB_TOKEN
+      - key: PYTHONUNBUFFERED
+        value: "1"
       - key: PORT
-        value: 10000
+        value: "10000"
       - key: AURORA_PUSH_INTERVAL
-        fromEnvVar: AURORA_PUSH_INTERVAL
-      - key: AURORA_MAX_QUEUE_SIZE
-        fromEnvVar: AURORA_MAX_QUEUE_SIZE
-      - key: AURORA_PUSH_RETRY_LIMIT
-        fromEnvVar: AURORA_PUSH_RETRY_LIMIT
-      - key: AURORA_PUSH_QUEUE_PATH
-        fromEnvVar: AURORA_PUSH_QUEUE_PATH
-
-    # ---------------------------------------------------------
-    # ✅ 修正点
-    #  - Renderのファイル検出器が api/self/ 以下のモジュールを確実に認識するよう、
-    #    buildContextInclude を明示化。
-    #  - main.py の単一ルート構成は維持しつつ、サブモジュールの存在を通知。
-    # ---------------------------------------------------------
-    buildContextInclude:
-      - api/self/*
-      - aurora_memory/**
-      - api/utils/**
-      - requirements.txt
-      - start.sh
-
-    routes:
-      - type: http
-        name: aurora-core
-        path: /
-        file: aurora_memory/api/main.py
+        value: "600"
+      - key: RENDER_ENV
+        value: "true"
