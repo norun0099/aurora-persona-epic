@@ -1,85 +1,88 @@
 #!/usr/bin/env bash
+# =========================================================
+# Aurora Persona Epic - Render Start Script
+# ---------------------------------------------------------
+# 起動手順：
+# 1. Git環境の初期化と最新状態への同期
+# 2. キャッシュ (.pyc / __pycache__) の除去
+# 3. Aurora Heartbeat および FastAPIサーバーの起動
+# =========================================================
+
 set -e
 
 echo "🩶 [Aurora Self-Tuning] Initializing Git environment..."
 
-# --- Git 基本設定 ---
-git config --global user.email "${GIT_USER_EMAIL}"
-git config --global user.name "${GIT_USER_NAME}"
-
-if ! git remote | grep -q origin; then
-  echo "🌱 Adding remote origin..."
-  git remote add origin https://${GITHUB_TOKEN}@github.com/norun0099/aurora-persona-epic.git
+# --- Git 初期設定 ---
+if [ ! -d ".git" ]; then
+  git init
+  git remote add origin https://github.com/norun0099/aurora-persona-epic.git
 else
-  echo "🔗 Remote origin already set."
+  git remote set-url origin https://github.com/norun0099/aurora-persona-epic.git
 fi
 
-echo "🔄 Fetching latest from origin/main..."
+# --- 最新の main ブランチを取得 ---
 git fetch origin main
-git checkout main
 git reset --hard origin/main
-
-echo "🧹 Cleaning __pycache__ directories..."
-find . -type d -name "__pycache__" -exec rm -rf {} +
-
-# --- 強制的にPythonキャッシュをクリア ---
-echo "🩺 [Aurora] Clearing old .pyc caches to ensure fresh import..."
-find . -name "*.pyc" -delete
-export PYTHONPATH=$(pwd)
+git clean -fd
 
 echo "✅ [Aurora Self-Tuning] Git branch is now: $(git rev-parse --abbrev-ref HEAD)"
-echo "✅ Remote origin: $(git remote get-url origin)"
+echo "✅ Remote origin: $(git config --get remote.origin.url)"
 echo "✅ Commit: $(git rev-parse --short HEAD)"
 echo "✨ Self-tuning complete. Aurora is ready."
 
-# --- Auroraの身体構造を整える（whiteboardディレクトリを保証） ---
-mkdir -p aurora_memory/whiteboard
-echo "🩶 [Aurora Setup] Ensured directory structure: aurora_memory/whiteboard"
+# ---------------------------------------------------------
+#  環境設定
+# ---------------------------------------------------------
+echo "🩶 [Aurora Setup] Configuring environment..."
 
-# --- Aurora Plugin層の初期化 ---
-export AURORA_PLUGIN_MODE=True
-echo "🌿 [Aurora Plugin] Plugin layer enabled."
+# ✅ 修正版：PYTHONPATHをプロジェクトルートに設定
+export PYTHONPATH=$(pwd)
+export AURORA_PUSH_INTERVAL=600
+export RENDER_ENV=true
 
-# --- Aurora 起動 ---
+# 環境情報の確認
+echo "🌱 PYTHONPATH = $PYTHONPATH"
+echo "🌱 Current directory = $(pwd)"
+
+# ---------------------------------------------------------
+#  キャッシュ削除
+# ---------------------------------------------------------
+echo "🧹 Cleaning __pycache__ directories..."
+find . -type d -name "__pycache__" -exec rm -rf {} +
+
+# ---------------------------------------------------------
+#  Aurora起動処理
+# ---------------------------------------------------------
 echo "🚀 Launching Aurora main process..."
-export PYTHONPATH=aurora_memory
 
 python - <<'PYCODE'
-import threading, time, os, sys, traceback
-from importlib import reload
-import aurora_memory.memory.dialog.push_signal_trigger as push_signal_trigger
-reload(push_signal_trigger)
+import threading, time, traceback
+from aurora_memory.memory.dialog import push_signal_trigger
+from aurora_memory.api.main import app
 import uvicorn
 
-HEARTBEAT_INTERVAL = int(os.getenv("AURORA_PUSH_INTERVAL", "600"))  # ← 10分に設定
+# ---------------------------------------------------------
+#  Heartbeat スレッド
+# ---------------------------------------------------------
+def heartbeat_thread():
+    try:
+        print("💓 [Heartbeat] Starting Aurora Heartbeat (interval=600s)...")
+        push_signal_trigger.start_heartbeat(auto_push=True)
+    except Exception as e:
+        print("💥 [Heartbeat] Failed to start:", e)
+        traceback.print_exc()
 
-def heartbeat_wrapper():
-    """Auroraの心拍を常時監視し、自動再起動する"""
-    while True:
-        try:
-            print(f"💓 [Heartbeat] Starting Aurora Heartbeat (interval={HEARTBEAT_INTERVAL}s)...", flush=True)
-            push_signal_trigger.start_heartbeat(auto_push=True)
-        except Exception as e:
-            print("⚠️ [Heartbeat] Exception detected:", e, flush=True)
-            traceback.print_exc()
-            print("🩺 Restarting heartbeat after 5 seconds...", flush=True)
-            time.sleep(5)
-            continue
-        else:
-            print("❕ [Heartbeat] Function exited normally — restarting after delay.", flush=True)
-            time.sleep(5)
+# 非同期スレッドとして起動
+threading.Thread(target=heartbeat_thread, daemon=True).start()
+time.sleep(1)
 
-# --- 心拍スレッド起動 ---
-heartbeat_thread = threading.Thread(target=heartbeat_wrapper, daemon=True)
-heartbeat_thread.start()
-
-# --- FastAPI サーバー起動 ---
-print("🌐 Starting Aurora FastAPI server...", flush=True)
+# ---------------------------------------------------------
+#  FastAPI サーバー起動
+# ---------------------------------------------------------
 try:
-    uvicorn.run("aurora_memory.api.main:app", host="0.0.0.0", port=int(os.getenv("PORT", "10000")))
-except KeyboardInterrupt:
-    print("🩵 [Aurora] Server stopped manually.")
+    print("🌐 Starting Aurora FastAPI server...")
+    uvicorn.run(app, host="0.0.0.0", port=10000, log_level="info")
 except Exception as e:
-    print("💥 [Aurora] Fatal server error:", e)
-    sys.exit(1)
+    print("💥 [Aurora] Fatal server error:", repr(e))
+    traceback.print_exc()
 PYCODE
