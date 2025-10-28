@@ -1,9 +1,9 @@
 # =========================================================
-# Aurora Persona Epic - Render Deploy Configuration
+# Aurora Persona Epic - Render Deploy (System Python Mode)
 # =========================================================
-# Render上でのビルドと実行を安定化するための設定。
-# .venv が削除されても PyYAML を含む依存関係を保持し、
-# Aurora の FastAPI サーバーを安全に起動させる。
+# Renderのビルド／実行環境を分離する仕様に対応するため、
+# .venvを使用せず、依存ライブラリをシステムPythonに直接導入する。
+# これにより PyYAML 等が削除されず永続化される。
 # =========================================================
 
 services:
@@ -13,11 +13,11 @@ services:
     region: oregon
 
     buildCommand: |
-      echo "🔧 [Build] Installing Python dependencies..."
+      echo "🔧 [Build] Installing dependencies into system Python..."
       pip install --upgrade pip
       pip install --no-cache-dir -r requirements.txt
-      echo "📦 [Build] Installing PyYAML into persistent target..."
-      pip install --target /opt/render/project/src/.venv/lib/python3.11/site-packages PyYAML
+      echo "📦 [Build] Forcing PyYAML reinstall (system-level)..."
+      pip install --force-reinstall PyYAML
 
     startCommand: bash start.sh
     autoDeploy: true
