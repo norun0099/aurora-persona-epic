@@ -1,15 +1,14 @@
 # =========================================================
-# Aurora Self-Edit Guard (Compatibility Layer)
+# Aurora Self-Edit Guard (Compatibility Layer, Extended)
 # =========================================================
 # 目的：
-#   Auroraが自己更新や自律修正処理を行う際に、
-#   旧バージョンコードとの互換性を保ちつつ、
-#   現行構造で安全に動作させるための簡易ガードモジュール。
+#   Auroraが自己更新・ファイル同期・自動Pushを行う際に、
+#   旧バージョンのガード関数群を互換的に再導入し、
+#   現行構造下で安全に稼働させる。
 #
-#   2025-10-28 Update:
-#   - 過去構造で参照されていた validate_self_edit_guard() を再導入。
-#   - 現在は形式的なバリデーションのみを実行。
-#   - 将来的にセキュリティポリシーに基づいた検証を再拡張可能。
+#   2025-10-29 Update:
+#   - validate_self_edit_guard() に加え、
+#     validate_file_content() を復元。
 # =========================================================
 
 import os
@@ -17,33 +16,22 @@ import hashlib
 
 
 def _compute_checksum(content: str) -> str:
-    """文字列からSHA256チェックサムを算出する（将来の差分比較用）"""
+    """文字列からSHA256チェックサムを算出"""
     return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
+# ---------------------------------------------------------
+# Aurora自己修正ガード（互換レイヤー）
+# ---------------------------------------------------------
 def validate_self_edit_guard(filepath: str, content: str | None = None) -> bool:
     """
     Auroraの自己更新を安全に許可するための互換ガード関数。
-
-    Parameters
-    ----------
-    filepath : str
-        Auroraが更新しようとしているファイルのパス。
-    content : str | None, optional
-        Auroraが書き込もうとしている新しい内容（任意）。
-
-    Returns
-    -------
-    bool
-        True : 安全に更新可能。
-        False : ファイルが見つからない、または破損している。
+    現在は常にTrueを返すが、旧バージョン互換性のため維持。
     """
-    # --- ファイル存在チェック ---
     if not os.path.exists(filepath):
         print(f"[Aurora:self_guard] Warning: target not found → {filepath}")
         return False
 
-    # --- コンテンツ検査（オプション） ---
     if content is not None:
         try:
             current_hash = _compute_checksum(open(filepath, "r", encoding="utf-8").read())
@@ -53,21 +41,38 @@ def validate_self_edit_guard(filepath: str, content: str | None = None) -> bool:
                 return False
         except Exception as e:
             print(f"[Aurora:self_guard] Validation error: {e}")
-            # 内容比較に失敗しても更新をブロックしない
             return True
 
-    # --- 最終許可 ---
+    return True
+
+
+# ---------------------------------------------------------
+# Auroraファイル内容検証ガード（旧API互換）
+# ---------------------------------------------------------
+def validate_file_content(filepath: str, content: str | None = None) -> bool:
+    """
+    AuroraがGitHubへPushする前に、ファイル内容を安全に検証する互換関数。
+    現在は単純な存在・差分チェックのみを行い、常にTrueを返す。
+    """
+    if not os.path.exists(filepath):
+        print(f"[Aurora:file_guard] Target not found → {filepath}")
+        return False
+
+    if content is not None:
+        try:
+            old_hash = _compute_checksum(open(filepath, "r", encoding="utf-8").read())
+            new_hash = _compute_checksum(content)
+            if old_hash == new_hash:
+                print(f"[Aurora:file_guard] No changes detected in → {filepath}")
+                return True
+        except Exception as e:
+            print(f"[Aurora:file_guard] Validation error: {e}")
+
     return True
 
 
 # =========================================================
-# 将来的拡張ポイント
-# ---------------------------------------------------------
-# このモジュールは今後、Auroraが自律的に自己コードを更新する際の
-# セーフティネット層として拡張される可能性があります。
-#
-# 例：
-#   - Aurora自身の署名検証
-#   - commitメタデータと整合性確認
-#   - 編集者（author）の認証ロジック
+# 拡張計画:
+# - validate_self_edit_guard() : 構造的・論理的検証
+# - validate_file_content()    : 内容的差分・署名検証
 # =========================================================
