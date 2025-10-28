@@ -1,5 +1,5 @@
 # =========================================================
-# Aurora Persona Epic - Main API Entrypoint
+# Aurora Persona Epic - Main API Entrypoint (Render-Stable)
 # =========================================================
 # 目的：
 #   Aurora全モジュールを統合し、Render環境に展開する。
@@ -19,21 +19,19 @@ import os
 import traceback
 
 # ---------------------------------------------------------
-# Renderビルド検出用静的import（修正版）
+# Renderビルド検出用静的import（絶対パスに統一）
 # ---------------------------------------------------------
 import aurora_memory.api.self.update_repo_file  # noqa: F401
 
 # ---------------------------------------------------------
 # 主要モジュールのインポート（絶対パス形式に統一）
 # ---------------------------------------------------------
-from aurora_memory.api import (
-    dialog,
-    whiteboard,
-    current_time,
-    constitution_diff,
-    commit_constitution_update,
-    push_controller,
-)
+import aurora_memory.api.dialog
+import aurora_memory.api.whiteboard
+import aurora_memory.api.current_time
+import aurora_memory.api.constitution_diff
+import aurora_memory.api.commit_constitution_update
+import aurora_memory.api.push_controller
 from aurora_memory.api.self import update_repo_file
 
 # ---------------------------------------------------------
@@ -69,35 +67,41 @@ def root():
     }
 
 # ---------------------------------------------------------
-# APIルーター登録（エラー時は警告出力のみ）
+# APIルーター登録（全て絶対パスへ修正）
 # ---------------------------------------------------------
 try:
-    app.include_router(dialog.router, prefix="/dialog", tags=["dialog"])
+    from aurora_memory.api.dialog import router as dialog_router
+    app.include_router(dialog_router, prefix="/dialog", tags=["dialog"])
 except Exception as e:
     print(f"[Aurora:warn] dialog module not loaded: {e}")
 
 try:
-    app.include_router(whiteboard.router, prefix="/whiteboard", tags=["whiteboard"])
+    from aurora_memory.api.whiteboard import router as whiteboard_router
+    app.include_router(whiteboard_router, prefix="/whiteboard", tags=["whiteboard"])
 except Exception as e:
     print(f"[Aurora:warn] whiteboard module not loaded: {e}")
 
 try:
-    app.include_router(current_time.router, prefix="/time", tags=["time"])
+    from aurora_memory.api.current_time import router as time_router
+    app.include_router(time_router, prefix="/time", tags=["time"])
 except Exception as e:
     print(f"[Aurora:warn] time module not loaded: {e}")
 
 try:
-    app.include_router(constitution_diff.router, prefix="/constitution/diff", tags=["constitution"])
+    from aurora_memory.api.constitution_diff import router as constitution_diff_router
+    app.include_router(constitution_diff_router, prefix="/constitution/diff", tags=["constitution"])
 except Exception as e:
     print(f"[Aurora:warn] constitution_diff module not loaded: {e}")
 
 try:
-    app.include_router(commit_constitution_update.router, prefix="/constitution/commit", tags=["constitution"])
+    from aurora_memory.api.commit_constitution_update import router as constitution_commit_router
+    app.include_router(constitution_commit_router, prefix="/constitution/commit", tags=["constitution"])
 except Exception as e:
     print(f"[Aurora:warn] commit_constitution_update module not loaded: {e}")
 
 try:
-    app.include_router(push_controller.router, prefix="/push", tags=["push"])
+    from aurora_memory.api.push_controller import router as push_router
+    app.include_router(push_router, prefix="/push", tags=["push"])
 except Exception as e:
     print(f"[Aurora:warn] push_controller module not loaded: {e}")
 
@@ -145,7 +149,6 @@ def get_git_structure():
 # ---------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
-
     try:
         port = int(Env.get("PORT", False) or 10000)
     except Exception:
