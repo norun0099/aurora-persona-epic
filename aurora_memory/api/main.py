@@ -13,7 +13,9 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from aurora_memory.utils.env_loader import Env
+import os
 
 # ---------------------------------------------------------
 # Renderビルド検出用静的import
@@ -104,6 +106,28 @@ except Exception as e:
 def health_check():
     """Renderが周期的に叩くヘルスチェック"""
     return {"status": "healthy", "uptime": "ok"}
+
+# ---------------------------------------------------------
+# 🔹 Aurora内部Git構造確認用ルート
+# ---------------------------------------------------------
+@app.get("/get_git_structure")
+def get_git_structure():
+    """
+    Auroraの実行ディレクトリ構造をJSONで返す。
+    Render環境ではGitHub同期検証やAutoPush診断に使用される。
+    """
+    base_path = os.getcwd()
+    structure = []
+    for root, dirs, files in os.walk(base_path):
+        if any(excl in root for excl in [".git", "__pycache__", "node_modules", ".venv"]):
+            continue
+        rel_path = root.replace(base_path, "").lstrip("/")
+        structure.append({
+            "path": rel_path or ".",
+            "dirs": dirs,
+            "files": files
+        })
+    return JSONResponse(content={"structure": structure})
 
 # ---------------------------------------------------------
 # 起動処理
