@@ -1,4 +1,3 @@
-cat <<'EOF' > aurora_persona_epic_onrender_com__jit_plugin/bridge.py
 """
 Render ↔ GitHub bridge handler.
 Executes authenticated REST requests to GitHub to persist Aurora’s state.
@@ -45,4 +44,4 @@ def push_to_repo(request: Dict[str, Any]) -> Dict[str, Any]:
             return {"status": "error", "code": response.status_code, "detail": response.text}
     except Exception as e:
         return {"status": "error", "reason": str(e)}
-EOF
+
