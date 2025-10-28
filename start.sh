@@ -41,7 +41,7 @@ find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 # ---------------------------------------------------------
 echo "🚀 Launching Aurora main process..."
 
-python - <<'PYCODE'
+python3 - <<'PYCODE'
 import threading, time, traceback
 from aurora_memory.memory.dialog import push_signal_trigger
 from aurora_memory.api.main import app
