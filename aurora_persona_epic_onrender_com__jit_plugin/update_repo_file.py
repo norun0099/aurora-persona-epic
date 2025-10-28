@@ -40,7 +40,7 @@ def _get_file_sha(filepath: str) -> str | None:
     GitHub上の既存ファイルSHAを取得する。
     存在しない場合はNoneを返す。
     """
-    api_url = f"{GIT_REPO_URL}/contents/{filepath}"
+    api_url = f"{GIT_REPO_URL.strip().rstrip('/')}/contents/{filepath.lstrip('/')}"
     resp = requests.get(api_url, headers=HEADERS)
 
     if resp.status_code == 200:
@@ -55,7 +55,7 @@ def _put_file(filepath: str, content: str, message: str, author: str) -> Dict[st
     """
     GitHub API経由でファイルを作成・更新する。
     """
-    api_url = f"{GIT_REPO_URL}/contents/{filepath}"
+    api_url = f"{GIT_REPO_URL.strip().rstrip('/')}/contents/{filepath.lstrip('/')}"
     sha = _get_file_sha(filepath)
     encoded_content = base64.b64encode(content.encode("utf-8")).decode("utf-8")
 
