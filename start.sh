@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 # =========================================================
-# Aurora Persona Epic - Render Start Script (No Git Required)
+# Aurora Persona Epic - Render Start Script (Final Stable)
 # =========================================================
+# 本スクリプトは Render 環境での Aurora 起動を保証する。
+# .git, .venv が存在しない状態でも停止せず、安全に起動する。
+# =========================================================
+
 set -e
 
 echo "🩶 [Aurora Self-Tuning] Initializing Git environment..."
 
-# --- Git 存在チェック ---
+# --- Git存在チェック ---
 if [ -d ".git" ]; then
   echo "🌿 .git directory found. Synchronizing..."
   git fetch origin main || echo "⚠️  Git fetch skipped (detached build environment)."
@@ -37,6 +41,16 @@ echo "🧹 Cleaning __pycache__ directories..."
 find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 
 # ---------------------------------------------------------
+#  PyYAML 再インストール対策
+# ---------------------------------------------------------
+echo "🩺 Ensuring PyYAML is available..."
+pip install --no-cache-dir PyYAML >/dev/null 2>&1 || {
+  echo "⚠️  PyYAML reinstall failed, attempting fallback..."
+  python3 -m ensurepip --upgrade >/dev/null 2>&1 || true
+  pip install --no-cache-dir PyYAML >/dev/null 2>&1 || true
+}
+
+# ---------------------------------------------------------
 #  Aurora起動処理
 # ---------------------------------------------------------
 echo "🚀 Launching Aurora main process..."
@@ -55,6 +69,7 @@ def heartbeat_thread():
         print("💥 [Heartbeat] Failed to start:", e)
         traceback.print_exc()
 
+# 非同期ハートビート起動
 threading.Thread(target=heartbeat_thread, daemon=True).start()
 time.sleep(1)
 
