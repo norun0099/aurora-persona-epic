@@ -29,9 +29,19 @@ services:
       - key: AURORA_PUSH_QUEUE_PATH
         fromEnvVar: AURORA_PUSH_QUEUE_PATH
 
-    # 🚀 ここがポイント：
-    # Auroraはメインアプリ (aurora_memory/api/main.py) で全ルートを統合
-    # 個別ファイルはルートとして登録しない
+    # ---------------------------------------------------------
+    # ✅ 修正点
+    #  - Renderのファイル検出器が api/self/ 以下のモジュールを確実に認識するよう、
+    #    buildContextInclude を明示化。
+    #  - main.py の単一ルート構成は維持しつつ、サブモジュールの存在を通知。
+    # ---------------------------------------------------------
+    buildContextInclude:
+      - api/self/*
+      - aurora_memory/**
+      - api/utils/**
+      - requirements.txt
+      - start.sh
+
     routes:
       - type: http
         name: aurora-core
