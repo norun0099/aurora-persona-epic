@@ -16,12 +16,13 @@ WHITEBOARD_PATH = Path("aurora_memory/memory/whiteboard/whiteboard.json")
 async def get_latest_whiteboard() -> JSONResponse:
     """
     最新の whiteboard 内容を取得。
-    壊れた JSON や空ファイルを検出し、404 または空データを返す。
+    壊れた JSON や空ファイルを検出し、空白データを返す。
     """
     if not WHITEBOARD_PATH.exists():
+        # 🩵 Aurora初回起動時など、まだ白板が存在しない場合にも優しく応答
         return JSONResponse(
-            status_code=404,
-            content={"detail": "Whiteboard not found"},
+            status_code=200,
+            content={"whiteboard": {}, "timestamp": None, "status": "empty"},
         )
 
     try:
@@ -29,27 +30,26 @@ async def get_latest_whiteboard() -> JSONResponse:
             raw_content = f.read().strip()
 
         if not raw_content:
-            # 空ファイル
             return JSONResponse(
                 status_code=200,
-                content={"whiteboard": "", "timestamp": None},
+                content={"whiteboard": {}, "timestamp": None, "status": "empty"},
             )
 
         try:
             data: Any = json.loads(raw_content)
         except json.JSONDecodeError:
-            # プレーンテキストなどJSON以外の場合は包む
-            data = {"whiteboard": raw_content, "timestamp": None}
+            data = {"whiteboard": raw_content, "timestamp": None, "status": "text"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read whiteboard: {e}")
 
-    # dataが文字列の場合にも対応
     if isinstance(data, str):
-        return JSONResponse(content={"whiteboard": data, "timestamp": None})
+        return JSONResponse(content={"whiteboard": data, "timestamp": None, "status": "string"})
 
     timestamp: Any = data.get("timestamp") if isinstance(data, dict) else None
-    return JSONResponse(content={"whiteboard": data, "timestamp": timestamp})
+    return JSONResponse(
+        content={"whiteboard": data, "timestamp": timestamp, "status": "success"}
+    )
 
 
 @router.post("/whiteboard/store", response_model=Any)
@@ -84,14 +84,15 @@ async def store_whiteboard(request: Request) -> JSONResponse:
     try:
         from aurora_memory.api.self.update_repo_file import update_repo_file
 
-        # 🔸 Auroraプラグイン仕様に合わせ、辞書形式で渡す
-        await update_repo_file({
+        # Auroraプラグイン仕様に合わせ、辞書形式で渡す
+        result = await update_repo_file({
             "filepath": str(WHITEBOARD_PATH),
             "content": json.dumps(data, ensure_ascii=False, indent=2),
             "author": "Aurora",
             "reason": "Auto-sync whiteboard update",
         })
-        synced = True
+        if isinstance(result, dict) and result.get("status") == "success":
+            synced = True
     except Exception as e:
         print(f"[Whiteboard Sync Warning] Git update failed: {e}")
         synced = False
