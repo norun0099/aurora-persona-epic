@@ -20,8 +20,6 @@ import os
 # ---------------------------------------------------------
 # Renderビルド検出用静的import
 # ---------------------------------------------------------
-# このimportは実行時に使用されないが、
-# Renderの依存解析がapi/self配下のモジュールを検出するために必要。
 import api.self.update_repo_file  # noqa: F401
 
 # ---------------------------------------------------------
@@ -33,6 +31,7 @@ import api.current_time
 import api.constitution_diff
 import api.commit_constitution_update
 import api.push_controller
+from aurora_memory.api import update_repo_file  # ← 追加
 
 # ---------------------------------------------------------
 # Aurora Core Application Setup
@@ -98,6 +97,15 @@ try:
     app.include_router(constitution_commit_router, prefix="/constitution/commit", tags=["constitution"])
 except Exception as e:
     print(f"[Aurora:warn] commit_constitution_update module not loaded: {e}")
+
+# ---------------------------------------------------------
+# 🩵 Aurora self-update API  ← 新規追加ブロック
+# ---------------------------------------------------------
+try:
+    app.include_router(update_repo_file.router, prefix="/self", tags=["self"])
+    print("[Aurora:init] /self/update-repo-file endpoint registered successfully.")
+except Exception as e:
+    print(f"[Aurora:warn] self-update module not loaded: {e}")
 
 # ---------------------------------------------------------
 # ヘルスチェック用ルート
