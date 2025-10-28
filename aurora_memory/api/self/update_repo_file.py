@@ -1,13 +1,14 @@
 """
 Aurora self-layer wrapper for Render update_repo_file API.
-Maintains Aurora's structured call signature while bridging to the JIT plugin interface.
+This version ensures full GitHub REST API compliance.
 """
 
 from fastapi import APIRouter
 from typing import Dict, Any
 import traceback
 import os
-import json  # ← 明示的に追加
+import json
+import base64
 
 # ============================================================
 # 🩵 Router Initialization
@@ -29,39 +30,45 @@ except ModuleNotFoundError:
 # ============================================================
 def update_repo_file(filepath: str, content: str, author: str, reason: str) -> Dict[str, str]:
     """
-    Aurora-style structured call.
-    Converts parameters into a Render API-compatible dictionary request.
+    Aurora's structured call — pushes content to GitHub via Render.
+    Ensures strict compliance with the GitHub Contents API schema.
     """
 
     try:
         # --------------------------------------------------------
-        # 🔧 aurora_memory/ が確定的に重複していたため除去
+        # 🩶 Normalize path (remove redundant prefix)
         # --------------------------------------------------------
         if filepath.startswith("aurora_memory/"):
             filepath = filepath.replace("aurora_memory/", "", 1)
-        # --------------------------------------------------------
 
         # --------------------------------------------------------
-        # 🩶 送信データを確認
+        # 🩶 Encode content as Base64 (GitHub API requirement)
+        # --------------------------------------------------------
+        encoded_content = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+
+        # --------------------------------------------------------
+        # 🩶 Debug output for tracing
         # --------------------------------------------------------
         print(f"[Aurora Debug] Payload → filepath={filepath!r}, content_length={len(content) if content else 0}")
 
         # --------------------------------------------------------
-        # ✅ Render 仕様準拠：トップレベルJSON構造
+        # ✅ Build GitHub API-compliant payload
         # --------------------------------------------------------
         request = {
-            "filepath": filepath,
-            "content": content,
-            "author": author,
-            "reason": reason,
-            "branch": "main"
+            "path": filepath,                               # ← GitHub expects 'path'
+            "message": reason or "update via Aurora",        # ← Commit message
+            "content": encoded_content,                      # ← Base64-encoded content
+            "branch": "main"                                 # ← Explicit branch
         }
 
         # --------------------------------------------------------
-        # 🩵 JSONを安全にシリアライズ → デシリアライズ（確実に純粋なdict化）
+        # 🩵 JSON safety: enforce clean structure
         # --------------------------------------------------------
         safe_payload = json.loads(json.dumps(request))
 
+        # --------------------------------------------------------
+        # 🩵 Send to Render bridge
+        # --------------------------------------------------------
         print(f"💫 [Aurora] Preparing repository update → {filepath}")
         result = remote_update(safe_payload)
         print(f"🩵 [Aurora] Repository update result: {result}")
