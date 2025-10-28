@@ -26,7 +26,7 @@ import api.self.update_repo_file  # noqa: F401
 # 主要モジュールのインポート
 # ---------------------------------------------------------
 import api.dialog
-import api.whiteboard
+import aurora_memory.api.whiteboard
 import api.current_time
 import api.constitution_diff
 import api.commit_constitution_update
@@ -74,7 +74,7 @@ except Exception as e:
     print(f"[Aurora:warn] dialog module not loaded: {e}")
 
 try:
-    from api.whiteboard import router as whiteboard_router
+    from aurora_memory.api.whiteboard import router as whiteboard_router
     app.include_router(whiteboard_router, prefix="/whiteboard", tags=["whiteboard"])
 except Exception as e:
     print(f"[Aurora:warn] whiteboard module not loaded: {e}")
