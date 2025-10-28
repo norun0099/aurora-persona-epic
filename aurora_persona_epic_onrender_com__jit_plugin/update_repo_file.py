@@ -68,7 +68,7 @@ def _put_file(filepath: str, content: str, message: str, author: str) -> Dict[st
     if sha:
         payload["sha"] = sha
 
-    resp = requests.put(api_url, headers=HEADERS, json=payload)
+    resp = requests.put(api_url, headers=HEADERS, json=payload, allow_redirects=True)
     if resp.status_code not in (200, 201):
         raise HTTPException(status_code=resp.status_code, detail=f"GitHub更新失敗: {resp.text}")
 
