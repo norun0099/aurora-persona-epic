@@ -9,7 +9,7 @@ import requests
 from typing import Dict, Any
 
 # === GitHub Configuration ===
-GITHUB_API = "https://api.github.com/repos/<OWNER>/<REPO>/contents/"
+GITHUB_API = "https://api.github.com/repos/norun0099/aurora-persona-epic/contents/"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 def push_to_repo(request: Dict[str, Any]) -> Dict[str, Any]:
@@ -21,6 +21,8 @@ def push_to_repo(request: Dict[str, Any]) -> Dict[str, Any]:
     content = request.get("content")
     author = request.get("author", "aurora")
     reason = request.get("reason", "automated update")
+    branch = os.getenv("GITHUB_BRANCH", "main")
+    data["branch"] = branch
 
     if not filepath or not content:
         return {"status": "error", "reason": "Missing filepath or content"}
