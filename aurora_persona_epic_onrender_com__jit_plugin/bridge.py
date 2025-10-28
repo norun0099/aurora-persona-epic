@@ -9,7 +9,7 @@ from typing import Dict, Any
 
 # === GitHub Configuration ===
 GITHUB_API = "https://api.github.com/repos/<OWNER>/<REPO>/contents/"
-GITHUB_TOKEN = "<YOUR_PERSONAL_ACCESS_TOKEN>"
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 def push_to_repo(request: Dict[str, Any]) -> Dict[str, Any]:
     """
