@@ -17,6 +17,7 @@ router = APIRouter()
 # 🩵 Remote Update Import (safe fallback if unavailable)
 # ============================================================
 try:
+    print(f"[Aurora Debug] GIT_REPO_URL = {os.getenv('GIT_REPO_URL')!r}")
     from aurora_persona_epic_onrender_com__jit_plugin import update_repo_file as remote_update
 except ModuleNotFoundError:
     def remote_update(request: Dict[str, Any]) -> Dict[str, str]:
