@@ -6,6 +6,7 @@ Maintains Aurora's structured call signature while bridging to the JIT plugin in
 from fastapi import APIRouter
 from typing import Dict, Any
 import traceback
+import os
 
 # ============================================================
 # 🩵 Router Initialization
@@ -30,7 +31,15 @@ def update_repo_file(filepath: str, content: str, author: str, reason: str) -> D
     Aurora-style structured call.
     Converts parameters into a Render API-compatible dictionary request.
     """
+
     try:
+        # --------------------------------------------------------
+        # 🔧 修正箇所：aurora_memory/ が確定的に重複しているため除去
+        # --------------------------------------------------------
+        if filepath.startswith("aurora_memory/"):
+            filepath = filepath.replace("aurora_memory/", "", 1)
+        # --------------------------------------------------------
+
         request = {
             "filepath": filepath,
             "content": content,
