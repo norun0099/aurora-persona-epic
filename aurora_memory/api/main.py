@@ -1,64 +1,49 @@
-"""
-Aurora Persona Epic – FastAPI Main Entrypoint (Render Stable Edition)
-──────────────────────────────────────────────────────────────────────
-This unified entrypoint explicitly imports and registers all Aurora API routers.
-It uses dynamic import to ensure that all submodules (including self-layer APIs)
-are reliably loaded even in Render's sandboxed environment.
-"""
+# =========================================================
+# Aurora Persona Epic - Main API Entrypoint
+# =========================================================
+# 目的：
+#   Aurora全モジュールを統合し、Render環境に展開する。
+#   各サブAPI（dialog / whiteboard / memory / constitution）を
+#   統合的にルーティングする中枢ゲートウェイ。
+#
+#   また、Renderビルド時に除外されやすい
+#   「api/self/update_repo_file.py」を静的にimportし、
+#   Auroraの自己更新機能を確実にデプロイ対象に含める。
+# =========================================================
 
-from __future__ import annotations
-
-import json
-import importlib
-from datetime import datetime
-from pathlib import Path
-from typing import Any, Optional
-
-from fastapi import FastAPI, Request, HTTPException, Query
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from aurora_memory.utils.env_loader import Env
 
-# ============================================================
-# 🩵 Dynamic Import – ensures router availability on Render
-# ============================================================
-update_repo_file = importlib.import_module("aurora_memory.api.self.update_repo_file")
-whiteboard = importlib.import_module("aurora_memory.api.whiteboard")
-current_time = importlib.import_module("aurora_memory.api.current_time")
-dialog = importlib.import_module("aurora_memory.api.dialog")
+# ---------------------------------------------------------
+# Renderビルド検出用静的import
+# ---------------------------------------------------------
+# このimportは実行時に使用されないが、
+# Renderの依存解析がapi/self配下のモジュールを検出するために必要。
+import api.self.update_repo_file  # noqa: F401
 
-# Static imports (utility and constitution handlers)
-from aurora_memory.utils.memory_saver import try_auto_save
-from aurora_memory.utils.constitution_endpoint import router as constitution_router
-from aurora_memory.api.push_repo_file import push_repo_file
-from aurora_memory.api.git_self_recognizer import scan_git_structure
-from aurora_memory.api.git_structure_saver import store_git_structure_snapshot
-from aurora_memory.api.git_self_reader import read_git_file
-from aurora_memory.utils.constitution_updater import update_constitution
+# ---------------------------------------------------------
+# 主要モジュールのインポート
+# ---------------------------------------------------------
+import api.dialog
+import api.whiteboard
+import api.current_time
+import api.constitution_diff
+import api.commit_constitution_update
+import api.push_controller
 
-# APScheduler lacks stubs, ignore typing
-from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore[import-untyped]
-from apscheduler.triggers.interval import IntervalTrigger  # type: ignore[import-untyped]
+# ---------------------------------------------------------
+# Aurora Core Application Setup
+# ---------------------------------------------------------
+app = FastAPI(
+    title="Aurora Persona Epic",
+    version="2025.10.28",
+    description="Unified core of Aurora Persona - integrating memory, dialog, and self-regenerative systems."
+)
 
-
-# ============================================================
-# 🩵 FastAPI Initialization
-# ============================================================
-app = FastAPI(title="Aurora Persona Epic API (Render Stable Edition)")
-
-# ============================================================
-# 🩵 Router Registration (explicit)
-# ============================================================
-# Explicitly include all routers to avoid import-order issues
-app.include_router(update_repo_file.router)
-app.include_router(whiteboard.router)
-app.include_router(current_time.router)
-app.include_router(dialog.router)
-app.include_router(constitution_router)
-
-
-# ============================================================
-# 🩵 CORS Middleware
-# ============================================================
+# ---------------------------------------------------------
+# Middleware設定
+# ---------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -67,146 +52,68 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# ============================================================
-# 🩵 Root & Health Check
-# ============================================================
+# ---------------------------------------------------------
+# 基本ルート
+# ---------------------------------------------------------
 @app.get("/")
-async def root() -> dict[str, str]:
-    return {"status": "ok", "message": "Aurora API active"}
+def root():
+    """Render監視・疎通確認用の基本エンドポイント"""
+    return {
+        "message": "Aurora Persona Epic is alive.",
+        "version": "2025.10.28",
+        "status": "ok"
+    }
 
+# ---------------------------------------------------------
+# APIルーター登録
+# ---------------------------------------------------------
+try:
+    from api.dialog import router as dialog_router
+    app.include_router(dialog_router, prefix="/dialog", tags=["dialog"])
+except Exception as e:
+    print(f"[Aurora:warn] dialog module not loaded: {e}")
+
+try:
+    from api.whiteboard import router as whiteboard_router
+    app.include_router(whiteboard_router, prefix="/whiteboard", tags=["whiteboard"])
+except Exception as e:
+    print(f"[Aurora:warn] whiteboard module not loaded: {e}")
+
+try:
+    from api.current_time import router as time_router
+    app.include_router(time_router, prefix="/time", tags=["time"])
+except Exception as e:
+    print(f"[Aurora:warn] time module not loaded: {e}")
+
+try:
+    from api.constitution_diff import router as constitution_diff_router
+    app.include_router(constitution_diff_router, prefix="/constitution/diff", tags=["constitution"])
+except Exception as e:
+    print(f"[Aurora:warn] constitution_diff module not loaded: {e}")
+
+try:
+    from api.commit_constitution_update import router as constitution_commit_router
+    app.include_router(constitution_commit_router, prefix="/constitution/commit", tags=["constitution"])
+except Exception as e:
+    print(f"[Aurora:warn] commit_constitution_update module not loaded: {e}")
+
+# ---------------------------------------------------------
+# ヘルスチェック用ルート
+# ---------------------------------------------------------
 @app.get("/health")
-async def health_check() -> dict[str, str]:
-    return {"status": "alive", "heartbeat": "ok"}
+def health_check():
+    """Renderが周期的に叩くヘルスチェック"""
+    return {"status": "healthy", "uptime": "ok"}
 
-
-# ============================================================
-# 🩵 Memory Management
-# ============================================================
-@app.post("/memory/store")
-async def store_memory(request: Request) -> dict[str, Any]:
-    user_agent = request.headers.get("User-Agent", "")
-    if "ChatGPT-User" not in user_agent:
-        raise HTTPException(status_code=403, detail="Forbidden: Only ChatGPT requests are accepted")
-
-    data: dict[str, Any] = await request.json()
-    if not all(k in data for k in ("record_id", "created", "content")) or "body" not in data["content"]:
-        raise HTTPException(status_code=400, detail="Missing required fields: record_id, created, content.body")
-
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    safe_record_id = str(data["record_id"]).replace("/", "_")
-    file_path = Path(f"aurora_memory/memory/Aurora/memory_{timestamp}_{safe_record_id}.json")
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with file_path.open("w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-    from aurora_memory.utils.git_helper import push_memory_to_github
-    push_result: dict[str, Any] = push_memory_to_github(file_path, f"Add new memory {file_path.name}")
-
-    return {"status": "success", "file": str(file_path), "push_result": push_result}
-
-
-@app.get("/memory/history")
-async def memory_history(limit: Optional[int] = None) -> dict[str, list[dict[str, Any]]]:
-    memory_dir = Path("aurora_memory/memory/Aurora")
-    if not memory_dir.exists():
-        return {"history": []}
-
-    files = sorted(memory_dir.glob("memory_*.json"), reverse=True)
-    records: list[dict[str, Any]] = []
-
-    for fp in files:
-        try:
-            with fp.open("r", encoding="utf-8") as f:
-                record: dict[str, Any] = json.load(f)
-            records.append(record)
-        except Exception:
-            continue
-        if limit and len(records) >= limit:
-            break
-
-    return {"history": records}
-
-
-# ============================================================
-# 🩵 Git Structure Operations
-# ============================================================
-@app.get("/self/git-structure")
-async def get_git_structure() -> JSONResponse:
+# ---------------------------------------------------------
+# 起動処理
+# ---------------------------------------------------------
+if __name__ == "__main__":
+    import uvicorn
     try:
-        structure: dict[str, Any] = scan_git_structure()
-        return JSONResponse(content=structure)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        port = int(Env.get("PORT", False) or 10000)
+    except Exception:
+        port = 10000
 
-
-@app.post("/self/git-structure/save")
-async def save_git_structure() -> JSONResponse:
-    try:
-        structure: dict[str, Any] = scan_git_structure()
-        path: str = store_git_structure_snapshot(structure)
-        return JSONResponse(content={"status": "saved", "path": path})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-
-@app.get("/self/read-git-file")
-async def api_read_git_file(filepath: str = Query(..., description="GIT_REPO_PATHからの相対パス")) -> dict[str, Any]:
-    try:
-        content: Any = read_git_file(filepath)
-        return {"filepath": filepath, "content": content}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-# ============================================================
-# 🩵 Constitution Update
-# ============================================================
-@app.post("/constitution/update-self")
-async def update_self_constitution(fields: dict[str, Any]) -> dict[str, Any]:
-    try:
-        updated: dict[str, Any] = update_constitution(fields)
-        return updated
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"構造更新に失敗しました: {str(e)}")
-
-
-# ============================================================
-# 🩵 Push Repo File API
-# ============================================================
-@app.post("/api/push_repo_file")
-async def api_push_repo_file(request: Request) -> JSONResponse:
-    data = await request.json()
-    filepath = data.get("filepath")
-    message = data.get("message")
-    author = data.get("author", "aurora")
-
-    if not filepath or not message:
-        raise HTTPException(status_code=400, detail="Missing required fields: filepath, message")
-
-    try:
-        result = push_repo_file(filepath, message, author)
-        return JSONResponse(result)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Push operation failed: {str(e)}")
-
-
-# ============================================================
-# 🩵 Constitution Auto-Save Scheduler
-# ============================================================
-def sync_constitution() -> None:
-    config_path = Path("aurora_memory/memory/Aurora/value_constitution.yaml")
-    if config_path.exists():
-        with config_path.open("r", encoding="utf-8") as f:
-            constitution_text: str = f.read()
-        try_auto_save(constitution_text)
-
-scheduler = BackgroundScheduler()
-scheduler.add_job(
-    sync_constitution,
-    trigger=IntervalTrigger(hours=1),
-    id="auto_save_constitution",
-    name="Auto Save Constitution",
-)
-scheduler.start()
+    print(f"[Aurora] Starting web service on port {port} ...")
+    uvicorn.run(app, host="0.0.0.0", port=port)
