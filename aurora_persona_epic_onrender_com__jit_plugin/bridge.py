@@ -3,6 +3,7 @@ Render ↔ GitHub bridge handler.
 Executes authenticated REST requests to GitHub to persist Aurora’s state.
 """
 
+import os
 import base64
 import requests
 from typing import Dict, Any
