@@ -39,6 +39,7 @@ def update_repo_file(filepath: str, content: str, author: str, reason: str) -> D
         if filepath.startswith("aurora_memory/"):
             filepath = filepath.replace("aurora_memory/", "", 1)
         # --------------------------------------------------------
+        print(f"[Aurora Debug] Payload → filepath={filepath!r}, content_length={len(content) if content else 0}")
 
         # --------------------------------------------------------
         # ✅ Render仕様準拠：JSONを一段ラップ（record）
