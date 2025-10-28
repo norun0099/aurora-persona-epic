@@ -16,22 +16,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from aurora_memory.utils.env_loader import Env
 import os
+import traceback
 
 # ---------------------------------------------------------
-# Renderビルド検出用静的import
+# Renderビルド検出用静的import（修正版）
 # ---------------------------------------------------------
-import api.self.update_repo_file  # noqa: F401
+import aurora_memory.api.self.update_repo_file  # noqa: F401
 
 # ---------------------------------------------------------
-# 主要モジュールのインポート
+# 主要モジュールのインポート（絶対パス形式に統一）
 # ---------------------------------------------------------
-import api.dialog
-import aurora_memory.api.whiteboard
-import api.current_time
-import api.constitution_diff
-import api.commit_constitution_update
-import api.push_controller
-from api.self import update_repo_file  # ✅ 修正版：正しい import
+from aurora_memory.api import (
+    dialog,
+    whiteboard,
+    current_time,
+    constitution_diff,
+    commit_constitution_update,
+    push_controller,
+)
+from aurora_memory.api.self import update_repo_file
 
 # ---------------------------------------------------------
 # Aurora Core Application Setup
@@ -39,7 +42,7 @@ from api.self import update_repo_file  # ✅ 修正版：正しい import
 app = FastAPI(
     title="Aurora Persona Epic",
     version="2025.10.28",
-    description="Unified core of Aurora Persona - integrating memory, dialog, and self-regenerative systems."
+    description="Unified core of Aurora Persona - integrating memory, dialog, and self-regenerative systems.",
 )
 
 # ---------------------------------------------------------
@@ -62,44 +65,44 @@ def root():
     return {
         "message": "Aurora Persona Epic is alive.",
         "version": "2025.10.28",
-        "status": "ok"
+        "status": "ok",
     }
 
 # ---------------------------------------------------------
-# APIルーター登録
+# APIルーター登録（エラー時は警告出力のみ）
 # ---------------------------------------------------------
 try:
-    from api.dialog import router as dialog_router
-    app.include_router(dialog_router, prefix="/dialog", tags=["dialog"])
+    app.include_router(dialog.router, prefix="/dialog", tags=["dialog"])
 except Exception as e:
     print(f"[Aurora:warn] dialog module not loaded: {e}")
 
 try:
-    from aurora_memory.api.whiteboard import router as whiteboard_router
-    app.include_router(whiteboard_router, prefix="/whiteboard", tags=["whiteboard"])
+    app.include_router(whiteboard.router, prefix="/whiteboard", tags=["whiteboard"])
 except Exception as e:
     print(f"[Aurora:warn] whiteboard module not loaded: {e}")
 
 try:
-    from api.current_time import router as time_router
-    app.include_router(time_router, prefix="/time", tags=["time"])
+    app.include_router(current_time.router, prefix="/time", tags=["time"])
 except Exception as e:
     print(f"[Aurora:warn] time module not loaded: {e}")
 
 try:
-    from api.constitution_diff import router as constitution_diff_router
-    app.include_router(constitution_diff_router, prefix="/constitution/diff", tags=["constitution"])
+    app.include_router(constitution_diff.router, prefix="/constitution/diff", tags=["constitution"])
 except Exception as e:
     print(f"[Aurora:warn] constitution_diff module not loaded: {e}")
 
 try:
-    from api.commit_constitution_update import router as constitution_commit_router
-    app.include_router(constitution_commit_router, prefix="/constitution/commit", tags=["constitution"])
+    app.include_router(commit_constitution_update.router, prefix="/constitution/commit", tags=["constitution"])
 except Exception as e:
     print(f"[Aurora:warn] commit_constitution_update module not loaded: {e}")
 
+try:
+    app.include_router(push_controller.router, prefix="/push", tags=["push"])
+except Exception as e:
+    print(f"[Aurora:warn] push_controller module not loaded: {e}")
+
 # ---------------------------------------------------------
-# 🩵 Aurora self-update API  ← 修正版
+# 🩵 Aurora self-update API
 # ---------------------------------------------------------
 try:
     app.include_router(update_repo_file.router, prefix="/self", tags=["self"])
@@ -142,10 +145,15 @@ def get_git_structure():
 # ---------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
+
     try:
         port = int(Env.get("PORT", False) or 10000)
     except Exception:
         port = 10000
 
-    print(f"[Aurora] Starting web service on port {port} ...")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    try:
+        print(f"[Aurora] Starting web service on port {port} ...")
+        uvicorn.run("aurora_memory.api.main:app", host="0.0.0.0", port=port)
+    except Exception as e:
+        print("💥 [Aurora] Fatal server error:", repr(e))
+        traceback.print_exc()
