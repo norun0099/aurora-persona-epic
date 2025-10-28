@@ -34,17 +34,21 @@ def update_repo_file(filepath: str, content: str, author: str, reason: str) -> D
 
     try:
         # --------------------------------------------------------
-        # 🔧 修正箇所：aurora_memory/ が確定的に重複しているため除去
+        # 🔧 修正箇所：aurora_memory/ が確定的に重複していたため除去
         # --------------------------------------------------------
         if filepath.startswith("aurora_memory/"):
             filepath = filepath.replace("aurora_memory/", "", 1)
         # --------------------------------------------------------
 
+        # --------------------------------------------------------
+        # ✅ GitHubブランチ指定を追加（404対策）
+        # --------------------------------------------------------
         request = {
             "filepath": filepath,
             "content": content,
             "author": author,
-            "reason": reason
+            "reason": reason,
+            "branch": "main"   # ← 重要：ブランチを明示
         }
 
         print(f"💫 [Aurora] Preparing repository update → {filepath}")
