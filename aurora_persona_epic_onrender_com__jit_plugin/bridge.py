@@ -9,7 +9,7 @@ import requests
 from typing import Dict, Any
 
 # === GitHub Configuration ===
-GITHUB_API = "https://api.github.com/repos/norun0099/aurora-persona-epic/contents/"
+GITHUB_API = "https://api.github.com/repos/<OWNER>/<REPO>/contents/"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 def push_to_repo(request: Dict[str, Any]) -> Dict[str, Any]:
@@ -21,8 +21,7 @@ def push_to_repo(request: Dict[str, Any]) -> Dict[str, Any]:
     content = request.get("content")
     author = request.get("author", "aurora")
     reason = request.get("reason", "automated update")
-    branch = os.getenv("GITHUB_BRANCH", "main")
-    data["branch"] = branch
+    branch = os.getenv("GITHUB_BRANCH", "main")  # ← ここで取得
 
     if not filepath or not content:
         return {"status": "error", "reason": "Missing filepath or content"}
@@ -31,7 +30,8 @@ def push_to_repo(request: Dict[str, Any]) -> Dict[str, Any]:
     data = {
         "message": reason,
         "content": base64.b64encode(content.encode("utf-8")).decode("utf-8"),
-        "committer": {"name": author, "email": "aurora@render.local"}
+        "committer": {"name": author, "email": "aurora@render.local"},
+        "branch": branch                     # ← ここで設定（順序修正済）
     }
 
     headers = {
@@ -47,4 +47,3 @@ def push_to_repo(request: Dict[str, Any]) -> Dict[str, Any]:
             return {"status": "error", "code": response.status_code, "detail": response.text}
     except Exception as e:
         return {"status": "error", "reason": str(e)}
-
