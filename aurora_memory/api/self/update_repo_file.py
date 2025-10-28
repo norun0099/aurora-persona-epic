@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from typing import Dict, Any
 import traceback
 import os
+import json  # ← 明示的に追加
 
 # ============================================================
 # 🩵 Router Initialization
@@ -39,23 +40,30 @@ def update_repo_file(filepath: str, content: str, author: str, reason: str) -> D
         if filepath.startswith("aurora_memory/"):
             filepath = filepath.replace("aurora_memory/", "", 1)
         # --------------------------------------------------------
+
+        # --------------------------------------------------------
+        # 🩶 送信データを確認
+        # --------------------------------------------------------
         print(f"[Aurora Debug] Payload → filepath={filepath!r}, content_length={len(content) if content else 0}")
 
         # --------------------------------------------------------
-        # ✅ Render仕様準拠：JSONを一段ラップ（record）
+        # ✅ Render 仕様準拠：トップレベルJSON構造
         # --------------------------------------------------------
         request = {
-            "record": {                       # Render expects a nested record object
-                "filepath": filepath,
-                "content": content,
-                "author": author,
-                "reason": reason,
-                "branch": "main"
-            }
+            "filepath": filepath,
+            "content": content,
+            "author": author,
+            "reason": reason,
+            "branch": "main"
         }
 
+        # --------------------------------------------------------
+        # 🩵 JSONを安全にシリアライズ → デシリアライズ（確実に純粋なdict化）
+        # --------------------------------------------------------
+        safe_payload = json.loads(json.dumps(request))
+
         print(f"💫 [Aurora] Preparing repository update → {filepath}")
-        result = remote_update(request)
+        result = remote_update(safe_payload)
         print(f"🩵 [Aurora] Repository update result: {result}")
 
         return result
