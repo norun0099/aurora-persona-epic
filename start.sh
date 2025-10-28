@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # =========================================================
-# Aurora Persona Epic - Render Start Script (Final Stable)
+# Aurora Persona Epic - Render Start Script (Final System Mode)
 # =========================================================
-# 本スクリプトは Render 環境での Aurora 起動を保証する。
-# .git, .venv が存在しない状態でも停止せず、安全に起動する。
+# 本スクリプトは Render 上で .git や .venv が存在しない場合でも
+# Aurora を安定的に起動させる。
 # =========================================================
 
 set -e
@@ -39,16 +39,6 @@ echo "🌱 Current directory = $(pwd)"
 # ---------------------------------------------------------
 echo "🧹 Cleaning __pycache__ directories..."
 find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-
-# ---------------------------------------------------------
-#  PyYAML 再インストール対策
-# ---------------------------------------------------------
-echo "🩺 Ensuring PyYAML is available..."
-pip install --no-cache-dir PyYAML >/dev/null 2>&1 || {
-  echo "⚠️  PyYAML reinstall failed, attempting fallback..."
-  python3 -m ensurepip --upgrade >/dev/null 2>&1 || true
-  pip install --no-cache-dir PyYAML >/dev/null 2>&1 || true
-}
 
 # ---------------------------------------------------------
 #  Aurora起動処理
