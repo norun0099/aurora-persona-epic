@@ -45,8 +45,8 @@ def update_repo_file(filepath: str, content: str, author: str, reason: str) -> D
         # ✅ GitHubブランチ指定を追加（404対策）
         # --------------------------------------------------------
         request = {
-            "path": filepath,       # ← filepath → path に変更
-            "content": content,
+            "filepath": filepath,   # ← path ではなく filepath に戻す
+            "content": content,     # ← 空でないかを保証
             "author": author,
             "reason": reason,
             "branch": "main"   # ← 重要：ブランチを明示
