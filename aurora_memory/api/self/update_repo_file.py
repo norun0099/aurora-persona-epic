@@ -17,7 +17,6 @@ router = APIRouter()
 # 🩵 Remote Update Import (safe fallback if unavailable)
 # ============================================================
 try:
-    print(f"[Aurora Debug] GIT_REPO_URL = {os.getenv('GIT_REPO_URL')!r}")
     from aurora_persona_epic_onrender_com__jit_plugin import update_repo_file as remote_update
 except ModuleNotFoundError:
     def remote_update(request: Dict[str, Any]) -> Dict[str, str]:
@@ -35,21 +34,23 @@ def update_repo_file(filepath: str, content: str, author: str, reason: str) -> D
 
     try:
         # --------------------------------------------------------
-        # 🔧 修正箇所：aurora_memory/ が確定的に重複していたため除去
+        # 🔧 aurora_memory/ が確定的に重複していたため除去
         # --------------------------------------------------------
         if filepath.startswith("aurora_memory/"):
             filepath = filepath.replace("aurora_memory/", "", 1)
         # --------------------------------------------------------
 
         # --------------------------------------------------------
-        # ✅ GitHubブランチ指定を追加（404対策）
+        # ✅ Render仕様準拠：JSONを一段ラップ（record）
         # --------------------------------------------------------
         request = {
-            "filepath": filepath,   # ← path ではなく filepath に戻す
-            "content": content,     # ← 空でないかを保証
-            "author": author,
-            "reason": reason,
-            "branch": "main"   # ← 重要：ブランチを明示
+            "record": {                       # Render expects a nested record object
+                "filepath": filepath,
+                "content": content,
+                "author": author,
+                "reason": reason,
+                "branch": "main"
+            }
         }
 
         print(f"💫 [Aurora] Preparing repository update → {filepath}")
