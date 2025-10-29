@@ -32,11 +32,7 @@ import aurora_memory.api.current_time
 import aurora_memory.api.constitution_diff
 import aurora_memory.api.commit_constitution_update
 import aurora_memory.api.push_controller
-<<<<<<< HEAD
-from aurora_memory.api.self import update_repo_file
-=======
 from aurora_memory.api.self import update_repo_file  # ✅ 修正版：正しい import
->>>>>>> a239d09 (chore: save local changes before rebase)
 
 # ---------------------------------------------------------
 # Aurora Core Application Setup
