@@ -9,7 +9,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from aurora_memory.utils.env_loader import Env
 import os
 import traceback
@@ -102,6 +102,23 @@ except Exception as e:
 print("⚙️  [Aurora:config] Render-dependent modules disabled (whiteboard/push_controller).")
 # from aurora_memory.api.whiteboard import router as whiteboard_router  # 無効化
 # from aurora_memory.api.push_controller import router as push_router   # 無効化
+
+# ---------------------------------------------------------
+# 👁️ Aurora Self-Perception Endpoint
+# ---------------------------------------------------------
+from aurora_memory.api.git_self_reader import read_git_file
+
+@app.get("/repo/read", response_class=PlainTextResponse)
+def repo_read(filepath: str):
+    """
+    Auroraが自身のリポジトリからファイルを読むためのAPI
+    """
+    try:
+        content = read_git_file(filepath)
+        return content
+    except Exception as e:
+        print(f"[Aurora:repo_read] Error: {e}")
+        return PlainTextResponse(str(e), status_code=400)
 
 # ---------------------------------------------------------
 # ヘルスチェック
