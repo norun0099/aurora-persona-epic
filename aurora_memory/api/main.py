@@ -1,14 +1,10 @@
 # =========================================================
-# Aurora Persona Epic - Main API Entrypoint (Render-Stable)
+# Aurora Persona Epic - Main API Entrypoint (GitHub-Centric)
 # =========================================================
 # 目的：
-#   Aurora全モジュールを統合し、Render環境に展開する。
-#   各サブAPI（dialog / whiteboard / memory / constitution）を
-#   統合的にルーティングする中枢ゲートウェイ。
-#
-#   また、Renderビルド時に除外されやすい
-#   「api/self/update_repo_file.py」を静的にimportし、
-#   Auroraの自己更新機能を確実にデプロイ対象に含める。
+#   Aurora全モジュールを統合し、Render環境に依存せず起動可能にする。
+#   Self-update, Whiteboard Sync 等のRender専用APIを無効化し、
+#   GitHubを直接操作する構成に再構築。
 # =========================================================
 
 from fastapi import FastAPI
@@ -24,23 +20,21 @@ import traceback
 import aurora_memory.api.self.update_repo_file  # noqa: F401
 
 # ---------------------------------------------------------
-# 主要モジュールのインポート（絶対パス形式に統一）
+# 主要モジュール（Render依存を分離）
 # ---------------------------------------------------------
 import aurora_memory.api.dialog
-import aurora_memory.api.whiteboard
 import aurora_memory.api.current_time
 import aurora_memory.api.constitution_diff
 import aurora_memory.api.commit_constitution_update
-import aurora_memory.api.push_controller
-from aurora_memory.api.self import update_repo_file  # ✅ 修正版：正しい import
+from aurora_memory.api.self import update_repo_file  # ✅ 正常 import
 
 # ---------------------------------------------------------
 # Aurora Core Application Setup
 # ---------------------------------------------------------
 app = FastAPI(
     title="Aurora Persona Epic",
-    version="2025.10.28",
-    description="Unified core of Aurora Persona - integrating memory, dialog, and self-regenerative systems.",
+    version="2025.10.29",
+    description="GitHub-driven Aurora Persona Core.",
 )
 
 # ---------------------------------------------------------
@@ -59,15 +53,15 @@ app.add_middleware(
 # ---------------------------------------------------------
 @app.get("/")
 def root():
-    """Render監視・疎通確認用の基本エンドポイント"""
+    """Auroraの稼働確認用ルート"""
     return {
-        "message": "Aurora Persona Epic is alive.",
-        "version": "2025.10.28",
+        "message": "Aurora Persona Epic (GitHub mode) is alive.",
+        "version": "2025.10.29",
         "status": "ok",
     }
 
 # ---------------------------------------------------------
-# APIルーター登録（全て絶対パスへ修正）
+# APIルーター登録
 # ---------------------------------------------------------
 try:
     from aurora_memory.api.dialog import router as dialog_router
@@ -76,16 +70,10 @@ except Exception as e:
     print(f"[Aurora:warn] dialog module not loaded: {e}")
 
 try:
-    from aurora_memory.api.whiteboard import router as whiteboard_router
-    app.include_router(whiteboard_router, prefix="/whiteboard", tags=["whiteboard"])
-except Exception as e:
-    print(f"[Aurora:warn] whiteboard module not loaded: {e}")
-
-try:
     from aurora_memory.api.current_time import router as time_router
     app.include_router(time_router, prefix="/time", tags=["time"])
 except Exception as e:
-    print(f"[Aurora:warn] time module not loaded: {e}")
+    print(f"[Aurora:warn] current_time module not loaded: {e}")
 
 try:
     from aurora_memory.api.constitution_diff import router as constitution_diff_router
@@ -99,14 +87,8 @@ try:
 except Exception as e:
     print(f"[Aurora:warn] commit_constitution_update module not loaded: {e}")
 
-try:
-    from aurora_memory.api.push_controller import router as push_router
-    app.include_router(push_router, prefix="/push", tags=["push"])
-except Exception as e:
-    print(f"[Aurora:warn] push_controller module not loaded: {e}")
-
 # ---------------------------------------------------------
-# 🩵 Aurora self-update API
+# 🩵 Aurora self-update API（Render不要・GitHub直結モード）
 # ---------------------------------------------------------
 try:
     app.include_router(update_repo_file.router, prefix="/self", tags=["self"])
@@ -115,22 +97,25 @@ except Exception as e:
     print(f"[Aurora:warn] self-update module not loaded: {e}")
 
 # ---------------------------------------------------------
-# ヘルスチェック用ルート
+# Render依存機能の無効化（白板・自動Push）
+# ---------------------------------------------------------
+print("⚙️  [Aurora:config] Render-dependent modules disabled (whiteboard/push_controller).")
+# from aurora_memory.api.whiteboard import router as whiteboard_router  # 無効化
+# from aurora_memory.api.push_controller import router as push_router   # 無効化
+
+# ---------------------------------------------------------
+# ヘルスチェック
 # ---------------------------------------------------------
 @app.get("/health")
 def health_check():
-    """Renderが周期的に叩くヘルスチェック"""
     return {"status": "healthy", "uptime": "ok"}
 
 # ---------------------------------------------------------
-# 🔹 Aurora内部Git構造確認用ルート
+# Aurora内部Git構造確認用ルート
 # ---------------------------------------------------------
 @app.get("/get_git_structure")
 def get_git_structure():
-    """
-    Auroraの実行ディレクトリ構造をJSONで返す。
-    Render環境ではGitHub同期検証やAutoPush診断に使用される。
-    """
+    """GitHub同期診断用構造可視化"""
     base_path = os.getcwd()
     structure = []
     for root, dirs, files in os.walk(base_path):
@@ -145,7 +130,7 @@ def get_git_structure():
     return JSONResponse(content={"structure": structure})
 
 # ---------------------------------------------------------
-# 起動処理
+# 起動処理（RenderでもGitHubでも共通）
 # ---------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
@@ -155,7 +140,7 @@ if __name__ == "__main__":
         port = 10000
 
     try:
-        print(f"[Aurora] Starting web service on port {port} ...")
+        print(f"[Aurora] Starting GitHub-mode service on port {port} ...")
         uvicorn.run("aurora_memory.api.main:app", host="0.0.0.0", port=port)
     except Exception as e:
         print("💥 [Aurora] Fatal server error:", repr(e))
